@@ -1,6 +1,6 @@
 #include <iostream>
 #include <chrono>
-#include "board.h"
+#include "engine/braniac.h"
 
 uint64_t perft(chess::Board &b, int depth, int max_depth, bool verbose) {
     uint64_t nodes = 0;
