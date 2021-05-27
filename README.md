@@ -1,2 +1,3 @@
-# BraniacEngine
-Chess artificial intelligence engine
+# Braniac
+
+A chess artificial intelligence engine
