@@ -86,15 +86,8 @@ namespace chess::neural {
     const Matrix Matrix::operator*(const Matrix &rhs) const {
         assert(_cols == rhs.get_rows());
         double target[_rows * rhs._cols];
-        for(int i = 0; i < _rows; ++i) {
-            for(int j = 0; j < rhs._cols; ++j) {
-                double dot = 0.0;
-                for(int c = 0; c < _cols; ++c) {
-                    dot += get_at(i, c) * rhs.get_at(c, j);
-                }
-                target[i * rhs._cols + j] = dot;
-            }
-        }
+        cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, _rows, rhs._cols, _cols,
+                    1.0, _data, _cols, rhs._data, rhs._cols, 0.0, target, rhs._cols);
         return {
             _rows, rhs._cols, target
         };
@@ -135,15 +128,8 @@ namespace chess::neural {
     void Matrix::operator*=(const Matrix &rhs) {
         assert(_cols == rhs.get_rows());
         double *target = new double[_rows * rhs._cols];
-        for(int i = 0; i < _rows; ++i) {
-            for(int j = 0; j < rhs._cols; ++j) {
-                double dot = 0.0;
-                for(int c = 0; c < _cols; ++c) {
-                    dot += get_at(i, c) * rhs.get_at(c, j);
-                }
-                target[i * rhs._cols + j] = dot;
-            }
-        }
+        cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, _rows, rhs._cols, _cols,
+                    1.0, _data, _cols, rhs._data, rhs._cols, 0.0, target, rhs._cols);
         delete[] _data;
         _data = target;
         _cols = rhs.get_cols();
