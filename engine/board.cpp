@@ -665,6 +665,10 @@ namespace chess {
         return state->_halfmoves;
     }
 
+    uint8_t Board::get_castling_rights() {
+        return state->_castling_rights;
+    }
+
     Color Board::get_turn() {
         return _turn;
     }
