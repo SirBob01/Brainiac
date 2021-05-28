@@ -7,6 +7,8 @@
 #include <iomanip>
 #include <cassert>
 
+#include <gsl/gsl_blas.h>
+
 namespace chess::neural {
     class Matrix {
         double *_data;
