@@ -189,6 +189,11 @@ namespace chess {
         int get_halfmoves();
 
         /**
+         * Return the bitfield corresponding to castling rights
+         */
+        uint8_t get_castling_rights();
+
+        /**
          * Get the current turn (either White or Black)
          */
         Color get_turn();
