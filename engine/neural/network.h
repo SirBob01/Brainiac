@@ -21,6 +21,7 @@ namespace chess::neural {
         cost cost_function;
         double learning_rate;
         double gradient_clip;
+        double random_range;
         std::vector<Layer> layers;
     };
 

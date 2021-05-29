@@ -6,7 +6,7 @@ namespace chess::neural {
 
         std::random_device rd;
         std::mt19937 generator(rd());
-        std::uniform_real_distribution<double> distribution(-0.25, 0.25);
+        std::uniform_real_distribution<double> distribution(0.0, 1.0);
         
         for(int i = 0; i < n; i++) {
             _a.emplace_back(1, params.layers[i].nodes, 0.0);
@@ -16,7 +16,8 @@ namespace chess::neural {
                 _weights.emplace_back(params.layers[i].nodes, params.layers[i+1].nodes);
                 for(int j = 0; j < params.layers[i].nodes; j++) {
                     for(int k = 0; k < params.layers[i+1].nodes; k++) {
-                        _weights.back().set_at(j, k, distribution(generator));
+                        double r = params.random_range * distribution(generator) - (params.random_range / 2);
+                        _weights.back().set_at(j, k, r);
                     }
                 }
             }
