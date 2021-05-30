@@ -173,6 +173,16 @@ namespace chess {
         bool is_checkmate();
 
         /**
+         * Checks if the board is in a stalemate
+         */
+        bool is_stalemate();
+
+        /**
+         * Checks if the game is a draw
+         */
+        bool is_draw();
+
+        /**
          * Generate a valid chess move given shift positions
          * Used to validate move positions from user input
          */
