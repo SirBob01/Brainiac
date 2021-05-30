@@ -57,13 +57,32 @@ namespace chess::neural {
         } 
     }
 
+    Matrix::Matrix(Matrix &&rhs) {
+        _rows = rhs._rows;
+        _cols = rhs._cols;
+        _data = rhs._data;
+        rhs._data = nullptr;
+    }
+
     Matrix &Matrix::operator=(const Matrix &rhs) {
         _rows = rhs._rows;
         _cols = rhs._cols;
+
+        delete[] _data;
         _data = new double[_rows * _cols]; 
         for(int i = 0; i < _rows * _cols; i++) {
             _data[i] = rhs._data[i];
         }
+        return *this;
+    }
+
+    Matrix &Matrix::operator=(Matrix &&rhs) {
+        _rows = rhs._rows;
+        _cols = rhs._cols;
+        
+        delete[] _data;
+        _data = rhs._data;
+        rhs._data = nullptr;
         return *this;
     }
 

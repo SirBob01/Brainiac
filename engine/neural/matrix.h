@@ -21,14 +21,17 @@ namespace chess::neural {
         Matrix(int rows, int cols, double data[]);
         Matrix(int rows, int cols, std::vector<double> data);
         Matrix(std::vector<std::vector<double>> data);
-        Matrix(const Matrix &rhs);
-        ~Matrix();
 
         /**
-         * Assignment operator
+         * Copy and move semantics
          */
+        Matrix(const Matrix &rhs);
+        Matrix(Matrix &&rhs);
         Matrix &operator=(const Matrix &rhs);
-
+        Matrix &operator=(Matrix &&rhs);
+        
+        ~Matrix();
+        
         /**
          * Addition operator
          */
