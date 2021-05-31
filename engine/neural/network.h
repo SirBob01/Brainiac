@@ -5,6 +5,7 @@
 #include <random>
 
 #include "matrix.h"
+#include "costs.h"
 
 namespace chess::neural {
     // Activation/cost functions must take a double and a boolean indicating
@@ -18,10 +19,10 @@ namespace chess::neural {
     };
 
     struct NetworkParameters {
-        cost cost_function;
-        double learning_rate;
-        double gradient_clip;
-        double random_range;
+        cost cost_function   = quadratic_cost;
+        double learning_rate = 1.0;
+        double gradient_clip = 1.0;
+        double random_range  = 1.0;
         std::vector<Layer> layers;
     };
 
