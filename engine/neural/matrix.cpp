@@ -79,7 +79,7 @@ namespace chess::neural {
     Matrix &Matrix::operator=(Matrix &&rhs) {
         _rows = rhs._rows;
         _cols = rhs._cols;
-        
+
         delete[] _data;
         _data = rhs._data;
         rhs._data = nullptr;
@@ -190,6 +190,14 @@ namespace chess::neural {
         return {
             _cols, _rows, translate
         };
+    }
+
+    double Matrix::norm() {
+        double sum = 0.0;
+        for(int i = 0; i < _rows * _cols; i++) {
+            sum += _data[i] * _data[i];
+        }
+        return std::sqrt(sum);
     }
 
     void Matrix::zero() {

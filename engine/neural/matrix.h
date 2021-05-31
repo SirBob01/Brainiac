@@ -5,6 +5,7 @@
 #include <functional>
 #include <iostream>
 #include <iomanip>
+#include <cmath>
 #include <cassert>
 
 #include <gsl/gsl_blas.h>
@@ -101,6 +102,11 @@ namespace chess::neural {
          * Get the transpose of the matrix
          */
         Matrix transpose() const;
+
+        /**
+         * Calculate the Euclidean norm of the matrix
+         */
+        double norm();
 
         /**
          * Make all values zero
