@@ -35,6 +35,7 @@ namespace chess::neural {
         cost _cost;
 
         double _learning_rate;
+        double _gradient_clip;
 
         /**
          * Apply the cost function to matrices

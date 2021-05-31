@@ -30,6 +30,7 @@ namespace chess::neural {
 
         _cost = params.cost_function;
         _learning_rate = params.learning_rate;
+        _gradient_clip = params.gradient_clip;
     }
 
     Matrix Network::apply_cost(Matrix &predicted, Matrix &expected, bool derivative) {
@@ -70,9 +71,21 @@ namespace chess::neural {
             });
             delta_l ^= _z[i];
 
+            Matrix weight_grad = (_a[i].transpose() * delta_l) * _learning_rate;
+            double weight_grad_norm = weight_grad.norm();
+            if(weight_grad_norm >_gradient_clip) {
+                weight_grad *= _gradient_clip / weight_grad_norm;
+            }
+
+            Matrix bias_grad = delta_l * _learning_rate;
+            double bias_grad_norm = bias_grad.norm();
+            if(bias_grad_norm >_gradient_clip) {
+                bias_grad *= _gradient_clip / bias_grad_norm;
+            }
+
             // Update weights and biases
-            _weights[i] -= ((_a[i].transpose() * delta_l) * _learning_rate);
-            _biases[i] -= (delta_l * _learning_rate);
+            _weights[i] -= weight_grad;
+            _biases[i] -= bias_grad;
         }
     }
 
