@@ -6,19 +6,23 @@ namespace chess::neural {
 
         std::random_device rd;
         std::mt19937 generator(rd());
-        std::uniform_real_distribution<double> distribution(0.0, 1.0);
+        std::normal_distribution<double> distribution;
         
         for(int i = 0; i < n; i++) {
             _a.emplace_back(1, params.layers[i].nodes, 0.0);
 
             if(i < n - 1) {
                 // Add weight matrix (i, i+1) and its delta
-                _weights.emplace_back(params.layers[i].nodes, params.layers[i+1].nodes);
-                _weight_deltas.emplace_back(params.layers[i].nodes, params.layers[i+1].nodes);
+                int m = params.layers[i].nodes;
+                int n = params.layers[i+1].nodes;
+                _weights.emplace_back(m, n);
+                _weight_deltas.emplace_back(m, n);
 
-                for(int j = 0; j < params.layers[i].nodes; j++) {
-                    for(int k = 0; k < params.layers[i+1].nodes; k++) {
-                        double r = params.random_range * distribution(generator) - (params.random_range / 2);
+                // Kaiming initialization of weights
+                double kaiming_factor = std::sqrt(2.0/m);
+                for(int j = 0; j < m; j++) {
+                    for(int k = 0; k < n; k++) {
+                        double r = distribution(generator) * kaiming_factor;
                         _weights.back().set_at(j, k, r);
                     }
                 }
@@ -28,8 +32,8 @@ namespace chess::neural {
                 _activations.push_back(params.layers[i].activation_function);
             
                 // Add bias matrix and its delta
-                _bias_deltas.emplace_back(1, params.layers[i].nodes, 0.0);
-                _biases.emplace_back(1, params.layers[i].nodes, 0.0);
+                _bias_deltas.emplace_back(1, params.layers[i].nodes);
+                _biases.emplace_back(1, params.layers[i].nodes);
             }
         }
 
