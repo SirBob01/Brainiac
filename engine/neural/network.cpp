@@ -54,6 +54,32 @@ namespace chess::neural {
         return loss;
     }
 
+    void Network::update_parameters(int m) {
+        double delta_factor = _learning_rate / m;
+        for(int j = 0; j < _activations.size(); j++) {
+            // Calculate gradient clipping and learning rate adjustments
+            Matrix weight_grad = _weight_deltas[j] * delta_factor;
+            double weight_grad_norm = weight_grad.norm();
+            if(weight_grad_norm >_gradient_clip) {
+                weight_grad *= _gradient_clip / weight_grad_norm;
+            }
+
+            Matrix bias_grad = _bias_deltas[j] * delta_factor;
+            double bias_grad_norm = bias_grad.norm();
+            if(bias_grad_norm >_gradient_clip) {
+                bias_grad *= _gradient_clip / bias_grad_norm;
+            }
+
+            // Update parameters
+            _weights[j] -= weight_grad;
+            _biases[j] -= bias_grad;
+            
+            // Reset the deltas
+            _weight_deltas[j].zero();
+            _bias_deltas[j].zero();
+        }
+    }
+
     Matrix Network::forward(std::vector<double> input) {
         _a[0] = {1, _weights[0].get_rows(), input};
 
@@ -70,7 +96,6 @@ namespace chess::neural {
 
     void Network::fit(std::vector<DataSample> samples, int m) {
         m = std::min(m, static_cast<int>(samples.size()));
-        double delta_factor = _learning_rate / m;
 
         for(int i = 0; i < samples.size(); i++) {
             DataSample &sample = samples[i];
@@ -95,28 +120,15 @@ namespace chess::neural {
             }
 
             // Update the network parameters in batches
-            if(i % m == 0) {
-                for(int j = 0; j < _activations.size(); j++) {
-                    Matrix weight_grad = _weight_deltas[j] * delta_factor;
-                    double weight_grad_norm = weight_grad.norm();
-                    if(weight_grad_norm >_gradient_clip) {
-                        weight_grad *= _gradient_clip / weight_grad_norm;
-                    }
-
-                    Matrix bias_grad = _bias_deltas[j] * delta_factor;
-                    double bias_grad_norm = bias_grad.norm();
-                    if(bias_grad_norm >_gradient_clip) {
-                        bias_grad *= _gradient_clip / bias_grad_norm;
-                    }
-
-                    _weights[j] -= weight_grad;
-                    _biases[j] -= bias_grad;
-                    
-                    // Reset the deltas
-                    _weight_deltas[j].zero();
-                    _bias_deltas[j].zero();
-                }
+            if((i + 1) % m == 0) {
+                update_parameters(m);
             }
+        }
+        
+        // Sample size is not divisble by m; train on final batch
+        m = samples.size() % m;
+        if(m) {
+            update_parameters(m);
         }
     }
 }

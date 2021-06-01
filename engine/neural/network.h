@@ -50,6 +50,11 @@ namespace chess::neural {
          */
         Matrix apply_cost(Matrix &predicted, Matrix &expected, bool derivative);
 
+        /**
+         * Update the network parameters using the gradient averages (minibatch)
+         */
+        void update_parameters(int m);
+
     public:
         Network(NetworkParameters params);
 
