@@ -45,7 +45,7 @@ namespace chess::neural {
     Matrix Network::apply_cost(Matrix &predicted, Matrix &expected, bool derivative) {
         int rows = expected.get_rows();
         int cols = expected.get_cols();
-        Matrix loss(expected.get_rows(), expected.get_cols());
+        Matrix loss(rows, cols);
         for(int i = 0; i < rows; i++) {
             for(int j = 0; j < cols; j++) {
                 loss.set_at(i, j, _cost(predicted.get_at(i, j), expected.get_at(i, j), derivative));
