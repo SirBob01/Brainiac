@@ -26,11 +26,19 @@ namespace chess::neural {
         std::vector<Layer> layers;
     };
 
+    struct DataSample {
+        std::vector<double> input;
+        std::vector<double> output;
+    };
+
     class Network {
         std::vector<Matrix> _z;
         std::vector<Matrix> _a;
         std::vector<Matrix> _biases;
         std::vector<Matrix> _weights;
+
+        std::vector<Matrix> _weight_deltas;
+        std::vector<Matrix> _bias_deltas;
 
         std::vector<activation> _activations;
         cost _cost;
@@ -43,30 +51,19 @@ namespace chess::neural {
          */
         Matrix apply_cost(Matrix &predicted, Matrix &expected, bool derivative);
 
-        /**
-         * Feed-forward algorithm
-         */
-        Matrix forward(Matrix input);
-
-        /**
-         * Backpropagation gradient descent algorithm
-         */
-        void backward(Matrix expected);
-
     public:
         Network(NetworkParameters params);
 
         /**
-         * Train network on some data
+         * Feed-forward algorithm
          */
-        void fit(std::vector<double> input, std::vector<double> output);
+        Matrix forward(std::vector<double> input);
 
         /**
-         * Evaluate the network on some input data
+         * Train network on a set of sample data in batches of
+         * size m using the backpropagation algorithm
          */
-        inline Matrix evaluate(std::vector<double> input) {
-            return forward({1, _weights[0].get_rows(), input});
-        }
+        void fit(std::vector<DataSample> samples, int m=1);
     };
 }
 
