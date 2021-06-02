@@ -673,6 +673,15 @@ namespace chess {
         return {};
     }
 
+    Move Board::create_move(std::string standard_notation) {
+        for(auto &move : state->_legal_moves) {
+            if(move.standard_notation() == standard_notation) {
+                return move;
+            }
+        }
+        return {};
+    }
+
     std::vector<Move> Board::get_moves() {
         return state->_legal_moves;
     }
