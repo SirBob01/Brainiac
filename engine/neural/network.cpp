@@ -131,4 +131,47 @@ namespace chess::neural {
             update_parameters(m);
         }
     }
+
+    void Network::save(std::string filename) {
+        std::ofstream outfile;
+        outfile.open(filename, std::ios::binary | std::ios::out);
+        for(int i = 0; i < _activations.size(); i++) {
+            Matrix &weight = _weights[i];
+            Matrix &bias = _biases[i];
+
+            int wr = weight.get_rows();
+            int wc = weight.get_cols();
+
+            int br = bias.get_rows();
+            int bc = bias.get_cols();
+
+            outfile.write(reinterpret_cast<char *>(&wr), sizeof(int));
+            outfile.write(reinterpret_cast<char *>(&wc), sizeof(int));
+            outfile.write(reinterpret_cast<char *>(weight.data()), sizeof(double) * wr * wc);
+
+            outfile.write(reinterpret_cast<char *>(&br), sizeof(int));
+            outfile.write(reinterpret_cast<char *>(&bc), sizeof(int));
+            outfile.write(reinterpret_cast<char *>(bias.data()), sizeof(double) * br * bc);
+        }
+        outfile.close();
+    }
+
+    void Network::load(std::string filename) {
+        std::ifstream infile;
+        infile.open(filename, std::ios::binary | std::ios::in);
+        for(int i = 0; i < _activations.size(); i++) {
+            Matrix &weight = _weights[i];
+            Matrix &bias = _biases[i];
+
+            int wr, wc, br, bc;
+            infile.read(reinterpret_cast<char *>(&wr), sizeof(int));
+            infile.read(reinterpret_cast<char *>(&wc), sizeof(int));
+            infile.read(reinterpret_cast<char *>(weight.data()), sizeof(double) * wr * wc);
+
+            infile.read(reinterpret_cast<char *>(&br), sizeof(int));
+            infile.read(reinterpret_cast<char *>(&bc), sizeof(int));
+            infile.read(reinterpret_cast<char *>(bias.data()), sizeof(double) * br * bc);
+        }
+        infile.close();
+    }
 }

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <random>
+#include <fstream>
 
 #include "matrix.h"
 #include "costs.h"
@@ -68,6 +69,19 @@ namespace chess::neural {
          * size m using the backpropagation algorithm
          */
         void fit(std::vector<DataSample> samples, int m=1);
+
+        /**
+         * Write the neural network state (weights and biases) to disk
+         */
+        void save(std::string filename);
+
+        /**
+         * Load the neural network state (weights and biases) from disk
+         * 
+         * The number of parameters at each layer should match that
+         * of the constructed network
+         */
+        void load(std::string filename);
     };
 }
 
