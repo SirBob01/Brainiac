@@ -142,6 +142,13 @@ namespace chess::neural {
         }
 
         /**
+         * Get the pointer to the matrix data
+         */
+        inline double *data() const {
+            return _data;
+        }
+
+        /**
          * Pretty print the matrix for debugging
          */
         void print() const;
