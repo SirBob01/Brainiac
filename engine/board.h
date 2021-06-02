@@ -189,6 +189,11 @@ namespace chess {
         Move create_move(Square from, Square to, char promotion = 0); 
 
         /**
+         * Generate a valid chess move given a standard notation string
+         */
+        Move create_move(std::string standard_notation); 
+
+        /**
          * Get all legal moves available to the current player
          */
         std::vector<Move> get_moves();
