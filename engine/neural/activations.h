@@ -7,16 +7,12 @@
 namespace chess::neural {
     inline double lrelu(double x, bool derivative) {
         double slope = 0.05;
+        double y = std::max(x, slope * x);
         if(derivative) {
-            if(x > 0) {
-                return 1.0;
-            }
-            else {
-                return slope;
-            }
+            return y / x;
         }
         else {
-            return std::max(x, slope*x);
+            return y;
         }
     }
 
