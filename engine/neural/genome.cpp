@@ -52,7 +52,7 @@ namespace chess::neural {
         update_structure();
     }
 
-    void Genome::topological_sort(int node, std::set<int> &visited) {
+    void Genome::topological_sort(int node, std::unordered_set<int> &visited) {
         if(visited.count(node)) {
             return;
         }
@@ -77,7 +77,7 @@ namespace chess::neural {
         // Update the topological sort of the nodes
         int n = _nodes.size();
         _sorted.clear();
-        std::set<int> visited;
+        std::unordered_set<int> visited;
         for(int i = 0; i < n; i++) {
             topological_sort(i, visited);
         }
