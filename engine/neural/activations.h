@@ -1,45 +1,48 @@
 #ifndef CHESS_NEURAL_ACTIVATIONS_H_
 #define CHESS_NEURAL_ACTIVATIONS_H_
 
-#include <algorithm>
+#include <unordered_map>
 #include <cmath>
 
 namespace chess::neural {
-    inline double lrelu(double x, bool derivative) {
+    using activation_t = double (*)(double x);
+
+    inline double lrelu(double x) {
         double slope = 0.05;
-        double y = std::max(x, slope * x);
-        if(derivative) {
-            if(x == 0) {
-                return 1.0;
-            }
-            else {
-                return y / x;
-            }
-        }
-        else {
-            return y;
-        }
+        return std::max(x, slope * x);
     }
 
-    inline double sigmoid(double x, bool derivative) {
-        double y = 1.0/(1.0+std::exp(x));
-        if(!derivative) {
-            return y;
-        }
-        else {
-            return y * (1 - y);
-        }
+    inline double sigmoid(double x) {
+        return 1.0/(1.0+std::exp(-x));
     }
 
-    inline double tanh(double x, bool derivative) {
-        double f = 2 * sigmoid(2 * x, false) - 1;
-        if(!derivative) {
-            return f;
-        }
-        else {
-            return 1 - f*f;
-        }
+    inline double tanh(double x) {
+        return 2.0 * sigmoid(2 * x) - 1.0;
     }
+
+    inline double gaussian(double x) {
+        return std::exp(-0.5 * x * x);
+    }
+
+    // Taken from https://arxiv.org/abs/2006.08195
+    inline double zihaue_periodic(double x) {
+        double z = std::sin(x);
+        return x + z * z;
+    }
+
+    inline double identity(double x) {
+        return x;
+    }
+
+    const std::unordered_map<std::string, activation_t> activations = {
+        {"lrelu", lrelu},
+        {"sigmoid", sigmoid},
+        {"tanh", tanh},
+        {"gaussian", gaussian},
+        {"zihaue_periodic", zihaue_periodic},
+        {"sin", std::sin},
+        {"identity", identity}
+    };
 }
 
 #endif
