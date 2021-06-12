@@ -37,6 +37,13 @@ namespace chess::neural {
 
         double crossover_probability = 0.3;
         double mutation_probability  = 0.7;
+
+        double c1 = 1.0;
+        double c2 = 0.4;
+
+        double distance_threshold = 0.3;
+
+        int population = 100;
         
         GenomeParameters genome_params;
         PhenomeParameters phenome_params;
