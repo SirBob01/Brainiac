@@ -36,6 +36,22 @@ namespace chess::neural {
         update_structure();
     }
 
+    Genome::Genome(std::vector<NodeGene> &nodes, 
+                   std::unordered_map<Edge, EdgeGene, EdgeHash> &edges, 
+                   GenomeParameters params) {
+        _inputs = 6;
+        _outputs = 1;
+
+        _params = params;
+        _fitness = 0.0;
+
+        _nodes = nodes;
+        _edges = edges;
+
+        // Generate network structure from provided nodes and edges
+        update_structure();
+    }
+
     void Genome::topological_sort(int node, std::set<int> &visited) {
         if(visited.count(node)) {
             return;
@@ -214,6 +230,14 @@ namespace chess::neural {
         } while(error);
 
         update_structure();
+    }
+
+    const std::vector<NodeGene> &Genome::get_nodes() {
+        return _nodes;
+    }
+
+    const std::unordered_map<Edge, EdgeGene, EdgeHash> &Genome::get_edges() {
+        return _edges;
     }
 
     double Genome::get_fitness() {

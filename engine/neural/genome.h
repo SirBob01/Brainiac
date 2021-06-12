@@ -118,6 +118,9 @@ namespace chess::neural {
          * zero-out the rest, e.g., f(x1, y1, z1, 0, 0, 0).
          */
         Genome(GenomeParameters params);
+        Genome(std::vector<NodeGene> &nodes, 
+               std::unordered_map<Edge, EdgeGene, EdgeHash> &edges, 
+               GenomeParameters params);
 
         /**
          * Feed-forward algorithm
@@ -128,6 +131,16 @@ namespace chess::neural {
          * Randomly mutate the genome
          */
         void mutate();
+
+        /**
+         * Get the nodes of this network
+         */
+        const std::vector<NodeGene> &get_nodes();
+
+        /**
+         * Get the edges of this network
+         */
+        const std::unordered_map<Edge, EdgeGene, EdgeHash> &get_edges();
 
         /**
          * Get the fitness score of this genome
