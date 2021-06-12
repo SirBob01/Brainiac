@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <unordered_map>
-#include <set>
+#include <unordered_set>
 #include <iostream>
 #include <cassert>
 
@@ -52,7 +52,7 @@ namespace chess::neural {
         /**
          * Topologically sort the nodes
          */
-        void topological_sort(int node, std::set<int> &visited);
+        void topological_sort(int node, std::unordered_set<int> &visited);
         
         /**
          * Update the internal graph structure of the neural network for evaluation
