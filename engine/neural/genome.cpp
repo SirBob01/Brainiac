@@ -160,7 +160,7 @@ namespace chess::neural {
             double r = random();
             
             double cum_prob = 0;
-            if(r < cum_prob + _params.m_weight_shift) {
+            if(r <= cum_prob + _params.m_weight_shift) {
                 auto random_edge = std::next(std::begin(_edges), randrange(0, _edges.size()));
                 shift_weight(random_edge->first);
             }
@@ -172,25 +172,25 @@ namespace chess::neural {
             }
             cum_prob += _params.m_weight_change;
 
-            if(r >= cum_prob && r < cum_prob + _params.m_bias_shift) {
+            if(r > cum_prob && r <= cum_prob + _params.m_bias_shift) {
                 int random_node = randrange(_inputs, _nodes.size());
                 shift_bias(random_node);
             }
             cum_prob += _params.m_bias_shift;
 
-            if(r >= cum_prob && r < cum_prob + _params.m_bias_change) {
+            if(r > cum_prob && r <= cum_prob + _params.m_bias_change) {
                 int random_node = randrange(_inputs, _nodes.size());
                 reset_bias(random_node);
             }
             cum_prob += _params.m_bias_change;
 
-            if(r >= cum_prob && r < cum_prob + _params.m_node) {
+            if(r > cum_prob && r <= cum_prob + _params.m_node) {
                 auto random_edge = std::next(std::begin(_edges), randrange(0, _edges.size()));
                 error = !add_node(random_edge->first);
             }
             cum_prob += _params.m_node;
             
-            if(r >= cum_prob && r < cum_prob + _params.m_edge) {
+            if(r > cum_prob && r <= cum_prob + _params.m_edge) {
                 // When adding a new edge, maintain the following invariants:
                 // - Chosen nodes are ordered topologically (from -> to)
                 // - The "from" node cannot be an output, and the "to" node cannot be an input
@@ -200,13 +200,13 @@ namespace chess::neural {
             }
             cum_prob += _params.m_edge;
             
-            if(r >= cum_prob && r < cum_prob + _params.m_disable) {
+            if(r > cum_prob && r <= cum_prob + _params.m_disable) {
                 auto random_edge = std::next(std::begin(_edges), randrange(0, _edges.size()));
                 error = !disable_edge(random_edge->first);
             }
             cum_prob += _params.m_disable;
 
-            if(r >= cum_prob && r < cum_prob + _params.m_enable) {
+            if(r > cum_prob && r <= cum_prob + _params.m_enable) {
                 auto random_edge = std::next(std::begin(_edges), randrange(0, _edges.size()));
                 error = !enable_edge(random_edge->first);
             }
