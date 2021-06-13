@@ -18,10 +18,10 @@ namespace chess::neural {
 
     struct PhenomeParameters {
         double variance_threshold = 0.03;
-        double band_threshold     = 0.3;
+        double band_threshold     = 0.05;
         double weight_range       = 1.0;
-        int initial_depth         = 4;
-        int maximum_depth         = 50;
+        int initial_depth         = 2;
+        int maximum_depth         = 3;
         int iteration_level       = 1;
 
         // Activation functions of the ANN
