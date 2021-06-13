@@ -14,5 +14,5 @@ add_executable(main "../main.cpp")
 
 # Compile on Linux systems
 if(UNIX OR MSVC)
-    target_link_libraries(main Brainiac gslcblas)
+    target_link_libraries(main Brainiac)
 endif()
