@@ -13,6 +13,12 @@
 #include "random.h"
 
 namespace chess::neural {
+    enum NodeType {
+        Input,
+        Hidden,
+        Output
+    };
+
     struct Edge {
         int from;
         int to;
@@ -30,9 +36,13 @@ namespace chess::neural {
     };
 
     struct NodeGene {
-        double value;
         double bias;
+        NodeType type;
         activation_t function;
+
+        double activation = 0;
+        double sum = 0;
+        bool active = false;
     };
 
     class Genome {
@@ -40,7 +50,6 @@ namespace chess::neural {
         std::vector<NodeGene> _nodes;
 
         std::vector<std::vector<int>> _adjacency;
-        std::vector<int> _sorted;
 
         GenomeParameters _params;
 
@@ -48,11 +57,6 @@ namespace chess::neural {
         int _outputs;
         
         double _fitness;
-
-        /**
-         * Topologically sort the nodes
-         */
-        void topological_sort(int node, std::unordered_set<int> &visited);
         
         /**
          * Update the internal graph structure of the neural network for evaluation
@@ -104,6 +108,25 @@ namespace chess::neural {
          * Change the activation function of a node
          */
         void change_activation(int node);
+
+        /**
+         * Test if the node id is an input
+         */
+        inline bool is_input(int node) {
+            return node < _inputs;
+        }
+
+        /**
+         * Test if the node id is an output
+         */
+        inline bool is_output(int node) {
+            return node >= _inputs && node < _inputs + _outputs;
+        }
+        
+        /**
+         * Check if all the output nodes are active
+         */
+        bool active_output();
 
     public:
         /**
