@@ -40,7 +40,15 @@ namespace chess::neural {
          * Calculate the variance of the quadtree
          */
         double get_variance();
+
+    private:
+        /**
+         * Recursively grab the weights of all leaf nodes
+         */
+        void recur_weights(Octree *root, std::vector<double> &weights);
     };
+
+    double variance(std::vector<double> &values);
 }
 
 #endif
