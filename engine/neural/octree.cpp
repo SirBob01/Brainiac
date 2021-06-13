@@ -54,22 +54,42 @@ namespace chess::neural {
     }
 
     double Octree::get_variance() {
-        int n = children.size();
+        std::vector<double> weights;
+        for(auto &child : children) {
+            recur_weights(child, weights);
+        }
+        double var =variance(weights);
+        return var;
+    }
+
+    void Octree::recur_weights(Octree *root, std::vector<double> &weights) {
+        if((root->children).size()) {
+            for(auto child : root->children) {
+                recur_weights(child, weights);
+            }
+        }
+        else {
+            weights.push_back(root->weight);
+        }
+    }
+
+    double variance(std::vector<double> &values) {
+        int n = values.size();
         if(n == 0) {
             return 0;
         }
 
         double mean = 0;
-        for(auto &c : children) {
-            mean += c->weight;
+        for(auto &v : values) {
+            mean += v;
         }
         mean /= n;
 
-        double variance = 0;
-        for(auto &c : children) {
-            double d = c->weight - mean;
-            variance += d * d;
+        double var = 0;
+        for(auto &v : values) {
+            double d = v - mean;
+            var += d * d;
         }
-        return variance / n;
+        return var / n;
     }
 }
