@@ -10,12 +10,6 @@
 #include "octree.h"
 
 namespace chess::neural {
-    enum NodeType {
-        Input,
-        Hidden,
-        Output
-    };
-
     struct NodePhenotype {
         double bias;
         NodeType type;

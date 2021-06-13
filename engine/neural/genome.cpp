@@ -20,9 +20,12 @@ namespace chess::neural {
 
         // Initialize the CPPN with minimal topology
         // Weights are random and biases are zero-initialized
-        for(int i = 0; i < _inputs + _outputs; i++) {
+        for(int i = 0; i < _inputs; i++) {
             auto random_it = std::next(std::begin(activations), randrange(0, activations.size()));
-            _nodes.push_back({0, 0, random_it->second});
+            _nodes.push_back({0, NodeType::Input, random_it->second});
+        }
+        for(int i = 0; i < _outputs; i++) {
+            _nodes.push_back({0, NodeType::Output, tanh});
         }
         
         // Connect all inputs to all outputs
@@ -52,34 +55,15 @@ namespace chess::neural {
         update_structure();
     }
 
-    void Genome::topological_sort(int node, std::unordered_set<int> &visited) {
-        if(visited.count(node)) {
-            return;
-        }
-        
-        for(int &adj : _adjacency[node]) {
-            topological_sort(adj, visited);
-        }
-
-        visited.insert(node);
-        _sorted.push_back(node);
-    }
-
     void Genome::update_structure() {
         // Update the adjacency list
         _adjacency.clear();
         _adjacency.resize(_nodes.size());
         for(auto &p : _edges) {
             Edge e = p.first;
-            _adjacency[e.to].push_back(e.from);
-        }
-        
-        // Update the topological sort of the nodes
-        int n = _nodes.size();
-        _sorted.clear();
-        std::unordered_set<int> visited;
-        for(int i = 0; i < n; i++) {
-            topological_sort(i, visited);
+            if(p.second.enabled) {
+                _adjacency[e.to].push_back(e.from);
+            }
         }
     }
 
@@ -92,7 +76,7 @@ namespace chess::neural {
         add_edge({new_node, edge.to});
 
         auto random_it = std::next(std::begin(activations), randrange(0, activations.size()));
-        _nodes.push_back({0, 0, random_it->second});
+        _nodes.push_back({0, NodeType::Hidden, random_it->second});
         return true;
     }
 
@@ -141,32 +125,63 @@ namespace chess::neural {
         _nodes[node].function = random_it->second;
     }
 
+    bool Genome::active_output() {
+        bool active = false;
+        for(int i = _inputs; i < _inputs + _outputs; i++) {
+            active = active && _nodes[i].active;
+        }
+        return active;
+    }
+
     double Genome::forward(Point3 p0, Point3 p1) {
         // Map the 3D points to the input vector
-        _nodes[0].value = p0.x;
-        _nodes[1].value = p0.y;
-        _nodes[2].value = p0.z;
-        _nodes[3].value = p1.x;
-        _nodes[4].value = p1.y;
-        _nodes[5].value = p1.z;
+        for(int i = 0; i < _inputs; i++) {
+            _nodes[i].active = true;
+        }
+        _nodes[0].activation = p0.x;
+        _nodes[1].activation = p0.y;
+        _nodes[2].activation = p0.z;
+        _nodes[3].activation = p1.x;
+        _nodes[4].activation = p1.y;
+        _nodes[5].activation = p1.z;
 
-        // Forward propagation
+        // Forward propagation (adapted from the original NEAT implementation)
         int n = _nodes.size();
-        for(int i = _inputs; i < n; i++) {
-            int to = _sorted[i];
-            double sum = 0.0;
-            for(int from : _adjacency[to]) {
-                EdgeGene gene = _edges[{from, to}];
-                if(gene.enabled) {
-                    sum += gene.weight * _nodes[from].value + _nodes[to].bias;
+        int abort_count = 0;
+        while(!active_output()) {
+            if(abort_count++ >= 20) {
+                break;
+            }
+            for(int i = 0; i < n; i++) {
+                NodeGene &node = _nodes[i];
+                if(node.type != NodeType::Input) {
+                    node.sum = 0;
+                    for(auto &j : _adjacency[i]) {
+                        NodeGene &incoming = _nodes[j];
+                        if(incoming.active) {
+                            node.sum += _edges[{j, i}].weight * incoming.activation;
+                            node.active = true;
+                        }
+                    }
                 }
             }
-            _nodes[to].value = _nodes[to].function(sum);
+            for(int i = 0; i < n; i++) {
+                NodeGene &node = _nodes[i];
+                if(node.type != NodeType::Input && node.active) {
+                    node.activation = node.function(node.sum);
+                }
+            }
         }
-
-        // Generate output between -1.0 and 1.0
-        NodeGene &out_node = _nodes[_inputs];
-        return tanh(out_node.value);
+        double result = _nodes[_inputs].activation;
+        
+        // Deactivate the nodes
+        for(int i = 0; i < n; i++) {
+            NodeGene &node = _nodes[i];
+            node.sum = 0;
+            node.activation = 0;
+            node.active = false;
+        }
+        return result;
     }
 
     void Genome::mutate() {
@@ -207,12 +222,27 @@ namespace chess::neural {
             cum_prob += _params.m_node;
             
             if(r > cum_prob && r <= cum_prob + _params.m_edge) {
-                // When adding a new edge, maintain the following invariants:
-                // - Chosen nodes are ordered topologically (from -> to)
-                // - The "from" node cannot be an output, and the "to" node cannot be an input
-                int i = randrange(0, _nodes.size()-_outputs);
-                int j = randrange(std::max(_inputs, i+1), _nodes.size());
-                error = !add_edge({_sorted[i], _sorted[j]});
+                // Generate random nodes (i, j) such that:
+                // 1. i is not an output
+                // 2. j is not an input
+                // 3. i != j
+                int n = _nodes.size();
+                std::vector<int> incoming;
+                std::vector<int> remaining;
+                for(int k = 0; k < n; k++) {
+                    if(!is_output(k)) {
+                        incoming.push_back(k);
+                    }
+                }
+                int i = incoming[randrange(0, incoming.size())];
+
+                for(int k = 0; k < n; k++) {
+                    if(!is_input(k) && k != i) {
+                        remaining.push_back(k);
+                    }
+                }
+                int j = remaining[randrange(0, remaining.size())];
+                error = !add_edge({i, j});
             }
             cum_prob += _params.m_edge;
             
@@ -227,6 +257,12 @@ namespace chess::neural {
                 error = !enable_edge(random_edge->first);
             }
             cum_prob += _params.m_enable;
+
+            if(r > cum_prob && r <= cum_prob + _params.m_activation) {
+                int random_node = randrange(_inputs + _outputs, _nodes.size());
+                change_activation(random_node);
+            }
+            cum_prob += _params.m_activation;
         } while(error);
 
         update_structure();
