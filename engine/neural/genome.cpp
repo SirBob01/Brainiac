@@ -12,7 +12,7 @@ namespace chess::neural {
     }
 
     Genome::Genome(GenomeParameters params) {
-        _inputs = 6;
+        _inputs = 4;
         _outputs = 1;
 
         _params = params;
@@ -42,7 +42,7 @@ namespace chess::neural {
     Genome::Genome(std::vector<NodeGene> &nodes, 
                    std::unordered_map<Edge, EdgeGene, EdgeHash> &edges, 
                    GenomeParameters params) {
-        _inputs = 6;
+        _inputs = 4;
         _outputs = 1;
 
         _params = params;
@@ -67,17 +67,14 @@ namespace chess::neural {
         }
     }
 
-    bool Genome::add_node(Edge edge) {
-        if(!disable_edge(edge)) {
-            return false;
-        }
+    void Genome::add_node(Edge edge) {
         int new_node = _nodes.size();
-        add_edge({edge.from, new_node});
-        add_edge({new_node, edge.to});
+        _edges[edge].enabled = false;
+        _edges[{edge.from, new_node}] = {1.0, true};
+        _edges[{new_node, edge.to}] = {_edges[edge].weight, true};
 
         auto random_it = std::next(std::begin(activations), randrange(0, activations.size()));
         _nodes.push_back({0, NodeType::Hidden, random_it->second});
-        return true;
     }
 
     bool Genome::add_edge(Edge edge) {
@@ -126,24 +123,22 @@ namespace chess::neural {
     }
 
     bool Genome::active_output() {
-        bool active = false;
+        bool active = true;
         for(int i = _inputs; i < _inputs + _outputs; i++) {
             active = active && _nodes[i].active;
         }
         return active;
     }
 
-    double Genome::forward(Point3 p0, Point3 p1) {
+    double Genome::forward(Point p0, Point p1) {
         // Map the 3D points to the input vector
         for(int i = 0; i < _inputs; i++) {
             _nodes[i].active = true;
         }
         _nodes[0].activation = p0.x;
         _nodes[1].activation = p0.y;
-        _nodes[2].activation = p0.z;
-        _nodes[3].activation = p1.x;
-        _nodes[4].activation = p1.y;
-        _nodes[5].activation = p1.z;
+        _nodes[2].activation = p1.x;
+        _nodes[3].activation = p1.y;
 
         // Forward propagation (adapted from the original NEAT implementation)
         int n = _nodes.size();
@@ -168,7 +163,7 @@ namespace chess::neural {
             for(int i = 0; i < n; i++) {
                 NodeGene &node = _nodes[i];
                 if(node.type != NodeType::Input && node.active) {
-                    node.activation = node.function(node.sum);
+                    node.activation = node.function(node.sum + node.bias);
                 }
             }
         }
@@ -217,7 +212,7 @@ namespace chess::neural {
 
             if(r > cum_prob && r <= cum_prob + _params.m_node) {
                 auto random_edge = std::next(std::begin(_edges), randrange(0, _edges.size()));
-                error = !add_node(random_edge->first);
+                add_node(random_edge->first);
             }
             cum_prob += _params.m_node;
             

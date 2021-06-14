@@ -1,22 +1,19 @@
 #include "phenome.h"
 
 namespace chess::neural {
-    Phenome::Phenome(Genome &genome, std::vector<Point3> &inputs, std::vector<Point3> &outputs, PhenomeParameters params) 
+    Phenome::Phenome(Genome &genome, std::vector<Point> &inputs, std::vector<Point> &outputs, PhenomeParameters params) 
             : _genome(genome), _inputs(inputs), _outputs(outputs) {
         _params = params;
         _node_count = 0;
 
-        _hidden_activation = activations.at(_params.hidden_activation);
-        _output_activation = activations.at(_params.output_activation);
-
         for(auto &input : _inputs) {
             _pointset[input] = _node_count;
-            _nodes[_node_count] = {_genome.forward(input, {0, 0, 0}), NodeType::Input};
+            _nodes[_node_count] = {_genome.forward(input, {0, 0}), NodeType::Input};
             _node_count++;
         }
         for(auto &output : _outputs) {
             _pointset[output] = _node_count;
-            _nodes[_node_count] = {_genome.forward(output, {0, 0, 0}), NodeType::Output};
+            _nodes[_node_count] = {_genome.forward(output, {0, 0}), NodeType::Output};
             _node_count++;
         }
 
@@ -25,7 +22,7 @@ namespace chess::neural {
         
         // Input to hidden
         for(auto &input : _inputs) {
-            Octree *root = division_initialization(input, true);
+            Quadtree *root = division_initialization(input, true);
             prune_extract(input, root, true, conn1);
             delete root;
             for(auto &e : conn1) {
@@ -37,15 +34,16 @@ namespace chess::neural {
         std::unordered_set<int> unexplored_hidden = hidden_nodes;
         for(int i = 0; i < _params.iteration_level; i++) {
             for(auto &hidden_id : unexplored_hidden) {
-                Point3 hidden;
+                Point hidden;
                 for(auto &p : _pointset) {
                     if(_pointset[p.first] == hidden_id) {
                         hidden = p.first;
                         break;
                     }
                 }
-                Octree *root = division_initialization(hidden, true);
+                Quadtree *root = division_initialization(hidden, true);
                 prune_extract(hidden, root, true, conn2);
+                delete root;
                 for(auto &e : conn2) {
                     hidden_nodes.insert(e.first.to);
                 }
@@ -61,7 +59,7 @@ namespace chess::neural {
 
         // Hidden to output
         for(auto &output : _outputs) {
-            Octree *root = division_initialization(output, false);
+            Quadtree *root = division_initialization(output, false);
             prune_extract(output, root, false, conn3);
             delete root;
         }
@@ -92,19 +90,16 @@ namespace chess::neural {
         _edges = rhs._edges;
 
         _adjacency = rhs._adjacency;
-        
-        _hidden_activation = rhs._hidden_activation;
-        _output_activation = rhs._output_activation;
         return *this;
     }
 
-    Octree *Phenome::division_initialization(Point3 point, bool outgoing) {
-        Octree *root = new Octree(point, 1, 1);
-        std::queue<Octree *> q;
+    Quadtree *Phenome::division_initialization(Point point, bool outgoing) {
+        Quadtree *root = new Quadtree(point, 1, 1);
+        std::queue<Quadtree *> q;
         q.push(root);
 
         while(q.size()) {
-            Octree *current = q.front();
+            Quadtree *current = q.front();
             q.pop();
             current->generate_children();
             for(auto &child : current->children) {
@@ -117,7 +112,7 @@ namespace chess::neural {
             }
 
             if(current->level < _params.initial_depth || 
-              (current->level < _params.maximum_depth && current->get_variance() > _params.variance_threshold)) {
+              (current->level < _params.maximum_depth && current->get_variance() > _params.division_threshold)) {
                 for(auto &child : current->children) {
                     q.push(child);
                 }
@@ -126,46 +121,38 @@ namespace chess::neural {
         return root;
     }
 
-    void Phenome::prune_extract(Point3 point, Octree *octree, bool outgoing,
+    void Phenome::prune_extract(Point point, Quadtree *Quadtree, bool outgoing,
                                 std::unordered_map<Edge, double, EdgeHash> &connections) {
         if(_pointset.count(point) == 0) {
             _pointset[point] = _node_count;
-            _nodes[_node_count] = {_genome.forward(point, {0, 0, 0}), NodeType::Hidden};
+            _nodes[_node_count] = {_genome.forward(point, {0, 0}), NodeType::Hidden};
             _node_count++;
         }
 
-        double d_top, d_bottom, d_left, d_right, d_front, d_back;
-        for(auto &child : octree->children) {
-            Point3 &center = child->center;
+        double d_top, d_bottom, d_left, d_right;
+        for(auto &child : Quadtree->children) {
+            Point &center = child->center;
             if(child->get_variance() >= _params.variance_threshold) {
                 prune_extract(point, child, outgoing, connections);
             }
             else {
                 if(outgoing) {
-                    d_left   = std::fabs(child->weight - _genome.forward(point, {center.x - child->size/2, center.y, center.z}));
-                    d_right  = std::fabs(child->weight - _genome.forward(point, {center.x + child->size/2, center.y, center.z}));
-                    d_top    = std::fabs(child->weight - _genome.forward(point, {center.x, center.y - child->size/2, center.z}));
-                    d_bottom = std::fabs(child->weight - _genome.forward(point, {center.x, center.y + child->size/2, center.z}));
-                    d_front  = std::fabs(child->weight - _genome.forward(point, {center.x, center.y, center.z + child->size/2}));
-                    d_back   = std::fabs(child->weight - _genome.forward(point, {center.x, center.y, center.z - child->size/2}));
+                    d_left   = std::fabs(child->weight - _genome.forward(point, {center.x - child->size/2, center.y}));
+                    d_right  = std::fabs(child->weight - _genome.forward(point, {center.x + child->size/2, center.y}));
+                    d_top    = std::fabs(child->weight - _genome.forward(point, {center.x, center.y - child->size/2}));
+                    d_bottom = std::fabs(child->weight - _genome.forward(point, {center.x, center.y + child->size/2}));
                 }
                 else {
-                    d_left   = std::fabs(child->weight - _genome.forward({center.x - child->size/2, center.y, center.z}, point));
-                    d_right  = std::fabs(child->weight - _genome.forward({center.x + child->size/2, center.y, center.z}, point));
-                    d_top    = std::fabs(child->weight - _genome.forward({center.x, center.y - child->size/2, center.z}, point));
-                    d_bottom = std::fabs(child->weight - _genome.forward({center.x, center.y + child->size/2, center.z}, point));
-                    d_front  = std::fabs(child->weight - _genome.forward({center.x, center.y, center.z + child->size/2}, point));
-                    d_back   = std::fabs(child->weight - _genome.forward({center.x, center.y, center.z - child->size/2}, point));
+                    d_left   = std::fabs(child->weight - _genome.forward({center.x - child->size/2, center.y}, point));
+                    d_right  = std::fabs(child->weight - _genome.forward({center.x + child->size/2, center.y}, point));
+                    d_top    = std::fabs(child->weight - _genome.forward({center.x, center.y - child->size/2}, point));
+                    d_bottom = std::fabs(child->weight - _genome.forward({center.x, center.y + child->size/2}, point));
                 }
-                double band = std::max({
-                    std::min(d_top, d_bottom), 
-                    std::min(d_left, d_right), 
-                    std::min(d_front, d_back)
-                });
+                double band = std::max(std::min(d_top, d_bottom), std::min(d_left, d_right));
                 if(band > _params.band_threshold) {
                     if(_pointset.count(center) == 0) {
                         _pointset[center] = _node_count;
-                        _nodes[_node_count] = {_genome.forward(center, {0, 0, 0}), NodeType::Hidden};
+                        _nodes[_node_count] = {_genome.forward(center, {0, 0}), NodeType::Hidden};
                         _node_count++;
                     }
 
@@ -207,45 +194,35 @@ namespace chess::neural {
     }
 
     void Phenome::cleanup() {
-        // Get collection of valid nodes
-        std::unordered_set<int> valid_nodes;
         for(int n = 0; n < _node_count; n++) {
+            // Assume input and output nodes are valid
+            if(_nodes[n].type != NodeType::Hidden) {
+                continue;
+            }
+            // Deal with hidden nodes
             bool input_path = false;
             for(auto &input : _inputs) {
-                int node_id = _pointset[input];
-                if(path_exists(n, node_id)) {
-                    input_path = true;
-                    break;
-                }
+                input_path = path_exists(n, _pointset[input]);
             }
             bool output_path = false;
             for(auto &output : _outputs) {
-                int node_id = _pointset[output];
-                if(path_exists(node_id, n)) {
-                    output_path = true;
-                    break;
-                }
+                output_path = path_exists(_pointset[output], n);
             }
-            if(input_path && output_path) {
-                valid_nodes.insert(n);
+            if(!input_path || !output_path) {
+                _nodes.erase(n);
             }
         }
 
-        // Cull invalid nodes and connections
-        for(int n = 0; n < _node_count; n++) {
-            if(valid_nodes.count(n)) {
-                continue;
+        // Cull invalid edges
+        std::vector<Edge> invalid_edges;
+        for(auto &e : _edges) {
+            if(_nodes.count(e.first.from) == 0 || 
+               _nodes.count(e.first.to) == 0) {
+                invalid_edges.push_back(e.first);
             }
-            std::vector<Edge> invalid_edges;
-            for(auto &e : _edges) {
-                if(n == e.first.from || n == e.first.to) {
-                    invalid_edges.push_back(e.first);
-                }
-            }
-            for(auto &edge : invalid_edges) {
-                _edges.erase(edge);
-            }
-            _nodes.erase(n);
+        }
+        for(auto &edge : invalid_edges) {
+            _edges.erase(edge);
         }
     }
 
@@ -261,11 +238,22 @@ namespace chess::neural {
     void Phenome::update_structure() {
         generate_adjacency();
         cleanup();
+        if(_edges.size() == 0) {
+            // Algorithm was unable to generate hidden nodes 
+            // connect input and output neurons directly    
+            for(auto &input : _inputs) {
+                for(auto &output : _outputs) {
+                    int i = _pointset[input];
+                    int j = _pointset[output];
+                    _edges[{i, j}] = _genome.forward(input, output) * _params.weight_range;
+                }
+            }
+        }
         generate_adjacency();
     }
     
     bool Phenome::active_output() {
-        bool active = false;
+        bool active = true;
         for(auto &output : _outputs) {
             active = active && _nodes[_pointset[output]].active;
         }
@@ -277,7 +265,6 @@ namespace chess::neural {
         int idx = 0;
         for(auto &point : _inputs) {
             NodePhenotype &node = _nodes[_pointset[point]];
-            node.sum = input[idx++];
             node.activation = input[idx++];
             node.active = true;
         }
@@ -304,12 +291,13 @@ namespace chess::neural {
             for(int i = 0; i < _node_count; i++) {
                 NodePhenotype &node = _nodes[i];
                 if(node.type != NodeType::Input && node.active) {
+                    double total = node.sum + node.bias;
                     switch(node.type) {
                         case NodeType::Hidden:
-                            node.activation = _hidden_activation(node.sum);
+                            node.activation = _params.hidden_activation(total);
                             break;
                         case NodeType::Output:
-                            node.activation = _output_activation(node.sum);
+                            node.activation = _params.output_activation(total);
                             break;
                         default:
                             break;

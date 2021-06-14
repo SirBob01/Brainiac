@@ -35,13 +35,12 @@ namespace chess::neural {
     }
 
     const std::unordered_map<std::string, activation_t> activations = {
-        {"lrelu", lrelu},
-        {"sigmoid", sigmoid},
+        {"abs", std::fabs},
         {"tanh", tanh},
         {"gaussian", gaussian},
-        {"zihaue_periodic", zihaue_periodic},
         {"sin", std::sin},
-        {"identity", identity}
+        {"identity", identity},
+        {"lrelu", lrelu},
     };
 }
 

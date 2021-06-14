@@ -9,7 +9,7 @@
 
 #include "activations.h"
 #include "hyperparams.h"
-#include "octree.h"
+#include "quadtree.h"
 #include "random.h"
 
 namespace chess::neural {
@@ -66,7 +66,7 @@ namespace chess::neural {
         /**
          * Add a new node between an existing edge and disable that edge
          */
-        bool add_node(Edge edge);
+        void add_node(Edge edge);
 
         /**
          * Add a new edge between two unconnected nodes, and update 
@@ -133,12 +133,12 @@ namespace chess::neural {
          * A genome represents the Compositional Pattern-Producing Network (CPPN)
          * used to generate the phenotype Artificial Neural Network (ANN).
          * 
-         * The ANN is an 3-dimensional substrate, whose points correspond
+         * The ANN is an 2-dimensional substrate, whose points correspond
          * to neurons. The weight between two neurons are determined by feeding their
          * coordinates to the evolved CPPN.
          * 
          * To calculate the bias at a point, feed only one point to the CPPN and
-         * zero-out the rest, e.g., f(x1, y1, z1, 0, 0, 0).
+         * zero-out the rest, e.g., f(x1, y1, 0, 0).
          */
         Genome(GenomeParameters params);
         Genome(std::vector<NodeGene> &nodes, 
@@ -148,7 +148,7 @@ namespace chess::neural {
         /**
          * Feed-forward algorithm
          */
-        double forward(Point3 p0, Point3 p1);
+        double forward(Point p0, Point p1);
 
         /**
          * Randomly mutate the genome

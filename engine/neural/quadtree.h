@@ -1,35 +1,34 @@
-#ifndef CHESS_NEURAL_OCTREE_H_
-#define CHESS_NEURAL_OCTREE_H_
+#ifndef CHESS_NEURAL_QUADTREE_H_
+#define CHESS_NEURAL_QUADTREE_H_
 
 #include <vector>
 
 namespace chess::neural {
-    struct Point3 {
+    struct Point {
         double x;
         double y;
-        double z;
 
-        bool operator==(const Point3 &other) const;
+        bool operator==(const Point &other) const;
     };
 
-    struct Point3Hash {
-        std::size_t operator()(Point3 const &s) const noexcept;
+    struct PointHash {
+        std::size_t operator()(Point const &s) const noexcept;
     };
     
-    struct Octree {
-        Point3 center;
+    struct Quadtree {
+        Point center;
         double size;
         int level;
 
         double weight;
 
-        std::vector<Octree *> children;
+        std::vector<Quadtree *> children;
 
-        Octree(Point3 center, double size, int level) 
+        Quadtree(Point center, double size, int level) 
             : center(center), 
               size(size), 
               level(level) {};
-        ~Octree();
+        ~Quadtree();
 
         /**
          * Generate this node's children
@@ -37,7 +36,7 @@ namespace chess::neural {
         void generate_children();
 
         /**
-         * Calculate the variance of the quadtree
+         * Calculate the variance of the Quadtree
          */
         double get_variance();
 
@@ -45,7 +44,7 @@ namespace chess::neural {
         /**
          * Recursively grab the weights of all leaf nodes
          */
-        void recur_weights(Octree *root, std::vector<double> &weights);
+        void recur_weights(Quadtree *root, std::vector<double> &weights);
     };
 
     double variance(std::vector<double> &values);
