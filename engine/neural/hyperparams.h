@@ -5,28 +5,29 @@
 
 namespace chess::neural {
     struct GenomeParameters {
-        double m_weight_shift  = 0.25;
-        double m_weight_change = 0.05;
-        double m_bias_shift    = 0.25;
-        double m_bias_change   = 0.05;
-        double m_node          = 0.05;
-        double m_edge          = 0.05;
+        double m_weight_shift  = 0.17;
+        double m_weight_change = 0.13;
+        double m_bias_shift    = 0.17;
+        double m_bias_change   = 0.13;
+        double m_node          = 0.06;
+        double m_edge          = 0.08;
         double m_disable       = 0.05;
-        double m_enable        = 0.15;
-        double m_activation    = 0.1;
+        double m_enable        = 0.05;
+        double m_activation    = 0.16;
     };
 
     struct PhenomeParameters {
         double variance_threshold = 0.03;
-        double band_threshold     = 0.05;
+        double division_threshold = 0.03;
+        double band_threshold     = 0.01;
         double weight_range       = 1.0;
-        int initial_depth         = 2;
-        int maximum_depth         = 3;
-        int iteration_level       = 1;
+        int initial_depth         = 4;
+        int maximum_depth         = 8;
+        int iteration_level       = 2;
 
         // Activation functions of the ANN
-        std::string hidden_activation = "lrelu";
-        std::string output_activation = "tanh";
+        activation_t hidden_activation = lrelu;
+        activation_t output_activation = tanh;
     };
 
     /** 

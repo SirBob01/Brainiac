@@ -7,7 +7,7 @@
 #include <cassert>
 
 #include "genome.h"
-#include "octree.h"
+#include "quadtree.h"
 
 namespace chess::neural {
     struct NodePhenotype {
@@ -24,35 +24,32 @@ namespace chess::neural {
         PhenomeParameters _params;
         int _node_count;
         
-        std::vector<Point3> &_inputs;
-        std::vector<Point3> &_outputs;
+        std::vector<Point> &_inputs;
+        std::vector<Point> &_outputs;
 
         // Map 3D substrate points to node indexes
-        std::unordered_map<Point3, int, Point3Hash> _pointset;
+        std::unordered_map<Point, int, PointHash> _pointset;
 
         std::unordered_map<int, NodePhenotype> _nodes;
         std::unordered_map<Edge, double, EdgeHash> _edges;
 
         std::unordered_map<int, std::vector<int>> _adjacency;
 
-        activation_t _hidden_activation;
-        activation_t _output_activation;
-
         /**
          * Perform the division and initialization step of the evolving substrate
          */
-        Octree *division_initialization(Point3 point, bool outgoing);
+        Quadtree *division_initialization(Point point, bool outgoing);
 
         /**
          * Perform the prune and extract algorithm of the evolving substrate
          */
-        void prune_extract(Point3 point, Octree *octree, bool outgoing,
+        void prune_extract(Point point, Quadtree *quadtree, bool outgoing,
                            std::unordered_map<Edge, double, EdgeHash> &connections);
 
         /**
          * Check if a path exists between two nodes using BFS
          */
-        bool path_exists(int from, int to);
+        bool path_exists(int start, int end);
 
         /**
          * Remove nodes and connections that do not have a path to inputs or outputs
@@ -78,7 +75,7 @@ namespace chess::neural {
         /**
          * A phenome is defined by the genome CPPN
          */
-        Phenome(Genome &genome, std::vector<Point3> &inputs, std::vector<Point3> &outputs, PhenomeParameters params);
+        Phenome(Genome &genome, std::vector<Point> &inputs, std::vector<Point> &outputs, PhenomeParameters params);
         Phenome &operator=(const Phenome &rhs);
 
         /**
