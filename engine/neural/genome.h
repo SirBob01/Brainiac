@@ -144,6 +144,8 @@ namespace chess::neural {
         Genome(std::vector<NodeGene> &nodes, 
                std::unordered_map<Edge, EdgeGene, EdgeHash> &edges, 
                GenomeParameters params);
+        Genome(const Genome &genome);
+        Genome &operator=(const Genome &genome);
 
         /**
          * Feed-forward algorithm
