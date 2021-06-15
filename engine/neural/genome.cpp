@@ -55,6 +55,31 @@ namespace chess::neural {
         update_structure();
     }
 
+    Genome::Genome(const Genome &genome) {
+        _inputs = genome._inputs;
+        _outputs = genome._outputs;
+        
+        _params = genome._params;
+        _fitness = genome._fitness;
+        
+        _nodes = genome._nodes;
+        _edges = genome._edges;
+        _adjacency = genome._adjacency;
+    }
+
+    Genome &Genome::operator=(const Genome &genome) {
+        _inputs = genome._inputs;
+        _outputs = genome._outputs;
+        
+        _params = genome._params;
+        _fitness = genome._fitness;
+        
+        _nodes = genome._nodes;
+        _edges = genome._edges;
+        _adjacency = genome._adjacency;
+        return *this;
+    }
+
     void Genome::update_structure() {
         // Update the adjacency list
         _adjacency.clear();
@@ -255,7 +280,12 @@ namespace chess::neural {
 
             if(r > cum_prob && r <= cum_prob + _params.m_activation) {
                 int random_node = randrange(_inputs + _outputs, _nodes.size());
-                change_activation(random_node);
+                if(random_node >= _nodes.size()) {
+                    error = true;
+                }
+                else {
+                    change_activation(random_node);
+                }
             }
             cum_prob += _params.m_activation;
         } while(error);
