@@ -8,12 +8,12 @@ namespace chess::neural {
 
         for(auto &input : _inputs) {
             _pointset[input] = _node_count;
-            _nodes[_node_count] = {_genome.forward(input, {0, 0}), NodeType::Input, nullptr};
+            _nodes[_node_count] = {_genome.forward(input, input), NodeType::Input, nullptr};
             _node_count++;
         }
         for(auto &output : _outputs) {
             _pointset[output] = _node_count;
-            _nodes[_node_count] = {_genome.forward(output, {0, 0}), NodeType::Output, _params.output_activation};
+            _nodes[_node_count] = {_genome.forward(output, output), NodeType::Output, _params.output_activation};
             _node_count++;
         }
 
@@ -125,7 +125,7 @@ namespace chess::neural {
                                 std::unordered_map<Edge, double, EdgeHash> &connections) {
         if(_pointset.count(point) == 0) {
             _pointset[point] = _node_count;
-            _nodes[_node_count] = {_genome.forward(point, {0, 0}), NodeType::Hidden, _params.hidden_activation};
+            _nodes[_node_count] = {_genome.forward(point, point), NodeType::Hidden, _params.hidden_activation};
             _node_count++;
         }
 
@@ -155,7 +155,7 @@ namespace chess::neural {
                 if(band > _params.band_threshold) {
                     if(_pointset.count(center) == 0) {
                         _pointset[center] = _node_count;
-                        _nodes[_node_count] = {_genome.forward(center, {0, 0}), NodeType::Hidden, _params.hidden_activation};
+                        _nodes[_node_count] = {_genome.forward(center, center), NodeType::Hidden, _params.hidden_activation};
                         _node_count++;
                     }
 
