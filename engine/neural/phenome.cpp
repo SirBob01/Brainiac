@@ -94,7 +94,7 @@ namespace chess::neural {
     }
 
     Quadtree *Phenome::division_initialization(Point point, bool outgoing) {
-        Quadtree *root = new Quadtree(point, 1, 1);
+        Quadtree *root = new Quadtree({0, 0}, 1, 1);
         std::queue<Quadtree *> q;
         q.push(root);
 
@@ -129,24 +129,27 @@ namespace chess::neural {
             _node_count++;
         }
 
-        double d_top, d_bottom, d_left, d_right;
+        double d_top;
+        double d_bottom;
+        double d_left;
+        double d_right;
         for(auto &child : Quadtree->children) {
             Point &center = child->center;
-            if(child->get_variance() >= _params.variance_threshold) {
+            if(child->get_variance() > _params.variance_threshold) {
                 prune_extract(point, child, outgoing, connections);
             }
             else {
                 if(outgoing) {
-                    d_left   = std::fabs(child->weight - _genome.forward(point, {center.x - child->size/2, center.y}));
-                    d_right  = std::fabs(child->weight - _genome.forward(point, {center.x + child->size/2, center.y}));
-                    d_top    = std::fabs(child->weight - _genome.forward(point, {center.x, center.y - child->size/2}));
-                    d_bottom = std::fabs(child->weight - _genome.forward(point, {center.x, center.y + child->size/2}));
+                    d_left   = std::fabs(child->weight - _genome.forward(point, {center.x - child->size, center.y}));
+                    d_right  = std::fabs(child->weight - _genome.forward(point, {center.x + child->size, center.y}));
+                    d_top    = std::fabs(child->weight - _genome.forward(point, {center.x, center.y - child->size}));
+                    d_bottom = std::fabs(child->weight - _genome.forward(point, {center.x, center.y + child->size}));
                 }
                 else {
-                    d_left   = std::fabs(child->weight - _genome.forward({center.x - child->size/2, center.y}, point));
-                    d_right  = std::fabs(child->weight - _genome.forward({center.x + child->size/2, center.y}, point));
-                    d_top    = std::fabs(child->weight - _genome.forward({center.x, center.y - child->size/2}, point));
-                    d_bottom = std::fabs(child->weight - _genome.forward({center.x, center.y + child->size/2}, point));
+                    d_left   = std::fabs(child->weight - _genome.forward({center.x - child->size, center.y}, point));
+                    d_right  = std::fabs(child->weight - _genome.forward({center.x + child->size, center.y}, point));
+                    d_top    = std::fabs(child->weight - _genome.forward({center.x, center.y - child->size}, point));
+                    d_bottom = std::fabs(child->weight - _genome.forward({center.x, center.y + child->size}, point));
                 }
                 double band = std::max(std::min(d_top, d_bottom), std::min(d_left, d_right));
                 if(band > _params.band_threshold) {
@@ -240,7 +243,7 @@ namespace chess::neural {
         cleanup();
         if(_edges.size() == 0) {
             // Algorithm was unable to generate hidden nodes 
-            // connect input and output neurons directly    
+            // connect input and output neurons directly
             for(auto &input : _inputs) {
                 for(auto &output : _outputs) {
                     int i = _pointset[input];
