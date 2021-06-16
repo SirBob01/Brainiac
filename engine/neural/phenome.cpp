@@ -8,12 +8,12 @@ namespace chess::neural {
 
         for(auto &input : _inputs) {
             _pointset[input] = _node_count;
-            _nodes[_node_count] = {_genome.forward(input, {0, 0}), NodeType::Input};
+            _nodes[_node_count] = {_genome.forward(input, {0, 0}), NodeType::Input, nullptr};
             _node_count++;
         }
         for(auto &output : _outputs) {
             _pointset[output] = _node_count;
-            _nodes[_node_count] = {_genome.forward(output, {0, 0}), NodeType::Output};
+            _nodes[_node_count] = {_genome.forward(output, {0, 0}), NodeType::Output, _params.output_activation};
             _node_count++;
         }
 
@@ -125,7 +125,7 @@ namespace chess::neural {
                                 std::unordered_map<Edge, double, EdgeHash> &connections) {
         if(_pointset.count(point) == 0) {
             _pointset[point] = _node_count;
-            _nodes[_node_count] = {_genome.forward(point, {0, 0}), NodeType::Hidden};
+            _nodes[_node_count] = {_genome.forward(point, {0, 0}), NodeType::Hidden, _params.hidden_activation};
             _node_count++;
         }
 
@@ -152,7 +152,7 @@ namespace chess::neural {
                 if(band > _params.band_threshold) {
                     if(_pointset.count(center) == 0) {
                         _pointset[center] = _node_count;
-                        _nodes[_node_count] = {_genome.forward(center, {0, 0}), NodeType::Hidden};
+                        _nodes[_node_count] = {_genome.forward(center, {0, 0}), NodeType::Hidden, _params.hidden_activation};
                         _node_count++;
                     }
 
@@ -202,11 +202,11 @@ namespace chess::neural {
             // Deal with hidden nodes
             bool input_path = false;
             for(auto &input : _inputs) {
-                input_path = path_exists(n, _pointset[input]);
+                input_path = input_path || path_exists(n, _pointset[input]);
             }
             bool output_path = false;
             for(auto &output : _outputs) {
-                output_path = path_exists(_pointset[output], n);
+                output_path = output_path || path_exists(_pointset[output], n);
             }
             if(!input_path || !output_path) {
                 _nodes.erase(n);
@@ -264,7 +264,7 @@ namespace chess::neural {
         assert(input.size() == _inputs.size());
         int idx = 0;
         for(auto &point : _inputs) {
-            NodePhenotype &node = _nodes[_pointset[point]];
+            NodeGene &node = _nodes[_pointset[point]];
             node.activation = input[idx++];
             node.active = true;
         }
@@ -275,12 +275,13 @@ namespace chess::neural {
             if(abort_count++ >= 20) {
                 break;
             }
-            for(int i = 0; i < _node_count; i++) {
-                NodePhenotype &node = _nodes[i];
+            for(auto &n : _nodes) {
+                int i = n.first;
+                NodeGene &node = n.second;
                 if(node.type != NodeType::Input) {
                     node.sum = 0;
                     for(auto &j : _adjacency[i]) {
-                        NodePhenotype &incoming = _nodes[j];
+                        NodeGene &incoming = _nodes[j];
                         if(incoming.active) {
                             node.sum += _edges[{j, i}] * incoming.activation;
                             node.active = true;
@@ -288,20 +289,10 @@ namespace chess::neural {
                     }
                 }
             }
-            for(int i = 0; i < _node_count; i++) {
-                NodePhenotype &node = _nodes[i];
+            for(auto &n : _nodes) {
+                auto &node = n.second;
                 if(node.type != NodeType::Input && node.active) {
-                    double total = node.sum + node.bias;
-                    switch(node.type) {
-                        case NodeType::Hidden:
-                            node.activation = _params.hidden_activation(total);
-                            break;
-                        case NodeType::Output:
-                            node.activation = _params.output_activation(total);
-                            break;
-                        default:
-                            break;
-                    }
+                    node.activation = node.function(node.sum + node.bias);
                 }
             }
         }
@@ -313,10 +304,11 @@ namespace chess::neural {
         }
 
         // Deactivate the nodes
-        for(int i = 0; i < _node_count; i++) {
-            _nodes[i].sum = 0;
-            _nodes[i].activation = 0;
-            _nodes[i].active = false;
+        for(auto &n : _nodes) {
+            auto &node = n.second;
+            node.sum = 0;
+            node.activation = 0;
+            node.active = false;
         }
 
         return outputs;
@@ -329,4 +321,8 @@ namespace chess::neural {
     void Phenome::set_fitness(double fitness) {
         _genome.set_fitness(fitness);
     } 
+
+    Genome &Phenome::get_genome() {
+        return _genome;
+    }
 }

@@ -10,15 +10,6 @@
 #include "quadtree.h"
 
 namespace chess::neural {
-    struct NodePhenotype {
-        double bias;
-        NodeType type;
-
-        double sum = 0;
-        double activation = 0;
-        bool active = false;
-    };
-
     class Phenome {
         Genome &_genome;
         PhenomeParameters _params;
@@ -30,7 +21,7 @@ namespace chess::neural {
         // Map 3D substrate points to node indexes
         std::unordered_map<Point, int, PointHash> _pointset;
 
-        std::unordered_map<int, NodePhenotype> _nodes;
+        std::unordered_map<int, NodeGene> _nodes;
         std::unordered_map<Edge, double, EdgeHash> _edges;
 
         std::unordered_map<int, std::vector<int>> _adjacency;
@@ -92,6 +83,11 @@ namespace chess::neural {
          * Set the fitness of this phenome's genome
          */
         void set_fitness(double fitness);
+
+        /**
+         * Get this phenome's genome
+         */
+        Genome &get_genome();
     };
 }
 
