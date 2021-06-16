@@ -1,6 +1,7 @@
 #ifndef CHESS_NEURAL_ACTIVATIONS_H_
 #define CHESS_NEURAL_ACTIVATIONS_H_
 
+#include <string>
 #include <unordered_map>
 #include <cmath>
 
@@ -37,6 +38,7 @@ namespace chess::neural {
     const std::unordered_map<std::string, activation_t> activations = {
         {"abs", std::fabs},
         {"tanh", tanh},
+        {"sigmoid", sigmoid},
         {"gaussian", gaussian},
         {"sin", std::sin},
         {"identity", identity},
