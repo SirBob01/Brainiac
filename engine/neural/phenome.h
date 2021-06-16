@@ -27,6 +27,11 @@ namespace chess::neural {
         std::unordered_map<int, std::vector<int>> _adjacency;
 
         /**
+         * Query the CPPN (genome) to generate weight and bias values
+         */
+        double calculate_weight(Point p0, Point p1);
+
+        /**
          * Perform the division and initialization step of the evolving substrate
          */
         Quadtree *division_initialization(Point point, bool outgoing);

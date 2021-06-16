@@ -18,12 +18,13 @@ namespace chess::neural {
 
     struct PhenomeParameters {
         double variance_threshold = 0.03;
-        double division_threshold = 0.03;
+        double division_threshold = 0.5;
         double band_threshold     = 0.3;
-        double weight_range       = 1.0;
+        double weight_range       = 3.0;
+        double weight_cutoff      = 0.2;
         int initial_depth         = 4;
         int maximum_depth         = 6;
-        int iteration_level       = 3;
+        int iteration_level       = 1;
 
         // Activation functions of the ANN
         activation_t hidden_activation = lrelu;
@@ -43,9 +44,9 @@ namespace chess::neural {
         double c1 = 1.0;
         double c2 = 0.4;
 
-        double distance_threshold = 0.3;
+        double distance_threshold = 1.5;
 
-        double cull_percent = 0.5;
+        double cull_percent = 0.8;
 
         int population = 100;
         

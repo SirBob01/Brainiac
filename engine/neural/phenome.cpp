@@ -8,12 +8,12 @@ namespace chess::neural {
 
         for(auto &input : _inputs) {
             _pointset[input] = _node_count;
-            _nodes[_node_count] = {_genome.forward(input, input), NodeType::Input, nullptr};
+            _nodes[_node_count] = {calculate_weight(input, input), NodeType::Input, nullptr};
             _node_count++;
         }
         for(auto &output : _outputs) {
             _pointset[output] = _node_count;
-            _nodes[_node_count] = {_genome.forward(output, output), NodeType::Output, _params.output_activation};
+            _nodes[_node_count] = {calculate_weight(output, output), NodeType::Output, _params.output_activation};
             _node_count++;
         }
 
@@ -93,6 +93,17 @@ namespace chess::neural {
         return *this;
     }
 
+    double Phenome::calculate_weight(Point p0, Point p1) {
+        double raw = _genome.forward(p0, p1);
+        double mag = std::fabs(raw);
+        if(mag < _params.weight_cutoff) {
+            return 0.0;
+        }
+        else {
+            return raw;
+        }
+    }
+
     Quadtree *Phenome::division_initialization(Point point, bool outgoing) {
         Quadtree *root = new Quadtree({0, 0}, 1, 1);
         std::queue<Quadtree *> q;
@@ -104,10 +115,10 @@ namespace chess::neural {
             current->generate_children();
             for(auto &child : current->children) {
                 if(outgoing) {
-                    child->weight = _genome.forward(point, child->center);
+                    child->weight = calculate_weight(point, child->center);
                 }
                 else {
-                    child->weight = _genome.forward(child->center, point);
+                    child->weight = calculate_weight(child->center, point);
                 }
             }
 
@@ -125,7 +136,7 @@ namespace chess::neural {
                                 std::unordered_map<Edge, double, EdgeHash> &connections) {
         if(_pointset.count(point) == 0) {
             _pointset[point] = _node_count;
-            _nodes[_node_count] = {_genome.forward(point, point), NodeType::Hidden, _params.hidden_activation};
+            _nodes[_node_count] = {calculate_weight(point, point), NodeType::Hidden, _params.hidden_activation};
             _node_count++;
         }
 
@@ -140,22 +151,22 @@ namespace chess::neural {
             }
             else {
                 if(outgoing) {
-                    d_left   = std::fabs(child->weight - _genome.forward(point, {center.x - child->size, center.y}));
-                    d_right  = std::fabs(child->weight - _genome.forward(point, {center.x + child->size, center.y}));
-                    d_top    = std::fabs(child->weight - _genome.forward(point, {center.x, center.y - child->size}));
-                    d_bottom = std::fabs(child->weight - _genome.forward(point, {center.x, center.y + child->size}));
+                    d_left   = std::fabs(child->weight - calculate_weight(point, {center.x - child->size, center.y}));
+                    d_right  = std::fabs(child->weight - calculate_weight(point, {center.x + child->size, center.y}));
+                    d_top    = std::fabs(child->weight - calculate_weight(point, {center.x, center.y - child->size}));
+                    d_bottom = std::fabs(child->weight - calculate_weight(point, {center.x, center.y + child->size}));
                 }
                 else {
-                    d_left   = std::fabs(child->weight - _genome.forward({center.x - child->size, center.y}, point));
-                    d_right  = std::fabs(child->weight - _genome.forward({center.x + child->size, center.y}, point));
-                    d_top    = std::fabs(child->weight - _genome.forward({center.x, center.y - child->size}, point));
-                    d_bottom = std::fabs(child->weight - _genome.forward({center.x, center.y + child->size}, point));
+                    d_left   = std::fabs(child->weight - calculate_weight({center.x - child->size, center.y}, point));
+                    d_right  = std::fabs(child->weight - calculate_weight({center.x + child->size, center.y}, point));
+                    d_top    = std::fabs(child->weight - calculate_weight({center.x, center.y - child->size}, point));
+                    d_bottom = std::fabs(child->weight - calculate_weight({center.x, center.y + child->size}, point));
                 }
                 double band = std::max(std::min(d_top, d_bottom), std::min(d_left, d_right));
                 if(band > _params.band_threshold) {
                     if(_pointset.count(center) == 0) {
                         _pointset[center] = _node_count;
-                        _nodes[_node_count] = {_genome.forward(center, center), NodeType::Hidden, _params.hidden_activation};
+                        _nodes[_node_count] = {calculate_weight(center, center), NodeType::Hidden, _params.hidden_activation};
                         _node_count++;
                     }
 
@@ -220,7 +231,8 @@ namespace chess::neural {
         std::vector<Edge> invalid_edges;
         for(auto &e : _edges) {
             if(_nodes.count(e.first.from) == 0 || 
-               _nodes.count(e.first.to) == 0) {
+               _nodes.count(e.first.to) == 0   ||
+               e.second == 0.0) {
                 invalid_edges.push_back(e.first);
             }
         }
@@ -248,7 +260,7 @@ namespace chess::neural {
                 for(auto &output : _outputs) {
                     int i = _pointset[input];
                     int j = _pointset[output];
-                    _edges[{i, j}] = _genome.forward(input, output) * _params.weight_range;
+                    _edges[{i, j}] = calculate_weight(input, output) * _params.weight_range;
                 }
             }
         }
