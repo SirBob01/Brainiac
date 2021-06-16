@@ -19,7 +19,6 @@ namespace chess::neural {
     Brain::Brain(std::string filename) {
         std::ifstream infile;
         infile.open(filename, std::ios::binary | std::ios::in);
-        infile.read(reinterpret_cast<char *>(&_params), sizeof(NEATParameters));
         infile.read(reinterpret_cast<char *>(&_generations), sizeof(int));
 
         int specie_count;
@@ -323,7 +322,6 @@ namespace chess::neural {
     void Brain::save(std::string filename) {
         std::ofstream outfile;
         outfile.open(filename, std::ios::binary | std::ios::out);
-        outfile.write(reinterpret_cast<char *>(&_params), sizeof(NEATParameters));
         outfile.write(reinterpret_cast<char *>(&_generations), sizeof(int));
 
         int specie_count = _species.size();
