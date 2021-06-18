@@ -12,11 +12,6 @@
 #include "phenome.h"
 
 namespace chess::neural {
-    /**
-     * Test if a adding a new edge will create a cycle in the graph
-     */
-    bool creates_cycle(std::unordered_map<Edge, EdgeGene, EdgeHash> edges, Edge new_edge);
-
     class Brain {
         std::vector<Specie *> _species;
         std::vector<Phenome *> _phenomes;
