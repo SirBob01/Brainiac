@@ -64,7 +64,9 @@ namespace chess::neural {
         
         _nodes = genome._nodes;
         _edges = genome._edges;
+
         _adjacency = genome._adjacency;
+        _sorted = genome._sorted;
     }
 
     Genome &Genome::operator=(const Genome &genome) {
@@ -76,8 +78,23 @@ namespace chess::neural {
         
         _nodes = genome._nodes;
         _edges = genome._edges;
+        
         _adjacency = genome._adjacency;
+        _sorted = genome._sorted;
         return *this;
+    }
+    
+    void Genome::topological_sort(int node, std::unordered_set<int> &visited) {
+        if(visited.count(node)) {
+            return;
+        }
+        
+        for(int &adj : _adjacency[node]) {
+            topological_sort(adj, visited);
+        }
+
+        visited.insert(node);
+        _sorted.push_back(node);
     }
 
     void Genome::update_structure() {
@@ -86,9 +103,15 @@ namespace chess::neural {
         _adjacency.resize(_nodes.size());
         for(auto &p : _edges) {
             Edge e = p.first;
-            if(p.second.enabled) {
-                _adjacency[e.to].push_back(e.from);
-            }
+            _adjacency[e.to].push_back(e.from);
+        }
+
+        // Update the topological sort of the nodes
+        int n = _nodes.size();
+        _sorted.clear();
+        std::unordered_set<int> visited;
+        for(int i = 0; i < n; i++) {
+            topological_sort(i, visited);
         }
     }
 
@@ -110,28 +133,25 @@ namespace chess::neural {
         return true;
     }
 
-    bool Genome::enable_edge(Edge edge) {
-        if(_edges[edge].enabled) {
-            return false;
-        }
-        _edges[edge].enabled = true;
-        return true;
+    void Genome::toggle_enable(Edge edge) {
+        _edges[edge].enabled = !_edges[edge].enabled;
     }
-
-    bool Genome::disable_edge(Edge edge) {
+    
+    bool Genome::shift_weight(Edge edge) {
         if(!_edges[edge].enabled) {
             return false;
         }
-        _edges[edge].enabled = false;
+        _edges[edge].weight += random() * 2.0 - 1.0;
         return true;
     }
-    
-    void Genome::shift_weight(Edge edge) {
-        _edges[edge].weight += random() * 2.0 - 1.0;
-    }
 
-    void Genome::reset_weight(Edge edge) {
+    bool Genome::reset_weight(Edge edge) {
+        if(!_edges[edge].enabled) {
+            return false;
+        }
+
         _edges[edge].weight = random() * 2.0 - 1.0;
+        return true;
     }
 
     void Genome::shift_bias(int node) {
@@ -147,61 +167,26 @@ namespace chess::neural {
         _nodes[node].function = random_it->second;
     }
 
-    bool Genome::active_output() {
-        bool active = true;
-        for(int i = _inputs; i < _inputs + _outputs; i++) {
-            active = active && _nodes[i].active;
-        }
-        return active;
-    }
-
     double Genome::forward(Point p0, Point p1) {
-        // Map the 3D points to the input vector
-        for(int i = 0; i < _inputs; i++) {
-            _nodes[i].active = true;
-        }
+        // Map the 2D points to the input vector
         _nodes[0].activation = p0.x;
         _nodes[1].activation = p0.y;
         _nodes[2].activation = p1.x;
         _nodes[3].activation = p1.y;
 
-        // Forward propagation (adapted from the original NEAT implementation)
-        int n = _nodes.size();
-        int abort_count = 0;
-        while(!active_output()) {
-            if(abort_count++ >= 20) {
-                break;
-            }
-            for(int i = 0; i < n; i++) {
-                NodeGene &node = _nodes[i];
-                if(node.type != NodeType::Input) {
-                    node.sum = 0;
-                    for(auto &j : _adjacency[i]) {
-                        NodeGene &incoming = _nodes[j];
-                        if(incoming.active) {
-                            node.sum += _edges[{j, i}].weight * incoming.activation;
-                            node.active = true;
-                        }
-                    }
+        // Forward propagation
+        for(int i = _inputs; i < _sorted.size(); i++) {
+            int to = _sorted[i];
+            double sum = 0.0;
+            for(int from : _adjacency[to]) {
+                EdgeGene gene = _edges[{from, to}];
+                if(gene.enabled) {
+                    sum += gene.weight * _nodes[from].activation;
                 }
             }
-            for(int i = 0; i < n; i++) {
-                NodeGene &node = _nodes[i];
-                if(node.type != NodeType::Input && node.active) {
-                    node.activation = node.function(node.sum + node.bias);
-                }
-            }
+            _nodes[to].activation = _nodes[to].function(sum + _nodes[to].bias);
         }
-        double result = _nodes[_inputs].activation;
-        
-        // Deactivate the nodes
-        for(int i = 0; i < n; i++) {
-            NodeGene &node = _nodes[i];
-            node.sum = 0;
-            node.activation = 0;
-            node.active = false;
-        }
-        return result;
+        return _nodes[_inputs].activation;
     }
 
     void Genome::mutate() {
@@ -213,13 +198,13 @@ namespace chess::neural {
             double cum_prob = 0;
             if(r <= cum_prob + _params.m_weight_shift) {
                 auto random_edge = std::next(std::begin(_edges), randrange(0, _edges.size()));
-                shift_weight(random_edge->first);
+                error = !shift_weight(random_edge->first);
             }
             cum_prob += _params.m_weight_shift;
             
             if(r > cum_prob && r <= cum_prob + _params.m_weight_change) {
                 auto random_edge = std::next(std::begin(_edges), randrange(0, _edges.size()));
-                reset_weight(random_edge->first);
+                error = !reset_weight(random_edge->first);
             }
             cum_prob += _params.m_weight_change;
 
@@ -245,38 +230,19 @@ namespace chess::neural {
                 // Generate random nodes (i, j) such that:
                 // 1. i is not an output
                 // 2. j is not an input
-                // 3. i != j
+                // 3. i < j in the topological sort
                 int n = _nodes.size();
-                std::vector<int> incoming;
-                std::vector<int> remaining;
-                for(int k = 0; k < n; k++) {
-                    if(!is_output(k)) {
-                        incoming.push_back(k);
-                    }
-                }
-                int i = incoming[randrange(0, incoming.size())];
-
-                for(int k = 0; k < n; k++) {
-                    if(!is_input(k) && k != i) {
-                        remaining.push_back(k);
-                    }
-                }
-                int j = remaining[randrange(0, remaining.size())];
-                error = !add_edge({i, j});
+                int i = randrange(0, n-_outputs);
+                int j = randrange(std::max(_inputs, i+1), n);
+                error = !add_edge({_sorted[i], _sorted[j]});
             }
             cum_prob += _params.m_edge;
-            
-            if(r > cum_prob && r <= cum_prob + _params.m_disable) {
-                auto random_edge = std::next(std::begin(_edges), randrange(0, _edges.size()));
-                error = !disable_edge(random_edge->first);
-            }
-            cum_prob += _params.m_disable;
 
-            if(r > cum_prob && r <= cum_prob + _params.m_enable) {
+            if(r > cum_prob && r <= cum_prob + _params.m_toggle_enable) {
                 auto random_edge = std::next(std::begin(_edges), randrange(0, _edges.size()));
-                error = !enable_edge(random_edge->first);
+                toggle_enable(random_edge->first);
             }
-            cum_prob += _params.m_enable;
+            cum_prob += _params.m_toggle_enable;
 
             if(r > cum_prob && r <= cum_prob + _params.m_activation) {
                 int random_node = randrange(_inputs + _outputs, _nodes.size());
@@ -288,6 +254,7 @@ namespace chess::neural {
                 }
             }
             cum_prob += _params.m_activation;
+            assert(cum_prob == 1);
         } while(error);
 
         update_structure();
