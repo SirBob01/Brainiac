@@ -37,12 +37,9 @@ namespace chess::neural {
 
     struct NodeGene {
         double bias;
-        NodeType type;
         activation_t function;
-
+        
         double activation = 0;
-        double sum = 0;
-        bool active = false;
     };
 
     class Genome {

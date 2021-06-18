@@ -22,10 +22,10 @@ namespace chess::neural {
         // Weights are random and biases are zero-initialized
         for(int i = 0; i < _inputs; i++) {
             auto random_it = std::next(std::begin(activations), randrange(0, activations.size()));
-            _nodes.push_back({0, NodeType::Input, random_it->second});
+            _nodes.push_back({0, random_it->second});
         }
         for(int i = 0; i < _outputs; i++) {
-            _nodes.push_back({0, NodeType::Output, tanh});
+            _nodes.push_back({0, tanh});
         }
         
         // Connect all inputs to all outputs
@@ -122,7 +122,7 @@ namespace chess::neural {
         _edges[{new_node, edge.to}] = {_edges[edge].weight, true};
 
         auto random_it = std::next(std::begin(activations), randrange(0, activations.size()));
-        _nodes.push_back({0, NodeType::Hidden, random_it->second});
+        _nodes.push_back({0, random_it->second});
     }
 
     bool Genome::add_edge(Edge edge) {
