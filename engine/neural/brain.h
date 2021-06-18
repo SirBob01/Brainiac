@@ -1,6 +1,7 @@
 #ifndef CHESS_NEURAL_BRAIN_H_
 #define CHESS_NEURAL_BRAIN_H_
 
+#include <algorithm>
 #include <vector>
 #include <fstream>
 #include <cstring>
@@ -11,6 +12,11 @@
 #include "phenome.h"
 
 namespace chess::neural {
+    /**
+     * Test if a adding a new edge will create a cycle in the graph
+     */
+    bool creates_cycle(std::unordered_map<Edge, EdgeGene, EdgeHash> edges, Edge new_edge);
+
     class Brain {
         std::vector<Specie *> _species;
         std::vector<Phenome *> _phenomes;
@@ -18,6 +24,9 @@ namespace chess::neural {
         std::vector<Point> _inputs;
         std::vector<Point> _outputs;
         NEATParameters _params;
+
+        std::vector<Genome *> _elites;
+        Genome *_global_best;
 
         int _generations;
 
@@ -42,6 +51,21 @@ namespace chess::neural {
          */
         void generate_phenomes();
 
+        /**
+         * Eliminate the worst in the population
+         */
+        void cull();
+
+        /**
+         * Randomly breed new genomes via mutation or crossover
+         */
+        void repopulate();
+
+        /**
+         * Randomly select a specie whose likelihoods depend on adjusted fitness sum
+         */
+        Specie *sample_specie();
+
     public:
         Brain(std::vector<Point> inputs, std::vector<Point> outputs, NEATParameters params);
         Brain(std::string filename);
@@ -65,7 +89,7 @@ namespace chess::neural {
         /**
          * Get the fittest phenome of the current generation
          */
-        Phenome &get_fittest();
+        Phenome get_fittest();
 
         /**
          * Save the current population to disk

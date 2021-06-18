@@ -46,7 +46,7 @@ namespace chess::neural {
         double c1 = 2.0;
         double c2 = 1.0;
 
-        int target_species = 10;
+        int target_species = 8;
         double distance_threshold = 1.0;
         double distance_threshold_delta = 0.1;
 

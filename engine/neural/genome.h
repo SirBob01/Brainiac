@@ -55,6 +55,7 @@ namespace chess::neural {
         int _outputs;
         
         double _fitness;
+        double _adjusted_fitness;
         
         /**
          * Topologically sort the nodes for feed-forward evaluation
@@ -169,6 +170,16 @@ namespace chess::neural {
          * Set the fitness score of this genome
          */
         void set_fitness(double fitness);
+
+        /**
+         * Get the adjusted fitness score of this genome
+         */
+        double get_adjusted_fitness();
+
+        /**
+         * Set the adjusted fitness score of this genome
+         */
+        void set_adjusted_fitness(double fitness);
     };
 }
 
