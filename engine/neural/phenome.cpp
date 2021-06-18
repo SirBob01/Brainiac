@@ -279,7 +279,7 @@ namespace chess::neural {
         assert(input.size() == _inputs.size());
         int idx = 0;
         for(auto &point : _inputs) {
-            NodeGene &node = _nodes[_pointset[point]];
+            NodePhenotype &node = _nodes[_pointset[point]];
             node.activation = input[idx++];
             node.active = true;
         }
@@ -292,11 +292,11 @@ namespace chess::neural {
             }
             for(auto &n : _nodes) {
                 int i = n.first;
-                NodeGene &node = n.second;
+                NodePhenotype &node = n.second;
                 if(node.type != NodeType::Input) {
                     node.sum = 0;
                     for(auto &j : _adjacency[i]) {
-                        NodeGene &incoming = _nodes[j];
+                        NodePhenotype &incoming = _nodes[j];
                         if(incoming.active) {
                             node.sum += _edges[{j, i}] * incoming.activation;
                             node.active = true;
