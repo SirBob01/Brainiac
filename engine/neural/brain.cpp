@@ -1,32 +1,6 @@
 #include "brain.h"
 
 namespace chess::neural {
-    bool creates_cycle(std::unordered_map<Edge, EdgeGene, EdgeHash> edges, Edge new_edge) {
-        std::unordered_map<int, std::vector<int>> adjacency;
-        for(auto &e : edges) {
-            adjacency[e.first.from].push_back(e.first.to);
-        }
-
-        // Given edge (u, v), use BFS to find a path from v to u
-        std::queue<int> q;
-        std::unordered_set<int> visited;
-        q.push(new_edge.to);
-        while(q.size()) {
-            int current = q.front();
-            q.pop();
-            if(current == new_edge.from) {
-                return true;
-            }
-            for(auto &adj : adjacency[current]) {
-                if(visited.count(adj) == 0) {
-                    q.push(adj);
-                    visited.insert(adj);
-                }
-            }
-        }
-        return false;
-    }
-
     Brain::Brain(std::vector<Point> inputs, std::vector<Point> outputs, NEATParameters params) {
         _inputs = inputs;
         _outputs = outputs;
@@ -188,16 +162,12 @@ namespace chess::neural {
         // Inherit disjoint genes from fitter parent
         if(a.get_fitness() > b.get_fitness()) {
             for(auto &edge : a_disjoint) {
-                if(!creates_cycle(child_edges, edge)) {
-                    child_edges[edge] = a_edges[edge];
-                }
+                child_edges[edge] = a_edges[edge];
             }
         }
         else {
             for(auto &edge : b_disjoint) {
-                if(!creates_cycle(child_edges, edge)) {
-                    child_edges[edge] = b_edges[edge];
-                }
+                child_edges[edge] = b_edges[edge];
             }
         }
 
