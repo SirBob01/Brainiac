@@ -1,6 +1,32 @@
 #include "brain.h"
 
 namespace chess::neural {
+    bool creates_cycle(std::unordered_map<Edge, EdgeGene, EdgeHash> edges, Edge new_edge) {
+        std::unordered_map<int, std::vector<int>> adjacency;
+        for(auto &e : edges) {
+            adjacency[e.first.from].push_back(e.first.to);
+        }
+
+        // Given edge (u, v), use BFS to find a path from v to u
+        std::queue<int> q;
+        std::unordered_set<int> visited;
+        q.push(new_edge.to);
+        while(q.size()) {
+            int current = q.front();
+            q.pop();
+            if(current == new_edge.from) {
+                return true;
+            }
+            for(auto &adj : adjacency[current]) {
+                if(visited.count(adj) == 0) {
+                    q.push(adj);
+                    visited.insert(adj);
+                }
+            }
+        }
+        return false;
+    }
+
     Brain::Brain(std::vector<Point> inputs, std::vector<Point> outputs, NEATParameters params) {
         _inputs = inputs;
         _outputs = outputs;
@@ -14,6 +40,7 @@ namespace chess::neural {
             add_genome(g);
         }
         generate_phenomes();
+        _global_best = new Genome(*(_species[0]->sample()));
     }
 
     Brain::Brain(std::string filename) {
@@ -36,10 +63,8 @@ namespace chess::neural {
                 for(int k = 0; k < edge_count; k++) {
                     Edge edge;
                     EdgeGene gene;
-                    infile.read(reinterpret_cast<char *>(&edge.from), sizeof(int));
-                    infile.read(reinterpret_cast<char *>(&edge.to), sizeof(int));
-                    infile.read(reinterpret_cast<char *>(&gene.weight), sizeof(double));
-                    infile.read(reinterpret_cast<char *>(&gene.enabled), sizeof(bool));
+                    infile.read(reinterpret_cast<char *>(&edge), sizeof(Edge));
+                    infile.read(reinterpret_cast<char *>(&gene), sizeof(EdgeGene));
                     edges[edge] = gene;
                 }
 
@@ -49,7 +74,6 @@ namespace chess::neural {
                 for(int k = 0; k < node_count; k++) {
                     NodeGene n;
                     infile.read(reinterpret_cast<char *>(&n.bias), sizeof(double));
-                    infile.read(reinterpret_cast<char *>(&n.type), sizeof(NodeType));
 
                     // Read the function string
                     int len;
@@ -79,9 +103,13 @@ namespace chess::neural {
             }
             delete specie;
         }
+        for(auto &elite : _elites) {
+            delete elite;
+        }
         for(auto &phenome : _phenomes) {
             delete phenome;
         }
+        delete _global_best;
     }
 
     double Brain::distance(Genome &a, Genome &b) {
@@ -128,10 +156,11 @@ namespace chess::neural {
 
         // Calculate disjoint and matching edges
         std::vector<Edge> matching;
-        std::vector<Edge> disjoint;
+        std::vector<Edge> a_disjoint;
+        std::vector<Edge> b_disjoint;
         for(auto &e : b_edges) {
             if(a_edges.count(e.first) == 0) {
-                disjoint.push_back(e.first);
+                b_disjoint.push_back(e.first);
             }
             else {
                 matching.push_back(e.first);
@@ -139,7 +168,7 @@ namespace chess::neural {
         }
         for(auto &e : a_edges) {
             if(b_edges.count(e.first) == 0) {
-                disjoint.push_back(e.first);
+                a_disjoint.push_back(e.first);
             }
         }
 
@@ -156,25 +185,23 @@ namespace chess::neural {
             }
         }
 
-        // Inherit disjoint genes from fitter parent (or random if they're equally fit)
-        for(auto &edge : disjoint) {
-            if(a.get_fitness() > b.get_fitness()) {
-                child_edges[edge] = a_edges[edge];
-            }
-            else if(a.get_fitness() < b.get_fitness()) {
-                child_edges[edge] = b_edges[edge];
-            }
-            else {
-                if(random() < 0.5) {
+        // Inherit disjoint genes from fitter parent
+        if(a.get_fitness() > b.get_fitness()) {
+            for(auto &edge : a_disjoint) {
+                if(!creates_cycle(child_edges, edge)) {
                     child_edges[edge] = a_edges[edge];
                 }
-                else {
+            }
+        }
+        else {
+            for(auto &edge : b_disjoint) {
+                if(!creates_cycle(child_edges, edge)) {
                     child_edges[edge] = b_edges[edge];
                 }
             }
         }
 
-        // Inherit nodes from fitter parent (or random if they're equally fit)
+        // Inherit nodes from fitter parent
         int max_node = 0;
         for(auto &e : child_edges) {
             max_node = std::max(max_node, e.first.from);
@@ -182,38 +209,10 @@ namespace chess::neural {
         }
         for(int n = 0; n <= max_node; n++) {
             if(a.get_fitness() > b.get_fitness()) {
-                if(n < a_nodes.size()) {
-                    child_nodes.push_back(a_nodes[n]);
-                }
-                else {
-                    child_nodes.push_back(b_nodes[n]);
-                }
-            }
-            else if(a.get_fitness() < b.get_fitness()) {
-                if(n < b_nodes.size()) {
-                    child_nodes.push_back(b_nodes[n]);
-                }
-                else {
-                    child_nodes.push_back(a_nodes[n]);
-                }
+                child_nodes.push_back(a_nodes[n]);
             }
             else {
-                if(random() < 0.5) {
-                    if(n < a_nodes.size()) {
-                        child_nodes.push_back(a_nodes[n]);
-                    }
-                    else {
-                        child_nodes.push_back(b_nodes[n]);
-                    }
-                }
-                else {
-                    if(n < b_nodes.size()) {
-                        child_nodes.push_back(b_nodes[n]);
-                    }
-                    else {
-                        child_nodes.push_back(a_nodes[n]);
-                    }
-                }
+                child_nodes.push_back(b_nodes[n]);
             }
         }
 
@@ -235,6 +234,9 @@ namespace chess::neural {
     }
 
     void Brain::generate_phenomes() {
+        for(auto &phenome : _phenomes) {
+            delete phenome;
+        }
         _phenomes.clear();
         for(auto &s : _species) {
             for(auto &genome : s->get_members()) {
@@ -242,34 +244,77 @@ namespace chess::neural {
             }            
         }
     }
-
-    std::vector<Phenome *> &Brain::get_phenomes() {
-        return _phenomes;
-    }
-
-    void Brain::evolve() {
-        // Cull
-        std::vector<Genome *> survivors;
-        for(auto &phenome : _phenomes) {
-            delete phenome;
+    
+    void Brain::cull() {
+        std::vector<Specie *> survivors;
+        for(auto &elite : _elites) {
+            delete elite;
         }
+        _elites.clear();
         for(auto &specie : _species) {
-            specie->cull();
+            // Update top genomes before culling
+            _elites.push_back(new Genome(*(specie->get_best())));
             for(auto &genome : specie->get_members()) {
-                survivors.push_back(genome);
+                if(genome->get_fitness() > _global_best->get_fitness()) {
+                    delete _global_best;
+                    _global_best = new Genome(*genome);
+                }
             }
-            delete specie;
-        }
-        _species.clear();
 
-        // Repopulate
-        while(survivors.size() < _params.population) {
+            // Delete stagnant species
+            if(specie->can_progress()) {
+                specie->adjust_fitness();
+                specie->cull();
+                survivors.push_back(specie);
+            }
+            else {
+                delete specie;
+            }
+        }
+        _species = survivors;
+    }
+    
+    void Brain::repopulate() {
+        int size = 0;
+        for(auto &specie : _species) {
+            size += (specie->get_members()).size();
+        }
+        if(!_species.size()) {
+            // No specie survived; reset the population
+            for(int i = 0; i < _params.population; i++) {
+                double r = random();
+                Genome *genome;
+                if(r < 0.5) {
+                    genome = new Genome(*_global_best);
+                    genome->mutate();
+                }
+                else if(r < 0.75 && _elites.size() >= 2) {
+                    Genome *mom = _elites[randrange(0, _elites.size())];
+                    Genome *dad = _elites[randrange(0, _elites.size())];
+                    if(mom == dad) {
+                        genome = new Genome(*mom);
+                        genome->mutate();
+                    }
+                    else {
+                        genome = crossover(*mom, *dad);
+                    }
+                }
+                else {
+                    genome = new Genome(_params.genome_params);
+                }
+                add_genome(genome);
+            }
+            return;
+        }
+        while(size < _params.population) {
             double r = random();
             double cum_prob = 0;
             Genome *child = nullptr;
+            Specie *specie = sample_specie(); 
+
             if(r < _params.crossover_probability) {
-                Genome *mom = survivors[randrange(0, survivors.size())]; 
-                Genome *dad = survivors[randrange(0, survivors.size())];
+                Genome *mom = specie->sample();
+                Genome *dad = specie->sample();
                 if(mom == dad) {
                     child = new Genome(*mom);
                     child->mutate();
@@ -281,27 +326,64 @@ namespace chess::neural {
             cum_prob += _params.crossover_probability;
 
             if(r >= cum_prob && r < cum_prob + _params.mutation_probability) {
-                Genome *parent = survivors[randrange(0, survivors.size())]; 
+                Genome *parent = specie->sample();
                 child = new Genome(*parent);
                 child->mutate();
             }
             cum_prob += _params.mutation_probability;
 
             if(r >= cum_prob && r < cum_prob + _params.clone_probability) {
-                Genome *parent = survivors[randrange(0, survivors.size())]; 
+                Genome *parent = specie->sample();
                 child = new Genome(*parent);
             }
             cum_prob += _params.clone_probability;
             assert(cum_prob == 1.0);
-            survivors.push_back(child);
+            add_genome(child);
+            size++;
+        }
+    }
+
+    Specie *Brain::sample_specie() {
+        double r = random();
+        double total = 0;
+        for(auto &specie : _species) {
+            total += specie->get_fitness_sum();
         }
 
-        // Speciate
-        for(int i = 0; i < survivors.size(); i++) {
-            Genome *g = survivors[i];
-            add_genome(g);
+        // Species with a higher adjusted fitness sum are more likely to be picked
+        double cum_prob = 0;
+        int i = 0;
+        for(auto &specie : _species) {
+            double prob = specie->get_fitness_sum() / total;
+            i++;
+            if(r >= cum_prob && r < cum_prob + prob) {
+                return specie;
+                break;
+            }
+            cum_prob += prob;
         }
+        return nullptr;
+    }
+
+    std::vector<Phenome *> &Brain::get_phenomes() {
+        return _phenomes;
+    }
+
+    void Brain::evolve() {
+        cull();
+        repopulate();
         generate_phenomes();
+
+        // Dynamically update the distance threshold
+        if(_species.size() < _params.target_species) {
+            _params.distance_threshold -= _params.distance_threshold_delta;
+        }
+        else if(_species.size() > _params.target_species){
+            _params.distance_threshold += _params.distance_threshold_delta;
+        }
+        if(_params.distance_threshold < _params.distance_threshold_delta) {
+            _params.distance_threshold = _params.distance_threshold_delta;
+        }
         _generations++;
     }
 
@@ -309,14 +391,8 @@ namespace chess::neural {
         return _generations;
     }
 
-    Phenome &Brain::get_fittest() {
-        Phenome &current_best = *_phenomes[0];
-        for(auto &phenome : _phenomes) {
-            if(phenome->get_fitness() > current_best.get_fitness()) {
-                current_best = *phenome;
-            }
-        }
-        return current_best;
+    Phenome Brain::get_fittest() {
+        return Phenome(*_global_best, _inputs, _outputs, _params.phenome_params);
     }
 
     void Brain::save(std::string filename) {
@@ -339,10 +415,8 @@ namespace chess::neural {
                 for(auto &e : edges) {
                     Edge edge = e.first;
                     EdgeGene gene = e.second;
-                    outfile.write(reinterpret_cast<char *>(&edge.from), sizeof(int));
-                    outfile.write(reinterpret_cast<char *>(&edge.to), sizeof(int));
-                    outfile.write(reinterpret_cast<char *>(&gene.weight), sizeof(double));
-                    outfile.write(reinterpret_cast<char *>(&gene.enabled), sizeof(bool));
+                    outfile.write(reinterpret_cast<char *>(&edge), sizeof(Edge));
+                    outfile.write(reinterpret_cast<char *>(&gene), sizeof(EdgeGene));
                 }
 
                 // Save the nodes
@@ -357,8 +431,7 @@ namespace chess::neural {
                         }
                     }
                     outfile.write(reinterpret_cast<char *>(&n.bias), sizeof(double));
-                    outfile.write(reinterpret_cast<char *>(&n.type), sizeof(NodeType));
-
+                    
                     // Save function string
                     int len = function.length();
                     outfile.write(reinterpret_cast<char *>(&len), sizeof(int));

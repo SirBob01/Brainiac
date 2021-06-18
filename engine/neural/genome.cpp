@@ -17,6 +17,7 @@ namespace chess::neural {
 
         _params = params;
         _fitness = 0.0;
+        _adjusted_fitness = 0.0;
 
         // Initialize the CPPN with minimal topology
         // Weights are random and biases are zero-initialized
@@ -47,6 +48,7 @@ namespace chess::neural {
 
         _params = params;
         _fitness = 0.0;
+        _adjusted_fitness = 0.0;
 
         _nodes = nodes;
         _edges = edges;
@@ -61,6 +63,7 @@ namespace chess::neural {
         
         _params = genome._params;
         _fitness = genome._fitness;
+        _adjusted_fitness = genome._adjusted_fitness;
         
         _nodes = genome._nodes;
         _edges = genome._edges;
@@ -75,6 +78,7 @@ namespace chess::neural {
         
         _params = genome._params;
         _fitness = genome._fitness;
+        _adjusted_fitness = genome._adjusted_fitness;
         
         _nodes = genome._nodes;
         _edges = genome._edges;
@@ -274,5 +278,13 @@ namespace chess::neural {
 
     void Genome::set_fitness(double fitness) {
         _fitness = fitness;
+    }
+    
+    double Genome::get_adjusted_fitness() {
+        return _adjusted_fitness;
+    }
+
+    void Genome::set_adjusted_fitness(double fitness) {
+        _adjusted_fitness = fitness;
     }
 }
