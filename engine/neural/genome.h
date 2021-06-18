@@ -50,6 +50,7 @@ namespace chess::neural {
         std::vector<NodeGene> _nodes;
 
         std::vector<std::vector<int>> _adjacency;
+        std::vector<int> _sorted;
 
         GenomeParameters _params;
 
@@ -57,6 +58,11 @@ namespace chess::neural {
         int _outputs;
         
         double _fitness;
+        
+        /**
+         * Topologically sort the nodes for feed-forward evaluation
+         */
+        void topological_sort(int node, std::unordered_set<int> &visited);
         
         /**
          * Update the internal graph structure of the neural network for evaluation
@@ -75,24 +81,19 @@ namespace chess::neural {
         bool add_edge(Edge edge);
 
         /**
-         * Enable an edge
+         * Toggle the enable flag of an edge
          */
-        bool enable_edge(Edge edge);
-
-        /**
-         * Disable an edge
-         */
-        bool disable_edge(Edge edge);
+        void toggle_enable(Edge edge);
 
         /**
          * Shift the weight of an edge
          */
-        void shift_weight(Edge edge);
+        bool shift_weight(Edge edge);
 
         /**
          * Set the weight of an edge to a new random value
          */
-        void reset_weight(Edge edge);
+        bool reset_weight(Edge edge);
         
         /**
          * Shift the bias of a node
@@ -123,11 +124,6 @@ namespace chess::neural {
             return node >= _inputs && node < _inputs + _outputs;
         }
         
-        /**
-         * Check if all the output nodes are active
-         */
-        bool active_output();
-
     public:
         /**
          * A genome represents the Compositional Pattern-Producing Network (CPPN)
