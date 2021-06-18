@@ -141,7 +141,7 @@ namespace chess::neural {
         if(!_edges[edge].enabled) {
             return false;
         }
-        _edges[edge].weight += random() * 2.0 - 1.0;
+        _edges[edge].weight += (1.0 - random()) * _params.mutation_power - _params.mutation_power/2;
         return true;
     }
 
@@ -155,7 +155,7 @@ namespace chess::neural {
     }
 
     void Genome::shift_bias(int node) {
-        _nodes[node].bias += random() * 2.0 - 1.0;
+        _nodes[node].bias += (1.0 - random()) * _params.mutation_power - _params.mutation_power/2;
     }
 
     void Genome::reset_bias(int node) {
