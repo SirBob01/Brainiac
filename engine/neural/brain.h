@@ -73,7 +73,7 @@ namespace chess::neural {
 
     public:
         Brain(std::vector<Point> inputs, std::vector<Point> outputs, NEATParameters params);
-        Brain(std::string filename);
+        Brain(std::string filename, NEATParameters params);
         ~Brain();
 
         /**
