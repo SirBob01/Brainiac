@@ -12,5 +12,10 @@ add_library(Brainiac ${SOURCES} ${INCLUDE})
 
 add_executable(main "../main.cpp")
 
-# Compile on Linux systems
-target_link_libraries(main Brainiac)
+if(UNIX OR MSVC)
+    target_link_libraries(main pthread Brainiac)
+endif()
+
+if(WIN32) 
+    target_link_libraries(main Brainiac)
+endif()
