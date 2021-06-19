@@ -61,6 +61,16 @@ namespace chess::neural {
          */
         Specie *sample_specie();
 
+        /**
+         * Read a genome from an input filestream
+         */
+        Genome *read_genome(std::ifstream &infile);
+
+        /**
+         * Write a genome to an output filestream
+         */
+        void write_genome(std::ofstream &outfile, Genome *genome);
+
     public:
         Brain(std::vector<Point> inputs, std::vector<Point> outputs, NEATParameters params);
         Brain(std::string filename);
