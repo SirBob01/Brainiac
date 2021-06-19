@@ -19,9 +19,9 @@ namespace chess::neural {
 
     struct PhenomeParameters {
         double variance_threshold = 0.03;
-        double division_threshold = 0.03;
+        double division_threshold = 0.2;
         double band_threshold     = 0.1;
-        double weight_range       = 3.0;
+        double weight_range       = 3.5;
         double weight_cutoff      = 0.1;
         int initial_depth         = 2;
         int maximum_depth         = 3;
