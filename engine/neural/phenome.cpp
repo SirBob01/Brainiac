@@ -66,13 +66,19 @@ namespace chess::neural {
 
         // Combine the connection collections
         for(auto &c : conn1) {
-            _edges[c.first] = c.second;
+            if(!creates_cycle(c.first)) {
+                _edges[c.first] = c.second;
+            }
         }
         for(auto &c : conn2) {
-            _edges[c.first] = c.second;
+            if(!creates_cycle(c.first)) {
+                _edges[c.first] = c.second;
+            }
         }
         for(auto &c : conn3) {
-            _edges[c.first] = c.second;
+            if(!creates_cycle(c.first)) {
+                _edges[c.first] = c.second;
+            }
         }
         update_structure();
     }
@@ -91,6 +97,32 @@ namespace chess::neural {
 
         _adjacency = rhs._adjacency;
         return *this;
+    }
+
+    bool Phenome::creates_cycle(Edge edge) {
+        std::unordered_map<int, std::vector<int>> adjacency;
+        for(auto &e : _edges) {
+            adjacency[e.first.from].push_back(e.first.to);
+        }
+
+        // Given edge (u, v), use BFS to find a path from v to u
+        std::queue<int> q;
+        std::unordered_set<int> visited;
+        q.push(edge.to);
+        while(q.size()) {
+            int current = q.front();
+            q.pop();
+            if(current == edge.from) {
+                return true;
+            }
+            for(auto &adj : adjacency[current]) {
+                if(visited.count(adj) == 0) {
+                    q.push(adj);
+                    visited.insert(adj);
+                }
+            }
+        }
+        return false;
     }
 
     double Phenome::calculate_weight(Point p0, Point p1) {
@@ -250,6 +282,19 @@ namespace chess::neural {
         }
     }
 
+    void Phenome::topological_sort(int node, std::unordered_set<int> &visited) {
+        if(visited.count(node)) {
+            return;
+        }
+        
+        for(int &adj : _adjacency[node]) {
+            topological_sort(adj, visited);
+        }
+
+        visited.insert(node);
+        _sorted.push_back(node);
+    }
+
     void Phenome::update_structure() {
         generate_adjacency();
         cleanup();
@@ -265,14 +310,21 @@ namespace chess::neural {
             }
         }
         generate_adjacency();
-    }
-    
-    bool Phenome::active_output() {
-        bool active = true;
-        for(auto &output : _outputs) {
-            active = active && _nodes[_pointset[output]].active;
+
+        // Update the topological sort of the nodes
+        _sorted.clear();
+        std::unordered_set<int> visited;
+        
+        // Sort inputs first
+        for(auto &input : _inputs) {
+            topological_sort(_pointset[input], visited);
         }
-        return active;
+        // Sort all other nodes
+        for(auto &n : _adjacency) {
+            if(_nodes[n.first].type != NodeType::Input) {
+                topological_sort(n.first, visited);
+            }
+        }
     }
 
     std::vector<double> Phenome::forward(std::vector<double> input) {
@@ -281,35 +333,16 @@ namespace chess::neural {
         for(auto &point : _inputs) {
             NodePhenotype &node = _nodes[_pointset[point]];
             node.activation = input[idx++];
-            node.active = true;
         }
 
-        // Forward propagation (adapted from the original NEAT implementation)
-        int abort_count = 0;
-        while(!active_output()) {
-            if(abort_count++ >= 20) {
-                break;
+        // Forward propagation
+        for(int i = _inputs.size(); i < _sorted.size(); i++) {
+            int to = _sorted[i];
+            double sum = 0.0;
+            for(int from : _adjacency[to]) {
+                sum += _edges[{from, to}] * _nodes[from].activation;
             }
-            for(auto &n : _nodes) {
-                int i = n.first;
-                NodePhenotype &node = n.second;
-                if(node.type != NodeType::Input) {
-                    node.sum = 0;
-                    for(auto &j : _adjacency[i]) {
-                        NodePhenotype &incoming = _nodes[j];
-                        if(incoming.active) {
-                            node.sum += _edges[{j, i}] * incoming.activation;
-                            node.active = true;
-                        }
-                    }
-                }
-            }
-            for(auto &n : _nodes) {
-                auto &node = n.second;
-                if(node.type != NodeType::Input && node.active) {
-                    node.activation = node.function(node.sum + node.bias);
-                }
-            }
+            _nodes[to].activation = _nodes[to].function(sum + _nodes[to].bias);
         }
 
         // Calculate the final outputs
@@ -317,15 +350,6 @@ namespace chess::neural {
         for(auto &point : _outputs) {
             outputs.push_back(_nodes[_pointset[point]].activation);
         }
-
-        // Deactivate the nodes
-        for(auto &n : _nodes) {
-            auto &node = n.second;
-            node.sum = 0;
-            node.activation = 0;
-            node.active = false;
-        }
-
         return outputs;
     }
 

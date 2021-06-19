@@ -16,8 +16,6 @@ namespace chess::neural {
         activation_t function;
 
         double activation = 0;
-        double sum = 0;
-        bool active = false;
     };
 
     class Phenome {
@@ -35,6 +33,12 @@ namespace chess::neural {
         std::unordered_map<Edge, double, EdgeHash> _edges;
 
         std::unordered_map<int, std::vector<int>> _adjacency;
+        std::vector<int> _sorted;
+
+        /**
+         * Checks if adding a new edge will create a cycle
+         */
+        bool creates_cycle(Edge edge);
 
         /**
          * Query the CPPN (genome) to generate weight and bias values
@@ -66,6 +70,11 @@ namespace chess::neural {
          * Generate the adjacency list
          */
         void generate_adjacency();
+
+        /**
+         * Topologically sort the nodes for feed-forward evaluation
+         */
+        void topological_sort(int node, std::unordered_set<int> &visited);
 
         /**
          * Update the internal graph structure of the neural network for evaluation
