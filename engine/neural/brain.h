@@ -92,9 +92,14 @@ namespace chess::neural {
         int get_generations();
 
         /**
-         * Get the fittest phenome of the current generation
+         * Get the global fittest phenome
          */
         Phenome get_fittest();
+
+        /**
+         * Get the latest fittest phenome of the current generation
+         */
+        Phenome get_current_fittest();
 
         /**
          * Save the current population to disk

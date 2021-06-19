@@ -452,6 +452,17 @@ namespace chess::neural {
         return Phenome(*_global_best, _inputs, _outputs, _params.phenome_params);
     }
 
+    Phenome Brain::get_current_fittest() {
+        Genome *genome = _species[0]->get_best();
+        for(auto &specie : _species) {
+            Genome *candidate = specie->get_best();
+            if(candidate->get_fitness() > genome->get_fitness()) {
+                genome = candidate;
+            }
+        }
+        return Phenome(*genome, _inputs, _outputs, _params.phenome_params);
+    }
+
     void Brain::save(std::string filename) {
         std::ofstream outfile;
         outfile.open(filename, std::ios::binary | std::ios::out);
