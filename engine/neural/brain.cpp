@@ -20,52 +20,44 @@ namespace chess::neural {
     Brain::Brain(std::string filename) {
         std::ifstream infile;
         infile.open(filename, std::ios::binary | std::ios::in);
+        
+        // Read input/output coordinates
+        int input_count;
+        infile.read(reinterpret_cast<char *>(&input_count), sizeof(int));
+        for(int i = 0; i < input_count; i++) {
+            Point input;
+            infile.read(reinterpret_cast<char *>(&input), sizeof(Point));
+            _inputs.push_back(input);
+        }
+        int output_count;
+        infile.read(reinterpret_cast<char *>(&output_count), sizeof(int));
+        for(int i = 0; i < output_count; i++) {
+            Point output;
+            infile.read(reinterpret_cast<char *>(&output), sizeof(Point));
+            _outputs.push_back(output);
+        }
+
+        // Read generations
         infile.read(reinterpret_cast<char *>(&_generations), sizeof(int));
 
+        // Read each genome
         int specie_count;
         infile.read(reinterpret_cast<char *>(&specie_count), sizeof(int));
         for(int i = 0; i < specie_count; i++) {
             int genome_count;
             infile.read(reinterpret_cast<char *>(&genome_count), sizeof(int));
             for(int j = 0; j < genome_count; j++) {
-                std::unordered_map<Edge, EdgeGene, EdgeHash> edges;
-                std::vector<NodeGene> nodes;
-
-                // Save the edges
-                int edge_count;
-                infile.read(reinterpret_cast<char *>(&edge_count), sizeof(int));
-                for(int k = 0; k < edge_count; k++) {
-                    Edge edge;
-                    EdgeGene gene;
-                    infile.read(reinterpret_cast<char *>(&edge), sizeof(Edge));
-                    infile.read(reinterpret_cast<char *>(&gene), sizeof(EdgeGene));
-                    edges[edge] = gene;
-                }
-
-                // Save the nodes
-                int node_count;
-                infile.read(reinterpret_cast<char *>(&node_count), sizeof(int));
-                for(int k = 0; k < node_count; k++) {
-                    NodeGene n;
-                    infile.read(reinterpret_cast<char *>(&n.bias), sizeof(double));
-
-                    // Read the function string
-                    int len;
-                    infile.read(reinterpret_cast<char *>(&len), sizeof(int));
-
-                    char *tmp = new char[len+1];
-                    tmp[len] = 0;
-                    infile.read(tmp, sizeof(char) * len);
-                    std::string function(tmp);
-                    delete[] tmp;
-
-                    // Set the remaining values
-                    n.function = activations.at(function);
-                    nodes.push_back(n);
-                }
-                add_genome(new Genome(nodes, edges, _params.genome_params));
+                add_genome(read_genome(infile));
             }
         }
+
+        // Read the elites and global best genomes
+        int elite_count;
+        infile.read(reinterpret_cast<char *>(&elite_count), sizeof(int));
+        for(int i = 0; i < elite_count; i++) {
+            _elites.push_back(read_genome(infile));
+        }
+        _global_best = read_genome(infile);
         infile.close();
         generate_phenomes();
     }
@@ -335,6 +327,89 @@ namespace chess::neural {
         return nullptr;
     }
 
+    Genome *Brain::read_genome(std::ifstream &infile) {
+        std::unordered_map<Edge, EdgeGene, EdgeHash> edges;
+        std::vector<NodeGene> nodes;
+
+        // Read the fitness
+        double fitness;
+        infile.read(reinterpret_cast<char *>(&fitness), sizeof(double));
+
+        // Read the edges
+        int edge_count;
+        infile.read(reinterpret_cast<char *>(&edge_count), sizeof(int));
+        for(int k = 0; k < edge_count; k++) {
+            Edge edge;
+            EdgeGene gene;
+            infile.read(reinterpret_cast<char *>(&edge), sizeof(Edge));
+            infile.read(reinterpret_cast<char *>(&gene), sizeof(EdgeGene));
+            edges[edge] = gene;
+        }
+
+        // Read the nodes
+        int node_count;
+        infile.read(reinterpret_cast<char *>(&node_count), sizeof(int));
+        for(int k = 0; k < node_count; k++) {
+            NodeGene n;
+            infile.read(reinterpret_cast<char *>(&n.bias), sizeof(double));
+
+            // Read the function string
+            int len;
+            infile.read(reinterpret_cast<char *>(&len), sizeof(int));
+
+            char *tmp = new char[len+1];
+            tmp[len] = 0;
+            infile.read(tmp, sizeof(char) * len);
+            std::string function(tmp);
+            delete[] tmp;
+
+            // Set the remaining values
+            n.function = activations.at(function);
+            nodes.push_back(n);
+        }
+        Genome *genome = new Genome(nodes, edges, _params.genome_params);
+        genome->set_fitness(fitness);
+        return genome;
+    }
+
+    void Brain::write_genome(std::ofstream &outfile, Genome *genome) {
+        auto edges = genome->get_edges();
+        auto nodes = genome->get_nodes();
+
+        // Save fitness
+        double fitness = genome->get_fitness();
+        outfile.write(reinterpret_cast<char *>(&fitness), sizeof(double));
+
+        // Save the edges
+        int edge_count = edges.size();
+        outfile.write(reinterpret_cast<char *>(&edge_count), sizeof(int));
+        for(auto &e : edges) {
+            Edge edge = e.first;
+            EdgeGene gene = e.second;
+            outfile.write(reinterpret_cast<char *>(&edge), sizeof(Edge));
+            outfile.write(reinterpret_cast<char *>(&gene), sizeof(EdgeGene));
+        }
+
+        // Save the nodes
+        int node_count = nodes.size();
+        outfile.write(reinterpret_cast<char *>(&node_count), sizeof(int));
+        for(auto &n : nodes) {
+            std::string function;
+            for(auto &a : activations) {
+                if(a.second == n.function) {
+                    function = a.first;
+                    break;
+                }
+            }
+            outfile.write(reinterpret_cast<char *>(&n.bias), sizeof(double));
+            
+            // Save function string
+            int len = function.length();
+            outfile.write(reinterpret_cast<char *>(&len), sizeof(int));
+            outfile.write(function.c_str(), sizeof(char) * len);
+        }
+    }
+
     std::vector<Phenome *> &Brain::get_phenomes() {
         return _phenomes;
     }
@@ -368,47 +443,40 @@ namespace chess::neural {
     void Brain::save(std::string filename) {
         std::ofstream outfile;
         outfile.open(filename, std::ios::binary | std::ios::out);
+
+        // Save input/output coordinates
+        int input_count = _inputs.size();
+        outfile.write(reinterpret_cast<char *>(&input_count), sizeof(int));
+        for(auto &input : _inputs) {
+            outfile.write(reinterpret_cast<char *>(&input), sizeof(Point));
+        }
+        int output_count = _outputs.size();
+        outfile.write(reinterpret_cast<char *>(&output_count), sizeof(int));
+        for(auto &output : _outputs) {
+            outfile.write(reinterpret_cast<char *>(&output), sizeof(Point));
+        }
+
+        // Save generations
         outfile.write(reinterpret_cast<char *>(&_generations), sizeof(int));
 
+        // Save each genome
         int specie_count = _species.size();
         outfile.write(reinterpret_cast<char *>(&specie_count), sizeof(int));
         for(auto &specie : _species) {
             int genome_count = specie->get_members().size();
             outfile.write(reinterpret_cast<char *>(&genome_count), sizeof(int));
             for(auto &genome : specie->get_members()) {
-                auto edges = genome->get_edges();
-                auto nodes = genome->get_nodes();
-
-                // Save the edges
-                int edge_count = edges.size();
-                outfile.write(reinterpret_cast<char *>(&edge_count), sizeof(int));
-                for(auto &e : edges) {
-                    Edge edge = e.first;
-                    EdgeGene gene = e.second;
-                    outfile.write(reinterpret_cast<char *>(&edge), sizeof(Edge));
-                    outfile.write(reinterpret_cast<char *>(&gene), sizeof(EdgeGene));
-                }
-
-                // Save the nodes
-                int node_count = nodes.size();
-                outfile.write(reinterpret_cast<char *>(&node_count), sizeof(int));
-                for(auto &n : nodes) {
-                    std::string function;
-                    for(auto &a : activations) {
-                        if(a.second == n.function) {
-                            function = a.first;
-                            break;
-                        }
-                    }
-                    outfile.write(reinterpret_cast<char *>(&n.bias), sizeof(double));
-                    
-                    // Save function string
-                    int len = function.length();
-                    outfile.write(reinterpret_cast<char *>(&len), sizeof(int));
-                    outfile.write(function.c_str(), sizeof(char) * len);
-                }
+                write_genome(outfile, genome);
             }
         }
+
+        // Save the elite genomes and the global best
+        int elite_count = _elites.size();
+        outfile.write(reinterpret_cast<char *>(&elite_count), sizeof(int));
+        for(auto &genome : _elites) {
+            write_genome(outfile, genome);
+        }
+        write_genome(outfile, _global_best);
         outfile.close();
     }
 }
