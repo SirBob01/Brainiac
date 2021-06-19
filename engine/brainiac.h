@@ -3,25 +3,17 @@
 
 #include <vector>
 #include <unordered_map>
+#include <memory>
+#include <thread>
 
-#include "neural/network.h"
-#include "neural/activations.h"
-#include  "neural/costs.h"
+#include "neural/brain.h"
 #include "board.h"
 
 namespace chess {
-    struct SearchNode {
-        double score = 0.0;
-
-        // Moves -> Children
-        std::unordered_map<std::string, SearchNode*> children;
-    };
-
     class Brainiac {
-        std::unique_ptr<neural::Network> _network;
-        Color _color;
-
-        SearchNode *_root;
+        neural::NEATParameters _params;
+        std::unique_ptr<neural::Brain> _brain;
+        std::string _savefile;
 
         /**
          * Convert the board into a 66x1 row-vector
@@ -30,20 +22,17 @@ namespace chess {
         std::vector<double> vectorize(Board &board);
 
         /**
-         * Perform one episode of the Monte-Carlo tree search 
-         * algorithm and train the neural network at each 
-         * backtracking step
+         * Simulate a game between two phenomes
          */
-        void train_recur(SearchNode *root, Board &board);
-
-        /**
-         * Recursively delete the search tree
-         */
-        void delete_recur(SearchNode *node);
+        void simulate(neural::Phenome &a, neural::Phenome &b);
 
     public:
-        Brainiac(Color color);
-        ~Brainiac();
+        Brainiac();
+
+        /**
+         * Generate the initial Brainiac instance and its networks
+         */
+        void generate();
 
         /**
          * Trains by playing games against itself and updating its neural network.
@@ -56,6 +45,16 @@ namespace chess {
          * possible move
          */
         Move evaluate(Board &board);
+
+        /**
+         * Load neural networks from disk
+         */
+        bool load();
+
+        /**
+         * Save neural networks to disk
+         */
+        void save();
     };
 }
 

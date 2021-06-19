@@ -1,33 +1,27 @@
 #include "brainiac.h"
 
 namespace chess {
-    Brainiac::Brainiac(Color color) {
-        neural::NetworkParameters params;
-        params.random_range = 1.0;
-        params.learning_rate = 0.1;
-        params.cost_function = neural::quadratic_cost;
-        params.layers = {
-            {66, nullptr},
-            {128, neural::lrelu},
-            {128, neural::lrelu},
-            {128, neural::lrelu},
-            {1, neural::tanh},
-        };
-        _network = std::make_unique<neural::Network>(params);
+    Brainiac::Brainiac() {
+        _params.phenome_params.hidden_activation = neural::lrelu;
+        _params.phenome_params.output_activation = tanh;
+        _params.population = 25;
+        _params.target_species = 3;
 
-        _root = new SearchNode();
-        _color = color;
+        _savefile = "brainiac.bin";
     }
 
-    Brainiac::~Brainiac() {
-        delete_recur(_root);
-    }
-
-    void Brainiac::delete_recur(SearchNode *node) {
-        for(auto child : node->children) {
-            delete_recur(child.second);
+    void Brainiac::generate() {
+        std::vector<neural::Point> inputs;
+        std::vector<neural::Point> outputs = {{0, 0}};
+        for(double i = 0; i < 8; i++) {
+            for(double j = 0; j < 8; j++) {
+                neural::Point node = {(i-3.5)/8, (j-3.5)/8};
+                inputs.push_back(node);
+            }
         }
-        delete node;
+        inputs.push_back({-0.6, 0});
+        inputs.push_back({0.6, 0});
+        _brain = std::make_unique<neural::Brain>(inputs, outputs, _params);
     }
 
     std::vector<double> Brainiac::vectorize(Board &board) {
@@ -57,66 +51,83 @@ namespace chess {
         return vector;
     }
 
-    void Brainiac::train_recur(SearchNode *root, Board &board) {
-        // Base case (win/lose/draw)
-        if(board.is_draw()) {
-            root->score = 0;
-            return;
-        }
-        else if(board.is_checkmate()) {
-            if(board.get_turn() != _color) {
-                root->score = 1;
+    void Brainiac::simulate(neural::Phenome &white, neural::Phenome &black) {
+        Board board;
+        while(true) {
+            if(board.is_draw()) {
+                // No change
+                return;
+            }
+            else if(board.is_checkmate()) {
+                // Update fitness
+                if(board.get_turn() == Color::Black) {
+                    white.set_fitness(white.get_fitness() + 1);
+                }
+                else {
+                    black.set_fitness(black.get_fitness() + 1);
+                }
+                return;
+            }
+            
+            std::vector<Move> moves = board.get_moves();
+            // Initially the worst possible score
+            double best_score;
+            double score;
+            if(board.get_turn() == Color::White) {
+                best_score = -1.0;
             }
             else {
-                root->score= -1;
+                best_score = 1.0;
             }
-            return;
-        }
+            Move best_move = moves[0];
 
-        // Choose a random move to play at each iteration step
-        std::vector<Move> moves = board.get_moves();
-        Move move = moves[std::rand()%moves.size()];
-        std::string key = move.standard_notation();
-
-        board.execute_move(move);
-        if(root->children.count(key)) {
-            // Chosen node has been visited
-            train_recur(root->children[key], board);
-        }
-        else {
-            // Chosen node is a new move unexplored, so evaluate it
-            root->children[key] = new SearchNode();
-            train_recur(root->children[key], board);
-            
-            // Calculate current true score by averaging children's scores
-            root->score = 0;
-            for(auto &child : root->children) {
-                root->score += child.second->score;
+            for(auto &move : moves) {
+                board.execute_move(move);
+                if(board.get_turn() == Color::White) {
+                    score = white.forward(vectorize(board))[0];
+                    if(score >= best_score) {
+                        best_score = score;
+                        best_move = move;
+                    }
+                }
+                else {
+                    score = black.forward(vectorize(board))[0];
+                    if(score <= best_score) {
+                        best_score = score;
+                        best_move = move;
+                    }
+                }
+                board.undo_move();
             }
-            root->score /= root->children.size();
-
-            // Train the network
-            std::vector<double> expected = {root->score};
-            for(int i = 0; i < 100; i++) {
-                _network->fit(vectorize(board), expected);
-            }
+            board.execute_move(best_move);
         }
-        board.undo_move();
     }
 
     void Brainiac::train() {
         /**
          * Algorithm 1. Single game train:
-         * 1. Loop until reaching terminal node (win/lose/draw)
-         *      a. Generate move space for current board state
-         *      b. Select random move from move space
-         *      c. Execute move
-         * 2. Loop until reaching initial root node
-         *      a. Train the network (expected = calculated score of board = average scores of children)
-         *      b. Undo move
+         * 1. Generate all possible pairs of phenomes
+         * 2. For each pair, run a game and update the fitness scores
+         * 3. Evolve
          */
-        Board board;
-        train_recur(_root, board);
+        std::cout << "Generation " << _brain->get_generations() << " | ";
+        auto &phenomes = _brain->get_phenomes();
+        int n = phenomes.size();
+        std::vector<std::thread> threads;
+        for(int i = 0; i < n-1; i++) {
+            for(int j = i+1; j < n; j++) {
+                threads.push_back(std::thread([phenomes, i, j, this]() {
+                    // Each phenome must play as both white and black
+                    simulate(*phenomes[i], *phenomes[j]);
+                    simulate(*phenomes[j], *phenomes[i]);
+                }));
+            }
+        }
+        for(auto &thread : threads) {
+            thread.join();
+        }
+        std::cout << "Best fitness: " << _brain->get_fittest().get_fitness() << "\n";
+        _brain->evolve();
     }
 
     Move Brainiac::evaluate(Board &board) {
@@ -127,8 +138,8 @@ namespace chess {
 
         for(auto &move : moves) {
             board.execute_move(move);
-            neural::Matrix output = _network->evaluate(vectorize(board));
-            double score = output.get_at(0, 0);
+            neural::Phenome best = _brain->get_fittest();
+            double score = best.forward(vectorize(board))[0];
             if(score >= best_score) {
                 best_score = score;
                 best_move = move;
@@ -136,5 +147,18 @@ namespace chess {
             board.undo_move();
         }
         return best_move;
+    }
+    
+    bool Brainiac::load() {
+        std::ifstream f(_savefile);
+        if(!f.good()) {
+            return false;
+        }
+        _brain = std::make_unique<neural::Brain>(_savefile);
+        return true;
+    }
+
+    void Brainiac::save() {
+        _brain->save(_savefile);
     }
 }
