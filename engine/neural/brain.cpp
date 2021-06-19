@@ -222,7 +222,7 @@ namespace chess::neural {
         std::sort(_elites.begin(), _elites.end(), [](Genome *a, Genome *b) {
             return a->get_fitness() > b->get_fitness();
         });
-        int index = std::min(static_cast<int>(_elites.size()), 10);
+        int index = std::min(static_cast<int>(_elites.size()), _params.target_species);
         for(int i = index; i < _elites.size(); i++) {
             delete _elites[i];
         }
