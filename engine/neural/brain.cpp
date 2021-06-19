@@ -209,20 +209,28 @@ namespace chess::neural {
     
     void Brain::cull() {
         std::vector<Specie *> survivors;
-        for(auto &elite : _elites) {
-            delete elite;
-        }
-        _elites.clear();
+        // Treat the elites as its own species
         for(auto &specie : _species) {
-            // Update top genomes before culling
-            _elites.push_back(new Genome(*(specie->get_best())));
             for(auto &genome : specie->get_members()) {
                 if(genome->get_fitness() > _global_best->get_fitness()) {
                     delete _global_best;
                     _global_best = new Genome(*genome);
                 }
             }
+            _elites.push_back(new Genome(*(specie->get_best())));
+        }
+        std::sort(_elites.begin(), _elites.end(), [](Genome *a, Genome *b) {
+            return a->get_fitness() > b->get_fitness();
+        });
+        int index = std::min(static_cast<int>(_elites.size()), 10);
+        for(int i = index; i < _elites.size(); i++) {
+            delete _elites[i];
+        }
+        while(_elites.size() > index) {
+            _elites.pop_back();
+        }
 
+        for(auto &specie : _species) {
             // Delete stagnant species
             if(specie->can_progress()) {
                 specie->adjust_fitness();
