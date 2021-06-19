@@ -13,6 +13,4 @@ add_library(Brainiac ${SOURCES} ${INCLUDE})
 add_executable(main "../main.cpp")
 
 # Compile on Linux systems
-if(UNIX OR MSVC)
-    target_link_libraries(main Brainiac)
-endif()
+target_link_libraries(main Brainiac)
