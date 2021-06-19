@@ -319,6 +319,9 @@ namespace chess::neural {
         for(auto &specie : _species) {
             total += specie->get_fitness_sum();
         }
+        if(total == 0) {
+            return _species[randrange(0, _species.size())];
+        }
 
         // Species with a higher adjusted fitness sum are more likely to be picked
         double cum_prob = 0;
