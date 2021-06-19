@@ -17,7 +17,8 @@ namespace chess::neural {
         _global_best = new Genome(*(_species[0]->sample()));
     }
 
-    Brain::Brain(std::string filename) {
+    Brain::Brain(std::string filename, NEATParameters params) {
+        _params = params;
         std::ifstream infile;
         infile.open(filename, std::ios::binary | std::ios::in);
         
