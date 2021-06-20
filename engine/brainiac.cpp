@@ -4,8 +4,8 @@ namespace chess {
     Brainiac::Brainiac() {
         _params.phenome_params.hidden_activation = neural::lrelu;
         _params.phenome_params.output_activation = tanh;
-        _params.population = 25;
-        _params.target_species = 3;
+        _params.population = 100;
+        _params.target_species = 5;
 
         _savefile = "brainiac.bin";
     }
@@ -19,8 +19,8 @@ namespace chess {
                 inputs.push_back(node);
             }
         }
-        inputs.push_back({-0.6, 0});
-        inputs.push_back({0.6, 0});
+        inputs.push_back({-1.0, 0});
+        inputs.push_back({1.0, 0});
         _brain = std::make_unique<neural::Brain>(inputs, outputs, _params);
     }
 
@@ -51,7 +51,7 @@ namespace chess {
         return vector;
     }
 
-    void Brainiac::simulate(neural::Phenome &white, neural::Phenome &black) {
+    void Brainiac::simulate(neural::Phenome &white, neural::Phenome &black, std::mutex &mutex) {
         Board board;
         while(true) {
             if(board.is_draw()) {
@@ -59,6 +59,7 @@ namespace chess {
                 return;
             }
             else if(board.is_checkmate()) {
+                std::lock_guard<std::mutex> lock(mutex);
                 // Update fitness
                 if(board.get_turn() == Color::Black) {
                     white.set_fitness(white.get_fitness() + 1);
@@ -113,20 +114,31 @@ namespace chess {
         std::cout << "Generation " << _brain->get_generations() << " | ";
         auto &phenomes = _brain->get_phenomes();
         int n = phenomes.size();
+                
+        // Reset fitness scores
+        for(auto &phenome : phenomes) {
+            phenome->set_fitness(0);
+        }
+        
+        // Run simulation games
         std::vector<std::thread> threads;
+        std::mutex mutex;
         for(int i = 0; i < n-1; i++) {
-            for(int j = i+1; j < n; j++) {
-                threads.push_back(std::thread([phenomes, i, j, this]() {
+            threads.push_back(std::thread([&phenomes, i, &mutex, n, this]() {
+                for(int j = i+1; j < n; j++) {
                     // Each phenome must play as both white and black
-                    simulate(*phenomes[i], *phenomes[j]);
-                    simulate(*phenomes[j], *phenomes[i]);
-                }));
-            }
+                    simulate(*phenomes[i], *phenomes[j], mutex);
+                    simulate(*phenomes[j], *phenomes[i], mutex);
+                }
+            }));
         }
         for(auto &thread : threads) {
             thread.join();
         }
-        std::cout << "Best fitness: " << _brain->get_fittest().get_fitness() << "\n";
+        std::cout << "Generation's best fitness: " << _brain->get_current_fittest().get_fitness() << "\n";
+        std::cout << "Global best fitness: " << _brain->get_fittest().get_fitness() << "\n";
+
+        // Evolve
         _brain->evolve();
     }
 
@@ -138,7 +150,7 @@ namespace chess {
 
         for(auto &move : moves) {
             board.execute_move(move);
-            neural::Phenome best = _brain->get_fittest();
+            neural::Phenome best = _brain->get_current_fittest();
             double score = best.forward(vectorize(board))[0];
             if(score >= best_score) {
                 best_score = score;
@@ -154,7 +166,7 @@ namespace chess {
         if(!f.good()) {
             return false;
         }
-        _brain = std::make_unique<neural::Brain>(_savefile);
+        _brain = std::make_unique<neural::Brain>(_savefile, _params);
         return true;
     }
 
