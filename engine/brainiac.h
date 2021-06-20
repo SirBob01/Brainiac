@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <memory>
 #include <thread>
+#include <mutex>
 
 #include "neural/brain.h"
 #include "board.h"
@@ -24,7 +25,7 @@ namespace chess {
         /**
          * Simulate a game between two phenomes
          */
-        void simulate(neural::Phenome &a, neural::Phenome &b);
+        void simulate(neural::Phenome &a, neural::Phenome &b, std::mutex &mutex);
 
     public:
         Brainiac();
