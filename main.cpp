@@ -1,6 +1,9 @@
 #include <iostream>
+#include <iomanip>
 #include <chrono>
-#include "engine/braniac.h"
+#include "engine/brainiac.h"
+#include "engine/neural/phenome.h"
+#include "engine/neural/brain.h"
 
 uint64_t perft(chess::Board &b, int depth, int max_depth, bool verbose) {
     uint64_t nodes = 0;
@@ -82,11 +85,79 @@ void debug_command() {
     }
 }
 
+void play_bot() {
+    chess::Board b;
+    chess::Brainiac bot;
+    bool loaded = bot.load();
+
+    chess::Move move;
+    std::string move_input;
+    chess::Color player_color;
+    if(chess::neural::random() < 0.5) {
+        player_color = chess::Color::White;
+    }
+    else {
+        player_color = chess::Color::Black;
+    }
+    while(!b.is_checkmate() && !b.is_draw()) {
+        b.print();
+        std::cout << b.generate_fen() << "\n";
+        if(b.is_check()) {
+            std::cout << "Check!\n";
+        }
+        if(b.get_turn() != player_color) {
+            b.execute_move(bot.evaluate(b));
+        }
+        else {
+            while(move.is_invalid()) {
+                std::cout << "Enter a move> ";
+                std::cin >> move_input;
+                if(move_input == "undo") {
+                    if(!b.is_initial()) {
+                        b.undo_move();
+                        break;
+                    }
+                }
+                else if(move_input == "redo") {
+                    if(!b.is_latest()) {
+                        b.redo_move();
+                        break;
+                    }
+                }
+                else if(move_input == "stop") {
+                    return;
+                }
+                else {
+                    std::string from = move_input.substr(0, 2);
+                    std::string to = move_input.substr(2, 2);
+                    char promotion = 0;
+                    if(move_input.length() == 5) {
+                        promotion = move_input[4];
+                    }
+                    move = b.create_move(chess::Square(from), chess::Square(to), promotion);
+                }
+            }
+            if(!move.is_invalid()) {
+                b.execute_move(move);
+                move = {};
+            }
+        }
+    }
+    b.print();
+    std::cout << b.generate_fen() << "\n";
+    if(b.is_checkmate()) {
+        std::cout << (b.get_turn() == chess::Color::White ? "Black" : "White") << " wins!\n";
+    }
+    else {
+        std::cout << "Draw!\n";
+    }
+}
+
 void play_command() {
     chess::Board b;
     chess::Move move;
     std::string move_input;
-    while(!b.is_checkmate()) {
+    while(!b.is_checkmate() && !b.is_draw()) {
         b.print();
         std::cout << b.generate_fen() << "\n";
         if(b.is_check()) {
@@ -127,11 +198,17 @@ void play_command() {
     }
     b.print();
     std::cout << b.generate_fen() << "\n";
-    std::cout << (b.get_turn() == chess::Color::White ? "Black" : "White") << " wins!\n";
+    if(b.is_checkmate()) {
+        std::cout << (b.get_turn() == chess::Color::White ? "Black" : "White") << " wins!\n";
+    }
+    else {
+        std::cout << "Draw!\n";
+    }
 }
 
 int main() {
     std::cout << "Chess Engine C++ v.1.0\n";
+    chess::neural::randseed();
     std::string command;
     while(true) {
         std::cout << "Enter command> ";
@@ -144,6 +221,9 @@ int main() {
         }
         else if(command == "play") {
             play_command();
+        }
+        else if(command == "bot") {
+            play_bot();
         }
         else if(command == "quit") {
             break;
