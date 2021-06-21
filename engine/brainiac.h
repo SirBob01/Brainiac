@@ -13,8 +13,9 @@
 namespace chess {
     class Brainiac {
         neural::NEATParameters _params;
-        std::unique_ptr<neural::Brain> _brain;
-        std::string _savefile;
+        neural::Brain *_population0;
+        neural::Brain *_population1;
+        int _current_eval = 0; // Which population are we currently evaluating?
 
         /**
          * Convert the board into a 66x1 row-vector
@@ -27,8 +28,14 @@ namespace chess {
          */
         void simulate(neural::Phenome &a, neural::Phenome &b, std::mutex &mutex);
 
+        /**
+         * Train a host population
+         */
+        void train_host();
+
     public:
         Brainiac();
+        ~Brainiac();
 
         /**
          * Generate the initial Brainiac instance and its networks
