@@ -5,9 +5,7 @@ namespace chess {
         _params.phenome_params.hidden_activation = neural::lrelu;
         _params.phenome_params.output_activation = tanh;
         _params.population = 100;
-        _params.target_species = 5;
-
-        _savefile = "brainiac.bin";
+        _params.target_species = 8;
     }
 
     void Brainiac::generate() {
@@ -21,7 +19,14 @@ namespace chess {
         }
         inputs.push_back({-1.0, 0});
         inputs.push_back({1.0, 0});
-        _brain = std::make_unique<neural::Brain>(inputs, outputs, _params);
+        _population0 = new neural::Brain(inputs, outputs, _params);
+        _population1 = new neural::Brain(inputs, outputs, _params);
+        _current_eval = 0;
+    }
+
+    Brainiac::~Brainiac() {
+        delete _population0;
+        delete _population1;
     }
 
     std::vector<double> Brainiac::vectorize(Board &board) {
@@ -104,16 +109,36 @@ namespace chess {
         }
     }
 
-    void Brainiac::train() {
+    void Brainiac::train_host() {
         /**
          * Algorithm 1. Single game train:
-         * 1. Generate all possible pairs of phenomes
-         * 2. For each pair, run a game and update the fitness scores
-         * 3. Evolve
+         * 1. Generate opponent list from parasite population
+         * 2. Evaluate the host population by simulating games against opponents
+         * 3. Evolve the host
+         * 4. Switch roles of populations
          */
-        std::cout << "Generation " << _brain->get_generations() << " | ";
-        auto &phenomes = _brain->get_phenomes();
+        neural::Brain *host;
+        neural::Brain *parasite;
+        if(_current_eval == 0) {
+            host = _population0;
+            parasite = _population1;
+        }
+        else {
+            host = _population1;
+            parasite = _population0;
+        }
+        std::cout << "Generation " << host->get_generations() << " | ";
+        auto &phenomes = host->get_phenomes();
         int n = phenomes.size();
+
+        std::vector<neural::Phenome> opponents;
+        for(auto &phenome : parasite->get_elites()) {
+            opponents.push_back(phenome);
+        }
+        for(auto &phenome : parasite->get_hall_of_fame()) {
+            opponents.push_back(phenome);
+        }
+        std::cout << opponents.size() << " opponents | ";
                 
         // Reset fitness scores
         for(auto &phenome : phenomes) {
@@ -123,23 +148,33 @@ namespace chess {
         // Run simulation games
         std::vector<std::thread> threads;
         std::mutex mutex;
-        for(int i = 0; i < n-1; i++) {
-            threads.push_back(std::thread([&phenomes, i, &mutex, n, this]() {
-                for(int j = i+1; j < n; j++) {
+        
+        for(auto &phenome : phenomes) {
+            threads.push_back(std::thread([&phenome, &opponents, &mutex, n, this]() {
+                for(auto &opponent : opponents) {
                     // Each phenome must play as both white and black
-                    simulate(*phenomes[i], *phenomes[j], mutex);
-                    simulate(*phenomes[j], *phenomes[i], mutex);
+                    simulate(*phenome, opponent, mutex);
+                    simulate(opponent, *phenome, mutex);
                 }
             }));
         }
         for(auto &thread : threads) {
             thread.join();
         }
-        std::cout << "Generation's best fitness: " << _brain->get_current_fittest().get_fitness() << "\n";
-        std::cout << "Global best fitness: " << _brain->get_fittest().get_fitness() << "\n";
+        std::cout << threads.size() << " threads executed | ";
+        std::cout << "Host generation's best fitness: " << host->get_current_fittest().get_fitness() << "\n";
+        std::cout << "Host global best fitness: " << host->get_fittest().get_fitness() << "\n";
 
         // Evolve
-        _brain->evolve();
+        host->evolve();
+
+        // Switch population roles
+        _current_eval = 1 - _current_eval;
+    }
+
+    void Brainiac::train() {
+        train_host(); // Population 0
+        train_host(); // Population 1
     }
 
     Move Brainiac::evaluate(Board &board) {
@@ -147,10 +182,12 @@ namespace chess {
         // Lowest possible score is when you lose
         double best_score = -1.0;
         Move best_move;
+        neural::Phenome best0 = _population0->get_fittest();
+        neural::Phenome best1 = _population1->get_fittest();
+        neural::Phenome &best = best0.get_fitness() > best1.get_fitness() ? best0 : best1;
 
         for(auto &move : moves) {
             board.execute_move(move);
-            neural::Phenome best = _brain->get_current_fittest();
             double score = best.forward(vectorize(board))[0];
             if(score >= best_score) {
                 best_score = score;
@@ -162,15 +199,18 @@ namespace chess {
     }
     
     bool Brainiac::load() {
-        std::ifstream f(_savefile);
-        if(!f.good()) {
+        std::ifstream f0("p0.bin");
+        std::ifstream f1("p1.bin");
+        if(!f0.good() || !f1.good()) {
             return false;
         }
-        _brain = std::make_unique<neural::Brain>(_savefile, _params);
+        _population0 = new neural::Brain("p0.bin", _params);
+        _population1 = new neural::Brain("p1.bin", _params);
         return true;
     }
 
     void Brainiac::save() {
-        _brain->save(_savefile);
+        _population0->save("p0.bin");
+        _population1->save("p1.bin");
     }
 }
