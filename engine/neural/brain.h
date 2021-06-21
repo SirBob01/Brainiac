@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <deque>
 #include <fstream>
 #include <cstring>
 #include <cassert>
@@ -21,6 +22,7 @@ namespace chess::neural {
         NEATParameters _params;
 
         std::vector<Genome *> _elites;
+        std::deque<Genome *> _hall_of_fame;
         Genome *_global_best;
 
         int _generations;
@@ -100,6 +102,16 @@ namespace chess::neural {
          * Get the latest fittest phenome of the current generation
          */
         Phenome get_current_fittest();
+
+        /**
+         * Get the phenomes of those in the hall of fame
+         */
+        std::vector<Phenome> get_hall_of_fame();
+
+        /**
+         * Get the elite phenomes
+         */
+        std::vector<Phenome> get_elites();
 
         /**
          * Save the current population to disk

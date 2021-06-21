@@ -12,6 +12,9 @@ namespace chess::neural {
         for(int i = 0; i < params.population; i++) {
             Genome *g = new Genome(_params.genome_params);
             add_genome(g);
+            if(_hall_of_fame.size() < _params.max_hall_of_fame) {
+                _hall_of_fame.push_back(new Genome(*g));
+            }
         }
         generate_phenomes();
         _global_best = new Genome(*(_species[0]->sample()));
@@ -52,11 +55,16 @@ namespace chess::neural {
             }
         }
 
-        // Read the elites and global best genomes
+        // Read the elites, hall of fame, and global best genomes
         int elite_count;
         infile.read(reinterpret_cast<char *>(&elite_count), sizeof(int));
         for(int i = 0; i < elite_count; i++) {
             _elites.push_back(read_genome(infile));
+        }
+        int fame_count;
+        infile.read(reinterpret_cast<char *>(&fame_count), sizeof(int));
+        for(int i = 0; i < fame_count; i++) {
+            _hall_of_fame.push_back(read_genome(infile));
         }
         _global_best = read_genome(infile);
         infile.close();
@@ -72,6 +80,9 @@ namespace chess::neural {
         }
         for(auto &elite : _elites) {
             delete elite;
+        }
+        for(auto &avatar : _hall_of_fame) {
+            delete avatar;
         }
         for(auto &phenome : _phenomes) {
             delete phenome;
@@ -220,6 +231,11 @@ namespace chess::neural {
             }
             _elites.push_back(new Genome(*(specie->get_best())));
         }
+        _hall_of_fame.push_back(new Genome(*_global_best));
+        if(_hall_of_fame.size() > _params.max_hall_of_fame) {
+            delete _hall_of_fame.front();
+            _hall_of_fame.pop_front();
+        }
         std::sort(_elites.begin(), _elites.end(), [](Genome *a, Genome *b) {
             return a->get_fitness() > b->get_fitness();
         });
@@ -308,7 +324,7 @@ namespace chess::neural {
                 child = new Genome(*parent);
             }
             cum_prob += _params.clone_probability;
-            assert(cum_prob == 1.0);
+            assert(std::fabs(1.0 - cum_prob) < 0.001);
             add_genome(child);
             size++;
         }
@@ -463,6 +479,22 @@ namespace chess::neural {
         return Phenome(*genome, _inputs, _outputs, _params.phenome_params);
     }
 
+    std::vector<Phenome> Brain::get_hall_of_fame() {
+        std::vector<Phenome> phenomes;
+        for(auto &genome : _hall_of_fame) {
+            phenomes.push_back(Phenome(*genome, _inputs, _outputs, _params.phenome_params));
+        }
+        return phenomes;
+    }
+    
+    std::vector<Phenome> Brain::get_elites() {
+        std::vector<Phenome> phenomes;
+        for(auto &genome : _elites) {
+            phenomes.push_back(Phenome(*genome, _inputs, _outputs, _params.phenome_params));
+        }
+        return phenomes;
+    }
+
     void Brain::save(std::string filename) {
         std::ofstream outfile;
         outfile.open(filename, std::ios::binary | std::ios::out);
@@ -493,10 +525,15 @@ namespace chess::neural {
             }
         }
 
-        // Save the elite genomes and the global best
+        // Save the elite genomes, hall of fame, and the global best
         int elite_count = _elites.size();
         outfile.write(reinterpret_cast<char *>(&elite_count), sizeof(int));
         for(auto &genome : _elites) {
+            write_genome(outfile, genome);
+        }
+        int fame_count = _hall_of_fame.size();
+        outfile.write(reinterpret_cast<char *>(&fame_count), sizeof(int));
+        for(auto &genome : _hall_of_fame) {
             write_genome(outfile, genome);
         }
         write_genome(outfile, _global_best);
