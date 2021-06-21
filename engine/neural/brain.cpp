@@ -161,6 +161,14 @@ namespace chess::neural {
             else {
                 child_edges[edge] = b_edges[edge];
             }
+            if(!a_edges[edge].enabled || !b_edges[edge].enabled) {
+                if(random() < _params.crossover_gene_disable_rate) {
+                    child_edges[edge].enabled = false;
+                }
+                else {
+                    child_edges[edge].enabled = true;
+                }
+            }
         }
 
         // Inherit disjoint genes from fitter parent
