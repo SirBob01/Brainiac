@@ -40,29 +40,29 @@ namespace chess {
             return heuristic;
         }
 
-        int value;
         Color next_turn = static_cast<Color>(!node.turn);
-        MinimaxNode new_node;
+        int value;
         if(node.turn == player) {
             value = INT32_MIN;
-            for(auto &move : moves) {
-                board.execute_move(move);
-                new_node = {node.depth-1, node.alpha, node.beta, next_turn};
-                value = std::max(value, alphabeta(board, new_node, player));
-                board.undo_move();
+        }
+        else {
+            value = INT32_MAX;
+        }
+        for(auto &move : moves) {
+            board.execute_move(move);
+            MinimaxNode new_node = {node.depth-1, node.alpha, node.beta, next_turn};
+            int recur_value = alphabeta(board, new_node, player);
+            board.undo_move();
+
+            if(node.turn == player) {
+                value = std::max(value, recur_value);
                 if(value >= node.beta) {
                     break;
                 }
                 node.alpha = std::max(node.alpha, value);
             }
-        }
-        else {
-            value = INT32_MAX;
-            for(auto &move : moves) {
-                board.execute_move(move);
-                new_node = {node.depth-1, node.alpha, node.beta, next_turn};
-                value = std::min(value, alphabeta(board, new_node, player));
-                board.undo_move();
+            else {
+                value = std::min(value, recur_value);
                 if(value <= node.alpha) {
                     break;
                 }
