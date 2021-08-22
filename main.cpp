@@ -1,9 +1,8 @@
 #include <iostream>
 #include <iomanip>
+#include <vector>
 #include <chrono>
 #include "engine/brainiac.h"
-#include "engine/neural/phenome.h"
-#include "engine/neural/brain.h"
 
 uint64_t perft(chess::Board &b, int depth, int max_depth, bool verbose) {
     uint64_t nodes = 0;
@@ -23,12 +22,12 @@ uint64_t perft(chess::Board &b, int depth, int max_depth, bool verbose) {
     return nodes;
 }
 
-void perft_command() {
+void perft_command(std::string fen_string="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
     int depth;
     std::cout << "Enter perft depth: ";
     std::cin >> depth;
 
-    chess::Board b;
+    chess::Board b(fen_string);
     b.print();
     std::cout << b.generate_fen() << "\n";
 
@@ -43,7 +42,7 @@ void perft_command() {
     }
 }
 
-void debug_command() {
+void debug_command(std::string fen_string="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
     int depth;
     // std::string fen_string;
     // std::cout << "Enter FEN string: ";
@@ -51,7 +50,7 @@ void debug_command() {
     std::cout << "Enter perft depth: ";
     std::cin >> depth;
 
-    chess::Board b;
+    chess::Board b(fen_string);
     b.print();
     std::cout << b.generate_fen() << "\n";
 
@@ -85,20 +84,12 @@ void debug_command() {
     }
 }
 
-void play_bot() {
+void play_bot(chess::Color player_color) {
     chess::Board b;
     chess::Brainiac bot;
-    bool loaded = bot.load();
 
     chess::Move move;
     std::string move_input;
-    chess::Color player_color;
-    if(chess::neural::random() < 0.5) {
-        player_color = chess::Color::White;
-    }
-    else {
-        player_color = chess::Color::Black;
-    }
     while(!b.is_checkmate() && !b.is_draw()) {
         b.print();
         std::cout << b.generate_fen() << "\n";
@@ -106,7 +97,7 @@ void play_bot() {
             std::cout << "Check!\n";
         }
         if(b.get_turn() != player_color) {
-            b.execute_move(bot.evaluate(b));
+            b.execute_move(bot.move(b));
         }
         else {
             while(move.is_invalid()) {
@@ -206,26 +197,73 @@ void play_command() {
     }
 }
 
+void help() {
+    std::vector<std::pair<std::string, std::string>> commands;
+    commands.push_back(std::make_pair("perft [fen_string?]", "Test performance"));
+    commands.push_back(std::make_pair("debug [fen_string?]", "Debug the chess engine"));
+    commands.push_back(std::make_pair("play", "Run a PvP game of chess"));
+    commands.push_back(std::make_pair("bot [w|b]", "Play against Brainiac"));
+    commands.push_back(std::make_pair("quit", "Quit Brainiac"));
+
+    for(auto &pair : commands) {
+        std::cout << std::left 
+                  << std::setw(20) << pair.first 
+                  << std::setw(4) << " -- " 
+                  << std::setw(20) << pair.second << "\n";
+    }
+}
+
 int main() {
     std::cout << "Chess Engine C++ v.1.0\n";
-    chess::neural::randseed();
+    std::cout << "Enter 'help' for the list of commands.\n";
     std::string command;
     while(true) {
         std::cout << "Enter command> ";
-        std::cin >> command;
-        if(command == "perft") {
-            perft_command();
+        std::getline(std::cin, command);
+        auto tokens = chess::util::tokenize(command, ' ');
+        if(tokens.empty()) {
+            continue;
         }
-        else if(command == "debug") {
+        if(tokens[0] == "perft") {
+            if(tokens.size() == 2) {
+                perft_command(tokens[1]);
+            }
+            else {
+                perft_command();
+            }
+        }
+        else if(tokens[0] == "debug") {
+            if(tokens.size() == 2) {
+                debug_command(tokens[1]);
+            }
+            else {
+                debug_command();
+            }
             debug_command();
         }
-        else if(command == "play") {
+        else if(tokens[0] == "play") {
             play_command();
         }
-        else if(command == "bot") {
-            play_bot();
+        else if(tokens[0] == "bot") {
+            if(tokens.size() == 2) {
+                if(tokens[1] == "w") {
+                    play_bot(chess::Color::White);
+                }
+                else if(tokens[1] == "b") {
+                    play_bot(chess::Color::Black);
+                }
+                else {
+                    std::cout << "Please select your color (w/b).\n";
+                }
+            }
+            else {
+                std::cout << "Please select your color (w/b).\n";
+            }
         }
-        else if(command == "quit") {
+        else if(tokens[0] == "help") {
+            help();
+        }
+        else if(tokens[0] == "quit") {
             break;
         }
     }

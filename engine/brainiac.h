@@ -7,15 +7,18 @@
 #include <thread>
 #include <mutex>
 
-#include "neural/brain.h"
 #include "board.h"
 
 namespace chess {
+    struct MinimaxNode {
+        int depth;
+        int alpha;
+        int beta;
+        Color turn;
+    };
+
     class Brainiac {
-        neural::NEATParameters _params;
-        neural::Brain *_population0;
-        neural::Brain *_population1;
-        int _current_eval = 0; // Which population are we currently evaluating?
+        int max_depth;
 
         /**
          * Convert the board into a 66x1 row-vector
@@ -24,45 +27,23 @@ namespace chess {
         std::vector<double> vectorize(Board &board);
 
         /**
-         * Simulate a game between two phenomes
+         * Alpha-beta pruning algorithm
          */
-        void simulate(neural::Phenome &a, neural::Phenome &b, std::mutex &mutex);
-
-        /**
-         * Train a host population
-         */
-        void train_host();
+        int alphabeta(Board &board, MinimaxNode node, Color player);
 
     public:
         Brainiac();
-        ~Brainiac();
 
         /**
-         * Generate the initial Brainiac instance and its networks
+         * Calculates the score of the maximizing player based
+         * on the board state
          */
-        void generate();
+        int evaluate(Board &board, Color maximizing_player);
 
         /**
-         * Trains by playing games against itself and updating its neural network.
-         * This network calculates the probability of winning at a particular board state.
+         * Selects the best possible move for the current position
          */
-        void train();
-
-        /**
-         * Evaluates the board state and selects the best
-         * possible move
-         */
-        Move evaluate(Board &board);
-
-        /**
-         * Load neural networks from disk
-         */
-        bool load();
-
-        /**
-         * Save neural networks to disk
-         */
-        void save();
+        Move move(Board &board);
     };
 }
 
