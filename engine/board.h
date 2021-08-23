@@ -31,6 +31,8 @@ namespace chess {
         uint64_t _attackers = 0; 
         std::vector<Move> _legal_moves;
 
+        int _material = 0;
+
         BoardState *next = nullptr;
         BoardState *prev = nullptr;
 
