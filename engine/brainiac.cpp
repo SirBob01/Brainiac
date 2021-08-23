@@ -35,8 +35,9 @@ namespace chess {
 
     int Brainiac::alphabeta(Board &board, MinimaxNode node, Color player, bool quiescence) {
         std::vector<Move> moves = board.get_moves();
+        int n = moves.size();
         if(!quiescence) {
-            if(moves.size() == 0) {
+            if(n == 0) {
                 // Return a static evaluation of the board
                 return evaluate(board, player);
             }
@@ -48,7 +49,7 @@ namespace chess {
         }
         else {
             bool quiet = (node.move.flags & MoveFlag::Quiet);
-            if(quiet || moves.size() == 0 || node.depth == 0) {
+            if(quiet || n == 0 || node.depth == 0) {
                 return evaluate(board, player);
             }
         }
@@ -62,8 +63,30 @@ namespace chess {
             value = INT32_MAX;
         }
 
-        // TODO: Selection sort
+        std::vector<std::pair<Move, int>> move_scores;
         for(auto &move : moves) {
+            board.execute_move(move);
+            int score = board.calculate_material();
+            if(player == Color::Black) {
+                score *= -1;
+            }
+            move_scores.push_back(std::make_pair(move, score));
+            board.undo_move();
+        }
+
+        // Move ordering allows early termination search
+        for(int i = 0; i < n - 1; i++) {
+            int max_score = move_scores[i].second;
+            int max_index = i;
+            for(int j = i + 1; j < n; j++) {
+                if(move_scores[j].second > max_score) {
+                    max_score = move_scores[j].second;
+                    max_index = j;
+                }
+            }
+            std::swap(move_scores[i], move_scores[max_index]);
+            auto move = move_scores[i].first;
+
             board.execute_move(move);
             MinimaxNode new_node = {node.depth-1, node.alpha, node.beta, move, next_turn};
             int child_value = alphabeta(board, new_node, player, quiescence);
