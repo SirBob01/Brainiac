@@ -103,17 +103,22 @@ void play_bot(chess::Color player_color) {
             while(move.is_invalid()) {
                 std::cout << "Enter a move> ";
                 std::cin >> move_input;
+                // Undo and redo twice to skip over bot's move as well
                 if(move_input == "undo") {
-                    if(!b.is_initial()) {
-                        b.undo_move();
-                        break;
+                    for(int i = 0; i < 2; i++) {
+                        if(!b.is_initial()) {
+                            b.undo_move();
+                        }
                     }
+                    break;
                 }
                 else if(move_input == "redo") {
-                    if(!b.is_latest()) {
-                        b.redo_move();
-                        break;
+                    for(int i = 0; i < 2; i++) {
+                        if(!b.is_latest()) {
+                            b.redo_move();
+                        }
                     }
+                    break;
                 }
                 else if(move_input == "stop") {
                     return;
