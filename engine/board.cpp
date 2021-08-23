@@ -417,6 +417,7 @@ namespace chess {
     }
 
     int Board::calculate_material() {
+        // TODO: Keep material count state and update only during captures
         int total = 0;
         for(int i = 0; i < 12; i++) {
             int bitcount = 0; // Count the number of bits in the bitboard
