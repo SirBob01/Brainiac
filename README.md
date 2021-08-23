@@ -16,6 +16,11 @@ To train, an initial population of genomes is created and divided into species t
 
 Over time, this should improve the overall gene pool, creating networks that can evaluate the board and predict whether a given move is most likely to win the game.
 
+## TODO
+
+- Implement Zobrist hashing
+- Use transposition table to further prune search tree
+
 ## License
 
 Code and documentation Copyright (c) 2021 Keith Leonardo
