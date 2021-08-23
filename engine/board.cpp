@@ -12,6 +12,7 @@ namespace chess {
 
         state->_attackers = _attackers;
         state->_halfmoves = _halfmoves;
+        state->_material = _material;
 
         return state;
     }
@@ -39,6 +40,7 @@ namespace chess {
                 PieceType type = static_cast<PieceType>(char_idx % PieceType::NPieces);
                 Color color = static_cast<Color>(char_idx / PieceType::NPieces);
                 set_at(sq, {type, color});
+                state->_material += piece_weights[(color * PieceType::NPieces) + type];
                 col++;
             }
         }
@@ -417,18 +419,7 @@ namespace chess {
     }
 
     int Board::calculate_material() {
-        // TODO: Keep material count state and update only during captures
-        int total = 0;
-        for(int i = 0; i < 12; i++) {
-            int bitcount = 0; // Count the number of bits in the bitboard
-            uint64_t bitboard = state->_bitboards[i];
-            while(bitboard) {
-                bitboard &= (bitboard-1);
-                bitcount++;
-            }
-            total += piece_weights[i] * bitcount;
-        }
-        return total;
+        return state->_material;
     }
     
     Piece Board::get_at(Square sq) {
@@ -490,6 +481,11 @@ namespace chess {
 
         Piece piece = get_at(move.from);
         Piece target = get_at(move.to);
+
+        // Update material if move was a capture
+        if(!target.is_empty()) {
+            state->_material -= piece_weights[(target.color * PieceType::NPieces) + target.type];
+        }
 
         // Unset castling flags if relevant pieces were moved
         Castle queen_side = (_turn == Color::White) ? (Castle::WQ) : (Castle::BQ);
