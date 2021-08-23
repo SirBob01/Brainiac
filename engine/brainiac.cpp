@@ -2,7 +2,8 @@
 
 namespace chess {
     Brainiac::Brainiac() {
-        max_depth = 5;
+        max_depth = 3;
+        max_quiescence_depth = 2;
     }
 
     std::vector<double> Brainiac::vectorize(Board &board) {
@@ -32,12 +33,24 @@ namespace chess {
         return vector;
     }
 
-    int Brainiac::alphabeta(Board &board, MinimaxNode node, Color player) {
-        // TODO: Sort moves and perform quiescence search
+    int Brainiac::alphabeta(Board &board, MinimaxNode node, Color player, bool quiescence) {
         std::vector<Move> moves = board.get_moves();
-        if(node.depth == 0 || moves.size() == 0) {
-            int heuristic = evaluate(board, player);
-            return heuristic;
+        if(!quiescence) {
+            if(moves.size() == 0) {
+                // Return a static evaluation of the board
+                return evaluate(board, player);
+            }
+            if(node.depth == 0) {
+                // Search further until a quiet move is found
+                node.depth = max_quiescence_depth;
+                return alphabeta(board, node, player, true);
+            }
+        }
+        else {
+            bool quiet = (node.move.flags & MoveFlag::Quiet);
+            if(quiet || moves.size() == 0 || node.depth == 0) {
+                return evaluate(board, player);
+            }
         }
 
         Color next_turn = static_cast<Color>(!node.turn);
@@ -48,21 +61,23 @@ namespace chess {
         else {
             value = INT32_MAX;
         }
+
+        // TODO: Selection sort
         for(auto &move : moves) {
             board.execute_move(move);
-            MinimaxNode new_node = {node.depth-1, node.alpha, node.beta, next_turn};
-            int recur_value = alphabeta(board, new_node, player);
+            MinimaxNode new_node = {node.depth-1, node.alpha, node.beta, move, next_turn};
+            int child_value = alphabeta(board, new_node, player, quiescence);
             board.undo_move();
 
             if(node.turn == player) {
-                value = std::max(value, recur_value);
+                value = std::max(value, child_value);
                 if(value >= node.beta) {
                     break;
                 }
                 node.alpha = std::max(node.alpha, value);
             }
             else {
-                value = std::min(value, recur_value);
+                value = std::min(value, child_value);
                 if(value <= node.alpha) {
                     break;
                 }
@@ -89,7 +104,8 @@ namespace chess {
 
         for(auto &move : moves) {
             board.execute_move(move);
-            int value = alphabeta(board, {max_depth, INT32_MIN, INT32_MAX, player}, player);
+            MinimaxNode node = {max_depth, INT32_MIN, INT32_MAX, move, player};
+            int value = alphabeta(board, node, player);
             board.undo_move();
             if(value > best_value) {
                 best_value = value;

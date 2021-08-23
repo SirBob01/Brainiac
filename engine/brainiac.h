@@ -14,11 +14,13 @@ namespace chess {
         int depth;
         int alpha;
         int beta;
+        Move move;
         Color turn;
     };
 
     class Brainiac {
         int max_depth;
+        int max_quiescence_depth;
 
         /**
          * Convert the board into a 66x1 row-vector
@@ -27,9 +29,9 @@ namespace chess {
         std::vector<double> vectorize(Board &board);
 
         /**
-         * Alpha-beta pruning algorithm
+         * Alpha-beta pruning algorithm with quiescence search
          */
-        int alphabeta(Board &board, MinimaxNode node, Color player);
+        int alphabeta(Board &board, MinimaxNode node, Color player, bool quiescence=false);
 
     public:
         Brainiac();
