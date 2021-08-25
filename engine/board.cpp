@@ -14,6 +14,8 @@ namespace chess {
         state->_halfmoves = _halfmoves;
         state->_material = _material;
 
+        state->_hash = _hash;
+
         return state;
     }
 
@@ -62,6 +64,14 @@ namespace chess {
         
         state->_attackers = get_attackers();
         generate_moves();
+        
+        // Calculate the Zobrist hash
+        state->_hash = zobrist_hash(
+            _turn, 
+            state->_bitboards, 
+            state->_castling_rights, 
+            state->_en_passant_target
+        );
     }
 
     Board::~Board() {
@@ -484,7 +494,7 @@ namespace chess {
 
         // Update material if move was a capture
         if(!target.is_empty()) {
-            state->_material -= piece_weights[(target.color * PieceType::NPieces) + target.type];
+            state->_material -= piece_weights[target.get_piece_index()];
         }
 
         // Unset castling flags if relevant pieces were moved
@@ -496,12 +506,28 @@ namespace chess {
 
         if(state->_castling_rights & (king_side | queen_side)) {
             if(piece.type == PieceType::King) {
+                if(state->_castling_rights & king_side) {
+                    state->_hash ^= castling_bitstrings[find_lsb(king_side)];
+                }
+                if(state->_castling_rights & queen_side) {
+                    state->_hash ^= castling_bitstrings[find_lsb(queen_side)];
+                }
                 state->_castling_rights &= ~(king_side | queen_side);
             }
             else if(piece.type == PieceType::Rook) {
                 uint64_t mask = move.from.get_mask();
-                if(mask & fileA) state->_castling_rights &= ~queen_side;
-                else if(mask & fileH) state->_castling_rights &= ~king_side;
+                if(mask & fileA) {
+                    if(state->_castling_rights & queen_side) {
+                        state->_hash ^= castling_bitstrings[find_lsb(queen_side)];
+                    }
+                    state->_castling_rights &= ~queen_side;
+                }
+                else if(mask & fileH) {
+                    if(state->_castling_rights & king_side) {
+                        state->_hash ^= castling_bitstrings[find_lsb(king_side)];
+                    }
+                    state->_castling_rights &= ~king_side;
+                }
             }
         }
 
@@ -509,26 +535,50 @@ namespace chess {
         if(target.type == PieceType::Rook) {
             uint64_t mask = move.to.get_mask();
             uint64_t rank = (_turn == Color::White) ? 0xFF00000000000000 : 0xFF;
-            if(mask & fileA & rank) state->_castling_rights &= ~opp_queen_side;
-            else if(mask & fileH & rank) state->_castling_rights &= ~opp_king_side;
+            if(mask & fileA & rank) {
+                if(state->_castling_rights & opp_queen_side) {
+                    state->_hash ^= castling_bitstrings[find_lsb(opp_queen_side)];
+                }
+                state->_castling_rights &= ~opp_queen_side;
+            }
+            else if(mask & fileH & rank) {
+                if(state->_castling_rights & opp_king_side) {
+                    state->_hash ^= castling_bitstrings[find_lsb(opp_king_side)];
+                }
+                state->_castling_rights &= ~opp_king_side;
+            }
         }
         
         // Move to target square and handle promotions
         clear_at(move.from);
+        state->_hash ^= zobrist_bitstring(piece, move.from);
+        if(!target.is_empty()) {
+            state->_hash ^= zobrist_bitstring(target, move.to);
+        }
+        Piece promotion;
         if(move.flags & MoveFlag::BishopPromo) {
-            set_at(move.to, {PieceType::Bishop, _turn});
+            promotion = {PieceType::Bishop, _turn};
+            set_at(move.to, promotion);
+            state->_hash ^= zobrist_bitstring(promotion, move.to);
         }
         else if(move.flags & MoveFlag::RookPromo) {
-            set_at(move.to, {PieceType::Rook, _turn});
+            promotion = {PieceType::Rook, _turn};
+            set_at(move.to, promotion);
+            state->_hash ^= zobrist_bitstring(promotion, move.to);
         }
         else if(move.flags & MoveFlag::KnightPromo) {
-            set_at(move.to, {PieceType::Knight, _turn});
+            promotion = {PieceType::Knight, _turn};
+            set_at(move.to, promotion);
+            state->_hash ^= zobrist_bitstring(promotion, move.to);
         }
         else if(move.flags & MoveFlag::QueenPromo) {
-            set_at(move.to, {PieceType::Queen, _turn});
+            promotion = {PieceType::Queen, _turn};
+            set_at(move.to, promotion);
+            state->_hash ^= zobrist_bitstring(promotion, move.to);
         }
         else {
             set_at(move.to, piece);
+            state->_hash ^= zobrist_bitstring(piece, move.to);
         }
 
         // Move rook if castling
@@ -545,8 +595,12 @@ namespace chess {
             else {
                 rook_board &= fileH;
             }
-            clear_at(Square(find_lsb(rook_board)));
+            Square initial_position = Square(find_lsb(rook_board));
+            clear_at(initial_position);
             set_at(target, rook);
+
+            state->_hash ^= zobrist_bitstring(rook, initial_position);
+            state->_hash ^= zobrist_bitstring(rook, target);
         } 
 
         // Check for en passant capture
@@ -555,14 +609,23 @@ namespace chess {
             int rankd = move.to.shift - move.from.shift;
             
             // One rank up or one rank down depending on current player
-            int dir = (rankd > 0) - (rankd < 0); 
-            clear_at(Square(state->_en_passant_target.shift - (dir * 8)));
+            int dir = (rankd > 0) - (rankd < 0);
+            Square en_passant_square = Square(state->_en_passant_target.shift - (dir * 8)); 
+            Piece en_passant_piece = get_at(en_passant_square);
+            clear_at(en_passant_square);
+
+            state->_hash ^= zobrist_bitstring(en_passant_piece, en_passant_square);
+            state->_hash ^= en_passant_bitstrings[state->_en_passant_target.shift % 8];
             state->_en_passant_target = Square();
         }
 
         // Update en passant position if pawn advanced two ranks
+        if(!state->_en_passant_target.is_invalid()) {
+            state->_hash ^= en_passant_bitstrings[state->_en_passant_target.shift % 8];
+        }
         if(move.flags & MoveFlag::PawnDouble) {
             state->_en_passant_target = Square(move.from.shift + (move.to.shift - move.from.shift)/2);
+            state->_hash ^= en_passant_bitstrings[state->_en_passant_target.shift % 8];
         }
         else {
             state->_en_passant_target = Square();
@@ -581,6 +644,7 @@ namespace chess {
             _fullmoves++;
         }
         _turn = static_cast<Color>(!_turn);
+        state->_hash ^= turn_bitstring;
 
         state->_attackers = get_attackers();
         generate_moves();
@@ -693,6 +757,10 @@ namespace chess {
 
     Color Board::get_turn() {
         return _turn;
+    }
+
+    uint64_t Board::get_hash() {
+        return state->_hash;
     }
 
     void Board::print() {
