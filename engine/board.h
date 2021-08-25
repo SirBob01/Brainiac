@@ -8,6 +8,7 @@
 #include "move.h"
 #include "bits.h"
 #include "util.h"
+#include "zobrist.h"
 
 namespace chess {
     /**
@@ -32,6 +33,7 @@ namespace chess {
         std::vector<Move> _legal_moves;
 
         int _material = 0;
+        uint64_t _hash;
 
         BoardState *next = nullptr;
         BoardState *prev = nullptr;
@@ -214,6 +216,11 @@ namespace chess {
          * Get the current turn (either White or Black)
          */
         Color get_turn();
+
+        /**
+         * Get the Zobrist hash of the board
+         */
+        uint64_t get_hash();
 
         /**
          * Print the board on the console
