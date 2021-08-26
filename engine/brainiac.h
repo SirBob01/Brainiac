@@ -8,6 +8,7 @@
 #include <mutex>
 
 #include "board.h"
+#include "transpositions.h"
 
 namespace chess {
     struct MinimaxNode {
@@ -19,8 +20,9 @@ namespace chess {
     };
 
     class Brainiac {
-        int max_depth;
-        int max_quiescence_depth;
+        int _max_depth;
+        int _max_quiescence_depth;
+        Transpositions _transpositions;
 
         /**
          * Convert the board into a 66x1 row-vector
