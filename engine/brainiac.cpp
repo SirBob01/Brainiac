@@ -2,8 +2,8 @@
 
 namespace chess {
     Brainiac::Brainiac() {
-        max_depth = 3;
-        max_quiescence_depth = 2;
+        _max_depth = 4;
+        _max_quiescence_depth = 2;
     }
 
     std::vector<double> Brainiac::vectorize(Board &board) {
@@ -43,7 +43,7 @@ namespace chess {
             }
             if(node.depth == 0) {
                 // Search further until a quiet move is found
-                node.depth = max_quiescence_depth;
+                node.depth = _max_quiescence_depth;
                 return alphabeta(board, node, player, true);
             }
         }
@@ -52,6 +52,11 @@ namespace chess {
             if(quiet || n == 0 || node.depth == 0) {
                 return evaluate(board, player);
             }
+        }
+        
+        // Read from the transposition table
+        if(_transpositions.contains(board, node.depth)) {
+            return _transpositions.get(board, node.depth);
         }
 
         Color next_turn = static_cast<Color>(!node.turn);
@@ -107,6 +112,9 @@ namespace chess {
                 node.beta = std::min(node.beta, value);
             }
         }
+
+        // Update the transposition table
+        _transpositions.set(board, node.depth, value);
         return value;
     }
 
@@ -127,7 +135,7 @@ namespace chess {
 
         for(auto &move : moves) {
             board.execute_move(move);
-            MinimaxNode node = {max_depth, INT32_MIN, INT32_MAX, move, player};
+            MinimaxNode node = {_max_depth, INT32_MIN, INT32_MAX, move, player};
             int value = alphabeta(board, node, player);
             board.undo_move();
             if(value > best_value) {
