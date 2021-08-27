@@ -42,17 +42,17 @@ namespace chess {
      * Flags that describe a chess move
      */
     enum MoveFlag {
-        Quiet       = 0,
-        Capture     = 1 << 0,
-        EnPassant   = 1 << 1,
-        PawnAdvance = 1 << 2,
-        PawnDouble  = 1 << 3,
-        Castling    = 1 << 4,
-        KnightPromo = 1 << 5,
-        QueenPromo  = 1 << 6,
-        BishopPromo = 1 << 7,
-        RookPromo   = 1 << 8,
-        Invalid     = 1 << 9
+        Quiet       = 1,
+        Capture     = 1 << 1,
+        EnPassant   = 1 << 2,
+        PawnAdvance = 1 << 3,
+        PawnDouble  = 1 << 4,
+        Castling    = 1 << 5,
+        KnightPromo = 1 << 6,
+        QueenPromo  = 1 << 7,
+        BishopPromo = 1 << 8,
+        RookPromo   = 1 << 9,
+        Invalid     = 1 << 10
     };
 
     /**
