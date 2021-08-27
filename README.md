@@ -18,7 +18,6 @@ Over time, this should improve the overall gene pool, creating networks that can
 
 ## TODO
 
-- Implement Zobrist hashing
 - Use transposition table to further prune search tree
 
 ## License
