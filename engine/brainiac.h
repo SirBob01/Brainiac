@@ -30,6 +30,8 @@ namespace chess {
     class Brainiac {
         int _max_depth;
         int _max_quiescence_depth;
+
+        // Transposition table
         Transpositions _transpositions;
 
         // Statistics for measuring search pruning performance
