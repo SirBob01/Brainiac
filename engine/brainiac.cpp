@@ -12,9 +12,6 @@ namespace chess {
 
     int Brainiac::search(Board &board, MinimaxNode node, Color player,
                          bool quiescence) {
-        const std::vector<Move> &moves = board.get_moves();
-        const size_t n = moves.size();
-
         // Terminal conditions
         _total++;
         if (_transpositions.contains(board)) {
@@ -32,8 +29,7 @@ namespace chess {
             }
         } else if (quiescence) {
             // Quiescence search found a quiet move, we can stop early
-            bool quiet = (node.move.flags & MoveFlag::Quiet);
-            if (quiet || n == 0 || node.depth == 0) {
+            if (node.move.flags & MoveFlag::Quiet) {
                 return evaluate(board, player);
             }
         } else if (board.is_checkmate()) {
@@ -55,9 +51,14 @@ namespace chess {
         new_node.beta = node.beta;
         new_node.turn = next_turn;
 
+        // Get move list
+        const std::vector<Move> &moves = board.get_moves();
+        int n = moves.size();
+
         // Move ordering using MVV-LVA heuristic
-        std::vector<std::pair<Move, int>> move_scores;
-        for (auto &move : moves) {
+        std::vector<std::pair<Move, int>> move_scores(n);
+        for (int i = 0; i < n; i++) {
+            const Move &move = moves[i];
             Piece mvv_piece = board.get_at(move.to);
             Piece lva_piece = board.get_at(move.from);
 
@@ -73,7 +74,7 @@ namespace chess {
                 if (lva_piece.color == Color::Black)
                     lva *= -1;
             }
-            move_scores.push_back(std::make_pair(move, mvv - lva));
+            move_scores[i] = std::make_pair(move, mvv - lva);
         }
 
         // Prioritize better moves to optimize pruning
