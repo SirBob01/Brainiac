@@ -5,33 +5,28 @@
 
 namespace chess {
     enum PieceType {
-        King    = 0,
-        Pawn    = 1,
-        Rook    = 2,
-        Knight  = 3,
-        Bishop  = 4,
-        Queen   = 5,
+        King = 0,
+        Pawn = 1,
+        Rook = 2,
+        Knight = 3,
+        Bishop = 4,
+        Queen = 5,
         NPieces = 6
     };
 
-    enum Color {
-        White = 0,
-        Black = 1,
-        Empty = 2
-    };
+    enum Color { White = 0, Black = 1, Empty = 2 };
 
     static const char *PieceChars = "KPRNBQkprnbq";
     static const char *PieceDisplay[] = {
         "\u2654", "\u2659", "\u2656", "\u2658", "\u2657", "\u2655",
-        "\u265A", "\u265F", "\u265C", "\u265E", "\u265D", "\u265B"
-    };
+        "\u265A", "\u265F", "\u265C", "\u265E", "\u265D", "\u265B"};
 
     /**
      * Calculate the material score of the board state
      */
     static const int piece_weights[] = {
-         4,  1,  5,  3,  3,  9, // White pieces
-        -4, -1, -5, -3, -3, -9  // Black pieces
+        4,  1,  5,  3,  3,  9, // White pieces
+        -4, -1, -5, -3, -3, -9 // Black pieces
     };
 
     /**
@@ -62,10 +57,8 @@ namespace chess {
             return PieceChars[get_piece_index()];
         }
 
-        inline bool is_empty() {
-            return color == Color::Empty;
-        }
+        inline bool is_empty() { return color == Color::Empty; }
     };
-}
+} // namespace chess
 
 #endif

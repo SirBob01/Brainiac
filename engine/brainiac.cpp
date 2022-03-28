@@ -2,8 +2,11 @@
 
 namespace chess {
     Brainiac::Brainiac() {
-        _max_depth = 4;
-        _max_quiescence_depth = 2;
+        _max_depth = 5;
+        _max_quiescence_depth = 1;
+        hits = 0;
+        total = 0;
+        visited = 0;
     }
 
     std::vector<double> Brainiac::vectorize(Board &board) {
@@ -34,6 +37,14 @@ namespace chess {
     }
 
     int Brainiac::alphabeta(Board &board, MinimaxNode node, Color player, bool quiescence) {
+        // Read from the transposition table
+        total++;
+        if(_transpositions.contains(board)) {
+            hits++;
+            return _transpositions.get(board);
+        }
+        visited++;
+
         std::vector<Move> moves = board.get_moves();
         int n = moves.size();
         if(!quiescence) {
@@ -54,11 +65,6 @@ namespace chess {
             }
         }
         
-        // Read from the transposition table
-        if(_transpositions.contains(board, node.depth)) {
-            return _transpositions.get(board, node.depth);
-        }
-
         Color next_turn = static_cast<Color>(!node.turn);
         int value;
         if(node.turn == player) {
@@ -70,12 +76,22 @@ namespace chess {
 
         std::vector<std::pair<Move, int>> move_scores;
         for(auto &move : moves) {
+            Piece mvv_piece = board.get_at(move.to);
+            Piece lva_piece = board.get_at(move.from);
             board.execute_move(move);
-            int score = board.calculate_material();
-            if(player == Color::Black) {
-                score *= -1;
+            
+            int mvv = 0;
+            int lva = 0;
+            if(!mvv_piece.is_empty()) {
+                mvv = piece_weights[mvv_piece.get_piece_index()];
             }
-            move_scores.push_back(std::make_pair(move, score));
+            if(!lva_piece.is_empty()) {
+                lva = piece_weights[lva_piece.get_piece_index()];
+            }
+            if(mvv_piece.color == Color::Black) {
+                mvv *= -1;
+            }
+            move_scores.push_back(std::make_pair(move, mvv - lva));
             board.undo_move();
         }
 
@@ -90,7 +106,7 @@ namespace chess {
                 }
             }
             std::swap(move_scores[i], move_scores[max_index]);
-            auto move = move_scores[i].first;
+            auto &move = move_scores[i].first;
 
             board.execute_move(move);
             MinimaxNode new_node = {node.depth-1, node.alpha, node.beta, move, next_turn};
@@ -99,22 +115,24 @@ namespace chess {
 
             if(node.turn == player) {
                 value = std::max(value, child_value);
+                node.alpha = std::max(node.alpha, value);
                 if(value >= node.beta) {
                     break;
                 }
-                node.alpha = std::max(node.alpha, value);
             }
             else {
                 value = std::min(value, child_value);
+                node.beta = std::min(node.beta, value);
                 if(value <= node.alpha) {
                     break;
                 }
-                node.beta = std::min(node.beta, value);
             }
         }
 
         // Update the transposition table
-        _transpositions.set(board, node.depth, value);
+        if(node.depth == _max_depth) {
+            _transpositions.set(board, node.depth, value);
+        }
         return value;
     }
 
@@ -133,6 +151,7 @@ namespace chess {
         int best_value = INT32_MIN;
         Move best_move = moves[0];
 
+        auto start = std::chrono::high_resolution_clock::now();
         for(auto &move : moves) {
             board.execute_move(move);
             MinimaxNode node = {_max_depth, INT32_MIN, INT32_MAX, move, player};
@@ -143,6 +162,12 @@ namespace chess {
                 best_move = move;
             }
         }
+        std::cout << "Done searching." << " (";
+        auto stop = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+        std::cout << duration.count()/1000000.0 << " s)\n";
+        std::cout << hits << " hits, " << visited << " searched, " << total << " total.\n";
+        _transpositions.print();
         return best_move;
     }
 }

@@ -1,20 +1,20 @@
-#include <iostream>
-#include <iomanip>
-#include <vector>
-#include <chrono>
 #include "engine/brainiac.h"
+#include <chrono>
+#include <iomanip>
+#include <iostream>
+#include <vector>
 
 uint64_t perft(chess::Board &b, int depth, int max_depth, bool verbose) {
     uint64_t nodes = 0;
     auto moves = b.get_moves();
-    if(depth == 1) {
+    if (depth == 1) {
         return moves.size();
     }
-    for(auto &move : moves) {
+    for (auto &move : moves) {
         b.execute_move(move);
-        uint64_t children = perft(b, depth-1, max_depth, verbose);
+        uint64_t children = perft(b, depth - 1, max_depth, verbose);
         b.undo_move();
-        if(depth == max_depth && verbose) {
+        if (depth == max_depth && verbose) {
             std::cout << move.standard_notation() << ": " << children << "\n";
         }
         nodes += children;
@@ -22,7 +22,9 @@ uint64_t perft(chess::Board &b, int depth, int max_depth, bool verbose) {
     return nodes;
 }
 
-void perft_command(std::string fen_string="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
+void perft_command(
+    std::string fen_string =
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
     int depth;
     std::cout << "Enter perft depth: ";
     std::cin >> depth;
@@ -31,18 +33,21 @@ void perft_command(std::string fen_string="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RN
     b.print();
     std::cout << b.generate_fen() << "\n";
 
-    for(int i = 1; i <= depth; i++) {
+    for (int i = 1; i <= depth; i++) {
         auto start = std::chrono::high_resolution_clock::now();
         std::cout << "Perft(" << i << ") = ";
         uint64_t nodes = perft(b, i, i, false);
         std::cout << nodes << " (";
         auto stop = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-        std::cout << duration.count()/1000000.0 << " s)\n";
+        auto duration =
+            std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+        std::cout << duration.count() / 1000000.0 << " s)\n";
     }
 }
 
-void debug_command(std::string fen_string="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
+void debug_command(
+    std::string fen_string =
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
     int depth;
     // std::string fen_string;
     // std::cout << "Enter FEN string: ";
@@ -56,25 +61,26 @@ void debug_command(std::string fen_string="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RN
 
     std::string move_input;
     chess::Move move = {};
-    while(depth) {
+    while (depth) {
         uint64_t nodes = perft(b, depth, depth, true);
-        if(depth == 1) {
-            for(auto &m : b.get_moves()) {
+        if (depth == 1) {
+            for (auto &m : b.get_moves()) {
                 std::cout << m.standard_notation() << "\n";
             }
         }
         std::cout << "Evaluated " << nodes << " nodes\n";
 
-        while(move.is_invalid()) {
+        while (move.is_invalid()) {
             std::cout << "Enter move to visit subtree> ";
             std::cin >> move_input;
             std::string from = move_input.substr(0, 2);
             std::string to = move_input.substr(2, 2);
             char promotion = 0;
-            if(move_input.length() == 5) {
+            if (move_input.length() == 5) {
                 promotion = move_input[4];
             }
-            move = b.create_move(chess::Square(from), chess::Square(to), promotion);
+            move = b.create_move(chess::Square(from), chess::Square(to),
+                                 promotion);
         }
         b.execute_move(move);
         b.print();
@@ -90,50 +96,47 @@ void play_bot(chess::Color player_color) {
 
     chess::Move move;
     std::string move_input;
-    while(!b.is_checkmate() && !b.is_draw()) {
+    while (!b.is_checkmate() && !b.is_draw()) {
         b.print();
         std::cout << b.generate_fen() << "\n";
-        if(b.is_check()) {
+        if (b.is_check()) {
             std::cout << "Check!\n";
         }
-        if(b.get_turn() != player_color) {
+        if (b.get_turn() != player_color) {
             b.execute_move(bot.move(b));
-        }
-        else {
-            while(move.is_invalid()) {
+        } else {
+            while (move.is_invalid()) {
                 std::cout << "Enter a move> ";
                 std::cin >> move_input;
                 // Undo and redo twice to skip over bot's move as well
-                if(move_input == "undo") {
-                    for(int i = 0; i < 2; i++) {
-                        if(!b.is_initial()) {
+                if (move_input == "undo") {
+                    for (int i = 0; i < 2; i++) {
+                        if (!b.is_initial()) {
                             b.undo_move();
                         }
                     }
                     break;
-                }
-                else if(move_input == "redo") {
-                    for(int i = 0; i < 2; i++) {
-                        if(!b.is_latest()) {
+                } else if (move_input == "redo") {
+                    for (int i = 0; i < 2; i++) {
+                        if (!b.is_latest()) {
                             b.redo_move();
                         }
                     }
                     break;
-                }
-                else if(move_input == "stop") {
+                } else if (move_input == "stop") {
                     return;
-                }
-                else {
+                } else {
                     std::string from = move_input.substr(0, 2);
                     std::string to = move_input.substr(2, 2);
                     char promotion = 0;
-                    if(move_input.length() == 5) {
+                    if (move_input.length() == 5) {
                         promotion = move_input[4];
                     }
-                    move = b.create_move(chess::Square(from), chess::Square(to), promotion);
+                    move = b.create_move(chess::Square(from), chess::Square(to),
+                                         promotion);
                 }
             }
-            if(!move.is_invalid()) {
+            if (!move.is_invalid()) {
                 b.execute_move(move);
                 move = {};
             }
@@ -141,10 +144,10 @@ void play_bot(chess::Color player_color) {
     }
     b.print();
     std::cout << b.generate_fen() << "\n";
-    if(b.is_checkmate()) {
-        std::cout << (b.get_turn() == chess::Color::White ? "Black" : "White") << " wins!\n";
-    }
-    else {
+    if (b.is_checkmate()) {
+        std::cout << (b.get_turn() == chess::Color::White ? "Black" : "White")
+                  << " wins!\n";
+    } else {
         std::cout << "Draw!\n";
     }
 }
@@ -153,68 +156,66 @@ void play_command() {
     chess::Board b;
     chess::Move move;
     std::string move_input;
-    while(!b.is_checkmate() && !b.is_draw()) {
+    while (!b.is_checkmate() && !b.is_draw()) {
         b.print();
         std::cout << b.generate_fen() << "\n";
-        if(b.is_check()) {
+        if (b.is_check()) {
             std::cout << "Check!\n";
         }
-        while(move.is_invalid()) {
+        while (move.is_invalid()) {
             std::cout << "Enter a move> ";
             std::cin >> move_input;
-            if(move_input == "undo") {
-                if(!b.is_initial()) {
+            if (move_input == "undo") {
+                if (!b.is_initial()) {
                     b.undo_move();
                     break;
                 }
-            }
-            else if(move_input == "redo") {
-                if(!b.is_latest()) {
+            } else if (move_input == "redo") {
+                if (!b.is_latest()) {
                     b.redo_move();
                     break;
                 }
-            }
-            else if(move_input == "stop") {
+            } else if (move_input == "stop") {
                 return;
-            }
-            else {
+            } else {
                 std::string from = move_input.substr(0, 2);
                 std::string to = move_input.substr(2, 2);
                 char promotion = 0;
-                if(move_input.length() == 5) {
+                if (move_input.length() == 5) {
                     promotion = move_input[4];
                 }
-                move = b.create_move(chess::Square(from), chess::Square(to), promotion);
+                move = b.create_move(chess::Square(from), chess::Square(to),
+                                     promotion);
             }
         }
-        if(!move.is_invalid()) {
+        if (!move.is_invalid()) {
             b.execute_move(move);
             move = {};
         }
     }
     b.print();
     std::cout << b.generate_fen() << "\n";
-    if(b.is_checkmate()) {
-        std::cout << (b.get_turn() == chess::Color::White ? "Black" : "White") << " wins!\n";
-    }
-    else {
+    if (b.is_checkmate()) {
+        std::cout << (b.get_turn() == chess::Color::White ? "Black" : "White")
+                  << " wins!\n";
+    } else {
         std::cout << "Draw!\n";
     }
 }
 
 void help() {
     std::vector<std::pair<std::string, std::string>> commands;
-    commands.push_back(std::make_pair("perft [fen_string?]", "Test performance"));
-    commands.push_back(std::make_pair("debug [fen_string?]", "Debug the chess engine"));
+    commands.push_back(
+        std::make_pair("perft [fen_string?]", "Test performance"));
+    commands.push_back(
+        std::make_pair("debug [fen_string?]", "Debug the chess engine"));
     commands.push_back(std::make_pair("play", "Run a PvP game of chess"));
     commands.push_back(std::make_pair("bot [w|b]", "Play against Brainiac"));
     commands.push_back(std::make_pair("quit", "Quit Brainiac"));
 
-    for(auto &pair : commands) {
-        std::cout << std::left 
-                  << std::setw(20) << pair.first 
-                  << std::setw(4) << " -- " 
-                  << std::setw(20) << pair.second << "\n";
+    for (auto &pair : commands) {
+        std::cout << std::left << std::setw(20) << pair.first << std::setw(4)
+                  << " -- " << std::setw(20) << pair.second << "\n";
     }
 }
 
@@ -222,53 +223,43 @@ int main() {
     std::cout << "Chess Engine C++ v.1.0\n";
     std::cout << "Enter 'help' for the list of commands.\n";
     std::string command;
-    while(true) {
+    while (true) {
         std::cout << "Enter command> ";
         std::getline(std::cin, command);
         auto tokens = chess::util::tokenize(command, ' ');
-        if(tokens.empty()) {
+        if (tokens.empty()) {
             continue;
         }
-        if(tokens[0] == "perft") {
-            if(tokens.size() == 2) {
+        if (tokens[0] == "perft") {
+            if (tokens.size() == 2) {
                 perft_command(tokens[1]);
-            }
-            else {
+            } else {
                 perft_command();
             }
-        }
-        else if(tokens[0] == "debug") {
-            if(tokens.size() == 2) {
+        } else if (tokens[0] == "debug") {
+            if (tokens.size() == 2) {
                 debug_command(tokens[1]);
-            }
-            else {
+            } else {
                 debug_command();
             }
             debug_command();
-        }
-        else if(tokens[0] == "play") {
+        } else if (tokens[0] == "play") {
             play_command();
-        }
-        else if(tokens[0] == "bot") {
-            if(tokens.size() == 2) {
-                if(tokens[1] == "w") {
+        } else if (tokens[0] == "bot") {
+            if (tokens.size() == 2) {
+                if (tokens[1] == "w") {
                     play_bot(chess::Color::White);
-                }
-                else if(tokens[1] == "b") {
+                } else if (tokens[1] == "b") {
                     play_bot(chess::Color::Black);
-                }
-                else {
+                } else {
                     std::cout << "Please select your color (w/b).\n";
                 }
-            }
-            else {
+            } else {
                 std::cout << "Please select your color (w/b).\n";
             }
-        }
-        else if(tokens[0] == "help") {
+        } else if (tokens[0] == "help") {
             help();
-        }
-        else if(tokens[0] == "quit") {
+        } else if (tokens[0] == "quit") {
             break;
         }
     }

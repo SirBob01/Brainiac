@@ -1,11 +1,11 @@
 #ifndef CHESS_BRAINIAC_H_
 #define CHESS_BRAINIAC_H_
 
-#include <vector>
-#include <unordered_map>
 #include <memory>
-#include <thread>
 #include <mutex>
+#include <thread>
+#include <unordered_map>
+#include <vector>
 
 #include "board.h"
 #include "transpositions.h"
@@ -24,6 +24,8 @@ namespace chess {
         int _max_quiescence_depth;
         Transpositions _transpositions;
 
+        int hits, total, visited;
+
         /**
          * Convert the board into a 66x1 row-vector
          * as input for the neural network.
@@ -33,9 +35,10 @@ namespace chess {
         /**
          * Alpha-beta pruning algorithm with quiescence search
          */
-        int alphabeta(Board &board, MinimaxNode node, Color player, bool quiescence=false);
+        int alphabeta(Board &board, MinimaxNode node, Color player,
+                      bool quiescence = false);
 
-    public:
+      public:
         Brainiac();
 
         /**
@@ -49,6 +52,6 @@ namespace chess {
          */
         Move move(Board &board);
     };
-}
+} // namespace chess
 
 #endif
