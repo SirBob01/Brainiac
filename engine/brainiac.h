@@ -29,14 +29,19 @@ namespace chess {
      */
     class Brainiac {
         int _max_depth;
+        int _max_quiescence_depth;
         Transpositions _transpositions;
 
-        int hits, total, visited;
+        // Statistics for measuring search pruning performance
+        int _hits;
+        int _total;
+        int _visited;
 
         /**
          * Alpha-beta pruning algorithm with quiescence search
          */
-        int search(Board &board, MinimaxNode node, Color player);
+        int search(Board &board, MinimaxNode node, Color player,
+                   bool quiescence);
 
       public:
         Brainiac();
