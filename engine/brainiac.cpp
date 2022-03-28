@@ -2,7 +2,7 @@
 
 namespace chess {
     Brainiac::Brainiac() {
-        _max_depth = 5;
+        _max_depth = 4;
 
         hits = 0;
         total = 0;
@@ -10,14 +10,19 @@ namespace chess {
     }
 
     int Brainiac::search(Board &board, MinimaxNode node, Color player) {
-        // Read from the transposition table
         total++;
         if (_transpositions.contains(board)) {
+            // Use transposition table
             hits++;
             return _transpositions.get(board);
-        }
-        if (node.depth == 0) {
+        } else if (node.depth == 0) {
+            // Use estimate
             return evaluate(board, player);
+        } else if (board.is_checkmate()) {
+            // Found a winner
+            int true_score = board.get_turn() != player ? INT32_MAX : INT32_MIN;
+            _transpositions.set(board, node.depth, true_score);
+            return true_score;
         }
         visited++;
 
@@ -34,7 +39,8 @@ namespace chess {
 
         // Alpha beta pruning
         const std::vector<Move> &moves = board.get_moves();
-        for (const auto &move : moves) {
+        for (int i = 0; i < moves.size(); i++) {
+            const Move &move = moves[i];
             new_node.move = move;
 
             if (node.turn == player) {
@@ -83,9 +89,9 @@ namespace chess {
         Move best_move = moves[0];
 
         auto start = std::chrono::high_resolution_clock::now();
-        for (auto &move : moves) {
-            board.execute_move(move);
 
+        for (auto &move : moves) {
+            // Create initial minimax node
             MinimaxNode node;
             node.depth = _max_depth;
             node.alpha = INT32_MIN;
@@ -93,6 +99,8 @@ namespace chess {
             node.move = move;
             node.turn = player;
 
+            // Get the value of the resulting board state
+            board.execute_move(move);
             int value = search(board, node, player);
             board.undo_move();
 
@@ -102,6 +110,8 @@ namespace chess {
                 best_move = move;
             }
         }
+
+        // DEBUGGING - Calculate search time
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
