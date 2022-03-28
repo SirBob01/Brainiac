@@ -1,6 +1,7 @@
 #ifndef CHESS_BRAINIAC_H_
 #define CHESS_BRAINIAC_H_
 
+#include <iostream>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -11,6 +12,9 @@
 #include "transpositions.h"
 
 namespace chess {
+    /**
+     * Contains per-node state data required during alpha-beta minimax
+     */
     struct MinimaxNode {
         int depth;
         int alpha;
@@ -19,24 +23,20 @@ namespace chess {
         Color turn;
     };
 
+    /**
+     * Core algorithm for strategically finding the best
+     * next move
+     */
     class Brainiac {
         int _max_depth;
-        int _max_quiescence_depth;
         Transpositions _transpositions;
 
         int hits, total, visited;
 
         /**
-         * Convert the board into a 66x1 row-vector
-         * as input for the neural network.
-         */
-        std::vector<double> vectorize(Board &board);
-
-        /**
          * Alpha-beta pruning algorithm with quiescence search
          */
-        int alphabeta(Board &board, MinimaxNode node, Color player,
-                      bool quiescence = false);
+        int search(Board &board, MinimaxNode node, Color player);
 
       public:
         Brainiac();

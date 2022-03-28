@@ -16,7 +16,7 @@ namespace chess {
         Square(char file, char rank);
         Square(std::string notation);
 
-        inline std::string standard_notation() {
+        inline std::string standard_notation() const {
             assert(!is_invalid());
             int row = shift / 8;
             int col = shift % 8;
@@ -25,11 +25,13 @@ namespace chess {
             return std::string({field, rank});
         };
 
-        inline uint64_t get_mask() { return (1ULL << shift); };
+        inline uint64_t get_mask() const { return (1ULL << shift); };
 
-        inline bool is_invalid() { return shift == -1; }
+        inline bool is_invalid() const { return shift == -1; }
 
-        inline bool operator==(Square other) { return shift == other.shift; }
+        inline bool operator==(Square other) const {
+            return shift == other.shift;
+        }
     };
 
     /**
@@ -67,9 +69,9 @@ namespace chess {
         Square to;
         unsigned flags = MoveFlag::Invalid;
 
-        inline bool is_invalid() { return flags & MoveFlag::Invalid; };
+        inline bool is_invalid() const { return flags & MoveFlag::Invalid; };
 
-        inline std::string standard_notation() {
+        inline std::string standard_notation() const {
             std::string s = from.standard_notation() + to.standard_notation();
             if (flags & MoveFlag::RookPromo)
                 s += 'r';

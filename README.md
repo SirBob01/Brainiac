@@ -8,6 +8,7 @@ TBD.
 
 ## TODO
 
+- Fix up main program command-line interface
 - Refine search algorithm, improve tree pruning
 
 ## License

@@ -771,7 +771,7 @@ namespace chess {
         return {};
     }
 
-    std::vector<Move> Board::get_moves() { return state->_legal_moves; }
+    const std::vector<Move> &Board::get_moves() { return state->_legal_moves; }
 
     int Board::get_halfmoves() { return state->_halfmoves; }
 
