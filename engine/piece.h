@@ -37,27 +37,27 @@ namespace chess {
         PieceType type = PieceType::NPieces;
         Color color = Color::Empty;
 
-        inline int get_piece_index() {
+        inline int get_piece_index() const {
             assert(!is_empty());
             return PieceType::NPieces * color + type;
         };
 
-        inline int get_color_index() {
+        inline int get_color_index() const {
             assert(!is_empty());
             return PieceType::NPieces * 2 + color;
         };
 
-        inline const char *get_display() {
+        inline const char *get_display() const {
             assert(!is_empty());
             return PieceDisplay[get_piece_index()];
         }
 
-        inline const char get_char() {
+        inline const char get_char() const {
             assert(!is_empty());
             return PieceChars[get_piece_index()];
         }
 
-        inline bool is_empty() { return color == Color::Empty; }
+        inline bool is_empty() const { return color == Color::Empty; }
     };
 } // namespace chess
 

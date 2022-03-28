@@ -209,7 +209,7 @@ namespace chess {
         /**
          * Get all legal moves available to the current player
          */
-        std::vector<Move> get_moves();
+        const std::vector<Move> &get_moves();
 
         /**
          * Get the current number of halfmoves to enforce the 50-move rule
