@@ -4,9 +4,9 @@
 #include <iostream>
 #include <string>
 
-#include "piece.h"
-#include "move.h"
 #include "bits.h"
+#include "move.h"
+#include "piece.h"
 #include "util.h"
 #include "zobrist.h"
 
@@ -14,7 +14,8 @@ namespace chess {
     /**
      * Linked list representing chronological board state
      * Allows forward and backward movement in time (undo/redo moves)
-     * Stores information that can be difficult to undo when changed (e.g., castling rights)
+     * Stores information that can be difficult to undo when changed (e.g.,
+     * castling rights)
      */
     struct BoardState {
         // Represent the positions of each of the 12 pieces on the board
@@ -25,11 +26,12 @@ namespace chess {
         uint8_t _castling_rights;
         Square _en_passant_target;
 
-        // Unlike fullmoves, halfmoves depends on state of the board (pawn advance or capture reset)
+        // Unlike fullmoves, halfmoves depends on state of the board (pawn
+        // advance or capture reset)
         int _halfmoves;
-        
+
         // Bitboard representing the attackers on each square (excluding king)
-        uint64_t _attackers = 0; 
+        uint64_t _attackers = 0;
         std::vector<Move> _legal_moves;
 
         int _material = 0;
@@ -53,12 +55,15 @@ namespace chess {
         /**
          * Generate all pseudo-legal moves for single step moves
          */
-        void generate_step_moves(uint64_t bitboard, bool is_king, uint64_t(*mask_func)(uint64_t));
+        void generate_step_moves(uint64_t bitboard, bool is_king,
+                                 uint64_t (*mask_func)(uint64_t));
 
         /**
          * Slider moves need more information about the board
          */
-        void generate_slider_moves(uint64_t bitboard, uint64_t(*mask_func)(uint64_t, uint64_t, uint64_t));
+        void generate_slider_moves(uint64_t bitboard,
+                                   uint64_t (*mask_func)(uint64_t, uint64_t,
+                                                         uint64_t));
 
         /**
          * Pawn function has special cases (ugh.)
@@ -73,9 +78,11 @@ namespace chess {
         /**
          * Test if a pseudo-legal move is legal
          * Algorithm for generating legal moves from pseudo legal?
-         * - If king is the moving piece, make sure destination square is not an attack target
+         * - If king is the moving piece, make sure destination square is not an
+         * attack target
          * - If move is an en passant, king must not currently be in check
-         * - If non-king piece, it must not be pinned, or if it is, to and from pieces must be aligned with king
+         * - If non-king piece, it must not be pinned, or if it is, to and from
+         * pieces must be aligned with king
          */
         bool is_legal(Move move);
 
@@ -87,7 +94,8 @@ namespace chess {
         /**
          * Get the pieces attacking the king
          */
-        uint64_t get_attackers(uint64_t allies_include = 0, uint64_t allies_exclude = 0,
+        uint64_t get_attackers(uint64_t allies_include = 0,
+                               uint64_t allies_exclude = 0,
                                uint64_t enemies_exclude = 0);
 
         /**
@@ -95,10 +103,11 @@ namespace chess {
          * If move list is empty, then player is in checkmate
          */
         void generate_moves();
-        
-    public:
-        Board(std::string fen_string="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-        Board(Board &other) : Board(other.generate_fen()) {};
+
+      public:
+        Board(std::string fen_string =
+                  "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        Board(Board &other) : Board(other.generate_fen()){};
 
         ~Board();
 
@@ -190,12 +199,12 @@ namespace chess {
          * Generate a valid chess move given shift positions
          * Used to validate move positions from user input
          */
-        Move create_move(Square from, Square to, char promotion = 0); 
+        Move create_move(Square from, Square to, char promotion = 0);
 
         /**
          * Generate a valid chess move given a standard notation string
          */
-        Move create_move(std::string standard_notation); 
+        Move create_move(std::string standard_notation);
 
         /**
          * Get all legal moves available to the current player
@@ -227,6 +236,6 @@ namespace chess {
          */
         void print();
     };
-}
+} // namespace chess
 
 #endif

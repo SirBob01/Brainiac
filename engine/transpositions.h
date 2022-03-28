@@ -4,6 +4,7 @@
 #define TRANSPOSITION_TABLE_SIZE 1 << 16
 
 #include <array>
+#include <vector>
 
 #include "board.h"
 
@@ -12,21 +13,15 @@ namespace chess {
         uint64_t key;
         int depth;
         int value;
-
-        TableNode *next = nullptr;
-
-        TableNode(uint64_t key, int depth, int value) 
-        : key(key), depth(depth), value(value) {};
-        ~TableNode();
     };
 
+    /**
+     * A hash table of visited nodes
+     */
     class Transpositions {
-        std::array<TableNode *, TRANSPOSITION_TABLE_SIZE> _table;
-    
-    public:
-        Transpositions();
-        ~Transpositions();
+        std::array<std::vector<TableNode>, TRANSPOSITION_TABLE_SIZE> _table;
 
+      public:
         /**
          * Set the value of a board position
          */
@@ -35,13 +30,18 @@ namespace chess {
         /**
          * Get the stored value of a position
          */
-        int get(Board &board, int depth);
+        int get(Board &board);
 
         /**
          * Check if board has been visited
          */
-        bool contains(Board &board, int depth);
+        bool contains(Board &board);
+
+        /**
+         * Print the transposition table for debugging
+         */
+        void print();
     };
-}
+} // namespace chess
 
 #endif
