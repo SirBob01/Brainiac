@@ -6,6 +6,13 @@ Brainiac is a chess artificial intelligence engine.
 
 TBD.
 
+## Build
+
+To build the engine executable, run
+
+1. Go to the build folder, `cd build`
+2. Run `cmake .. && make -j 3`
+
 ## TODO
 
 - Fix up main program command-line interface
