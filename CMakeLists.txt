@@ -1,16 +1,16 @@
 cmake_minimum_required(VERSION 3.10)
 project(.)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -g -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -pg -O3")
 
 # Engine source files
-file(GLOB_RECURSE INCLUDE "../engine/*.h")
-file(GLOB_RECURSE SOURCES "../engine/*.cpp" "../engine/*.c")
+file(GLOB_RECURSE INCLUDE "./engine/*.h")
+file(GLOB_RECURSE SOURCES "./engine/*.cpp" "./engine/*.c")
 
 # Make the Brainiac engine a shared library
 add_library(Brainiac ${SOURCES} ${INCLUDE})
 
-add_executable(main "../main.cpp")
+add_executable(main "./main.cpp")
 
 if(UNIX OR MSVC)
     target_link_libraries(main pthread Brainiac)
