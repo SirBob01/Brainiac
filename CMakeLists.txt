@@ -9,7 +9,8 @@ file(GLOB_RECURSE SOURCES "./engine/*.cpp" "./engine/*.c")
 
 # Make the Brainiac engine a library
 add_library(brainiac STATIC ${SOURCES} ${INCLUDE})
-    
+target_include_directories(brainiac PUBLIC "./engine")
+ 
 add_executable(main "./main.cpp")
 
 if(UNIX OR MSVC)
