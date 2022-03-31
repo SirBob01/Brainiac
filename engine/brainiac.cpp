@@ -12,6 +12,8 @@ namespace chess {
 
     int Brainiac::search(Board &board, MinimaxNode node, Color player,
                          bool quiescence) {
+        // TODO: Implement negamax (with alpha-beta pruning and transposition
+        // tables)
         // Terminal conditions
         _total++;
         if (_transpositions.contains(board)) {
