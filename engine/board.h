@@ -36,18 +36,14 @@ namespace chess {
 
         int _material = 0;
         uint64_t _hash;
-
-        BoardState *next = nullptr;
-        BoardState *prev = nullptr;
-
-        BoardState *copy();
     };
 
     /**
      * Represents a chess board's state
      */
     class Board {
-        BoardState *state;
+        std::vector<BoardState> _states;
+        int _current_state;
 
         Color _turn;
         int _fullmoves;
@@ -108,8 +104,6 @@ namespace chess {
         Board(std::string fen_string =
                   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         Board(Board &other) : Board(other.generate_fen()){};
-
-        ~Board();
 
         /**
          * Generate a FEN string of the current state for serialization

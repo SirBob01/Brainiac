@@ -1,28 +1,13 @@
 #include "board.h"
 
 namespace chess {
-    BoardState *BoardState::copy() {
-        BoardState *state = new BoardState();
-        for (int i = 0; i < 14; i++) {
-            state->_bitboards[i] = _bitboards[i];
-        }
-
-        state->_castling_rights = _castling_rights;
-        state->_en_passant_target = _en_passant_target;
-
-        state->_attackers = _attackers;
-        state->_halfmoves = _halfmoves;
-        state->_material = _material;
-
-        state->_hash = _hash;
-
-        return state;
-    }
-
     Board::Board(std::string fen_string) {
         std::vector<std::string> fields =
             chess::util::tokenize(fen_string, ' ');
-        state = new BoardState();
+        _states.reserve(64);
+        _states.emplace_back();
+        _current_state = 0;
+        BoardState &state = _states[_current_state];
 
         int row = 7;
         int col = 0;
@@ -42,61 +27,44 @@ namespace chess {
                     static_cast<PieceType>(char_idx % PieceType::NPieces);
                 Color color = static_cast<Color>(char_idx / PieceType::NPieces);
                 set_at(sq, {type, color});
-                state->_material +=
+                state._material +=
                     piece_weights[(color * PieceType::NPieces) + type];
                 col++;
             }
         }
 
         _turn = (fields[1][0] == 'w') ? Color::White : Color::Black;
-        state->_castling_rights = 0;
+        state._castling_rights = 0;
         for (auto &c : fields[2]) {
             if (c == 'K')
-                state->_castling_rights |= Castle::WK;
+                state._castling_rights |= Castle::WK;
             else if (c == 'Q')
-                state->_castling_rights |= Castle::WQ;
+                state._castling_rights |= Castle::WQ;
             else if (c == 'k')
-                state->_castling_rights |= Castle::BK;
+                state._castling_rights |= Castle::BK;
             else if (c == 'q')
-                state->_castling_rights |= Castle::BQ;
+                state._castling_rights |= Castle::BQ;
         }
 
         if (fields[3].length() == 2) {
-            state->_en_passant_target = Square(fields[3]);
+            state._en_passant_target = Square(fields[3]);
         }
-        state->_halfmoves = stoi(fields[4]);
+        state._halfmoves = stoi(fields[4]);
         _fullmoves = stoi(fields[5]);
 
-        state->_attackers = get_attackers();
+        state._attackers = get_attackers();
         generate_moves();
 
         // Calculate the Zobrist hash
-        state->_hash =
-            zobrist_hash(_turn, state->_bitboards, state->_castling_rights,
-                         state->_en_passant_target);
-    }
-
-    Board::~Board() {
-        // Delete the entire linked list from any point in the board history
-        BoardState *current_right = state->next;
-        BoardState *current_left = state->prev;
-
-        while (current_right) {
-            BoardState *next = current_right->next;
-            delete current_right;
-            current_right = next;
-        }
-        while (current_left) {
-            BoardState *next = current_left->prev;
-            delete current_left;
-            current_left = next;
-        }
-        delete state;
+        state._hash =
+            zobrist_hash(_turn, state._bitboards, state._castling_rights,
+                         state._en_passant_target);
     }
 
     bool Board::is_legal(Move move) {
         Piece king = {PieceType::King, _turn};
-        uint64_t kingbit = state->_bitboards[king.get_piece_index()];
+        BoardState &state = _states[_current_state];
+        uint64_t kingbit = state._bitboards[king.get_piece_index()];
         uint64_t from = move.from.get_mask();
         uint64_t to = move.to.get_mask();
 
@@ -104,7 +72,7 @@ namespace chess {
         if (move.flags & MoveFlag::EnPassant) {
             int rankd = move.to.shift - move.from.shift;
             int dir = (rankd > 0) - (rankd < 0);
-            Square target_pawn(state->_en_passant_target.shift - (dir * 8));
+            Square target_pawn(state._en_passant_target.shift - (dir * 8));
 
             return (get_attackers(to, from, target_pawn.get_mask()) &
                     kingbit) == 0;
@@ -115,9 +83,9 @@ namespace chess {
             int rankd = move.to.shift - move.from.shift;
             int dir = (rankd > 0) - (rankd < 0);
             Square pass_through(move.to.shift - dir);
-            if ((from & state->_attackers) ||
-                (state->_attackers & pass_through.get_mask()) ||
-                (to & state->_attackers)) {
+            if ((from & state._attackers) ||
+                (state._attackers & pass_through.get_mask()) ||
+                (to & state._attackers)) {
                 return false;
             }
             return true;
@@ -132,21 +100,23 @@ namespace chess {
     }
 
     void Board::register_move(Move move) {
+        BoardState &state = _states[_current_state];
         if (is_legal(move)) {
-            state->_legal_moves.push_back(move);
+            state._legal_moves.push_back(move);
         }
     }
 
     void Board::generate_pawn_moves(uint64_t bitboard) {
-        uint64_t allies = state->_bitboards[PieceType::NPieces * 2 + _turn];
-        uint64_t enemies = state->_bitboards[PieceType::NPieces * 2 + !_turn];
+        BoardState &state = _states[_current_state];
+        uint64_t allies = state._bitboards[PieceType::NPieces * 2 + _turn];
+        uint64_t enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
         uint64_t all_pieces = allies | enemies;
 
         MoveFlag promotions[4] = {MoveFlag::KnightPromo, MoveFlag::QueenPromo,
                                   MoveFlag::BishopPromo, MoveFlag::RookPromo};
         uint64_t en_passant_mask = 0;
-        if (!state->_en_passant_target.is_invalid()) {
-            en_passant_mask = state->_en_passant_target.get_mask();
+        if (!state._en_passant_target.is_invalid()) {
+            en_passant_mask = state._en_passant_target.get_mask();
         }
 
         uint64_t advance_board =
@@ -226,14 +196,14 @@ namespace chess {
     void Board::generate_step_moves(uint64_t bitboard, bool is_king,
                                     uint64_t (*mask_func)(uint64_t)) {
         // Generate single step moves (knight, king)
-        uint64_t allies = state->_bitboards[PieceType::NPieces * 2 + _turn];
-        uint64_t enemies = state->_bitboards[PieceType::NPieces * 2 + !_turn];
+        BoardState &state = _states[_current_state];
+        uint64_t allies = state._bitboards[PieceType::NPieces * 2 + _turn];
+        uint64_t enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
 
+        // King cannot move in range of his attackers
         uint64_t moves = mask_func(bitboard) & ~allies;
         if (is_king) {
-            moves &=
-                ~state
-                     ->_attackers; // King cannot move in range of his attackers
+            moves &= ~state._attackers;
         }
 
         uint64_t capture_board = moves & enemies;
@@ -257,8 +227,9 @@ namespace chess {
     void Board::generate_slider_moves(uint64_t bitboard,
                                       uint64_t (*mask_func)(uint64_t, uint64_t,
                                                             uint64_t)) {
-        uint64_t allies = state->_bitboards[PieceType::NPieces * 2 + _turn];
-        uint64_t enemies = state->_bitboards[PieceType::NPieces * 2 + !_turn];
+        BoardState &state = _states[_current_state];
+        uint64_t allies = state._bitboards[PieceType::NPieces * 2 + _turn];
+        uint64_t enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
 
         uint64_t moves = mask_func(bitboard, allies, enemies);
 
@@ -281,15 +252,16 @@ namespace chess {
     }
 
     void Board::generate_castling_moves(uint64_t bitboard) {
-        uint64_t allies = state->_bitboards[PieceType::NPieces * 2 + _turn];
-        uint64_t enemies = state->_bitboards[PieceType::NPieces * 2 + !_turn];
+        BoardState &state = _states[_current_state];
+        uint64_t allies = state._bitboards[PieceType::NPieces * 2 + _turn];
+        uint64_t enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
         uint64_t all_pieces = allies | enemies;
 
         uint8_t rights = 0;
         if (_turn == Color::White) {
-            rights = state->_castling_rights & (Castle::WK | Castle::WQ);
+            rights = state._castling_rights & (Castle::WK | Castle::WQ);
         } else {
-            rights = state->_castling_rights & (Castle::BK | Castle::BQ);
+            rights = state._castling_rights & (Castle::BK | Castle::BQ);
         }
 
         Square from(find_lsb(bitboard));
@@ -298,7 +270,7 @@ namespace chess {
 
             // King cannot move in range of his attackers
             uint64_t mask =
-                get_castling_mask(all_pieces, side) & ~state->_attackers;
+                get_castling_mask(all_pieces, side) & ~state._attackers;
             if (mask) {
                 Square to(find_lsb(mask));
                 register_move({from, to, MoveFlag::Quiet | MoveFlag::Castling});
@@ -312,22 +284,23 @@ namespace chess {
                                   uint64_t enemies_exclude) {
         // Generate attack vectors for sliding pieces to test if king is in
         // check
+        BoardState &state = _states[_current_state];
         Color opponent = static_cast<Color>(!_turn);
 
         Piece king = {PieceType::King, _turn};
         uint64_t source_mask = ~enemies_exclude & ~allies_include;
         uint64_t source_squares =
-            state->_bitboards[PieceType::NPieces * 2 + opponent] & source_mask;
+            state._bitboards[PieceType::NPieces * 2 + opponent] & source_mask;
         uint64_t target_squares =
-            (state->_bitboards[PieceType::NPieces * 2 + _turn] |
+            (state._bitboards[PieceType::NPieces * 2 + _turn] |
              allies_include) &
-            ~state->_bitboards[king.get_piece_index()] & ~allies_exclude;
+            ~state._bitboards[king.get_piece_index()] & ~allies_exclude;
 
         uint64_t attacked = 0;
         for (int type = 0; type < PieceType::NPieces; type++) {
             Piece piece = {static_cast<PieceType>(type), opponent};
             uint64_t bitboard =
-                state->_bitboards[piece.get_piece_index()] & source_mask;
+                state._bitboards[piece.get_piece_index()] & source_mask;
 
             switch (piece.type) {
             case PieceType::Pawn:
@@ -367,10 +340,11 @@ namespace chess {
     }
 
     void Board::generate_moves() {
-        state->_legal_moves.clear();
+        BoardState &state = _states[_current_state];
+        state._legal_moves.clear();
         for (int type = 0; type < PieceType::NPieces; type++) {
             Piece piece = {static_cast<PieceType>(type), _turn};
-            uint64_t bitboard = state->_bitboards[piece.get_piece_index()];
+            uint64_t bitboard = state._bitboards[piece.get_piece_index()];
             while (bitboard) {
                 uint64_t unit = bitboard & (-bitboard);
                 switch (type) {
@@ -402,6 +376,7 @@ namespace chess {
     }
 
     std::string Board::generate_fen() {
+        BoardState &state = _states[_current_state];
         std::string fen = "";
         for (int row = 7; row >= 0; row--) {
             int counter = 0;
@@ -427,38 +402,42 @@ namespace chess {
 
         std::string castling_rights = "";
 
-        if (state->_castling_rights & Castle::WK)
+        if (state._castling_rights & Castle::WK)
             castling_rights += 'K';
-        if (state->_castling_rights & Castle::WQ)
+        if (state._castling_rights & Castle::WQ)
             castling_rights += 'Q';
-        if (state->_castling_rights & Castle::BK)
+        if (state._castling_rights & Castle::BK)
             castling_rights += 'k';
-        if (state->_castling_rights & Castle::BQ)
+        if (state._castling_rights & Castle::BQ)
             castling_rights += 'q';
         if (castling_rights.length() == 0)
             castling_rights = "-";
         fen += " " + castling_rights;
 
-        if (state->_en_passant_target.is_invalid()) {
+        if (state._en_passant_target.is_invalid()) {
             fen += " -";
         } else {
             fen += " ";
-            fen += state->_en_passant_target.standard_notation();
+            fen += state._en_passant_target.standard_notation();
         }
 
         fen += " ";
-        fen += std::to_string(state->_halfmoves);
+        fen += std::to_string(state._halfmoves);
         fen += " ";
         fen += std::to_string(_fullmoves);
         return fen;
     }
 
-    int Board::calculate_material() { return state->_material; }
+    int Board::calculate_material() {
+        BoardState &state = _states[_current_state];
+        return state._material;
+    }
 
     Piece Board::get_at(Square sq) {
+        BoardState &state = _states[_current_state];
         uint64_t mask = sq.get_mask();
         for (int idx = 0; idx < 12; idx++) {
-            if (state->_bitboards[idx] & mask) {
+            if (state._bitboards[idx] & mask) {
                 PieceType type =
                     static_cast<PieceType>(idx % PieceType::NPieces);
                 Color color = static_cast<Color>(idx / PieceType::NPieces);
@@ -471,8 +450,10 @@ namespace chess {
     void Board::set_at(Square sq, Piece piece) {
         clear_at(sq);
         uint64_t mask = sq.get_mask();
-        state->_bitboards[piece.get_color_index()] |= mask;
-        state->_bitboards[piece.get_piece_index()] |= mask;
+
+        BoardState &state = _states[_current_state];
+        state._bitboards[piece.get_color_index()] |= mask;
+        state._bitboards[piece.get_piece_index()] |= mask;
     }
 
     Piece Board::get_at_coords(int row, int col) {
@@ -485,13 +466,14 @@ namespace chess {
 
     void Board::clear_at(Square sq) {
         // Clear all bitboards at this Square
+        BoardState &state = _states[_current_state];
         uint64_t mask = ~(sq.get_mask());
-        state->_bitboards[12] &= mask;
-        state->_bitboards[13] &= mask;
+        state._bitboards[12] &= mask;
+        state._bitboards[13] &= mask;
 
         for (uint8_t piece = 0; piece < 14; piece++) {
-            if ((state->_bitboards[piece] >> sq.shift) & 1ULL) {
-                state->_bitboards[piece] &= mask;
+            if ((state._bitboards[piece] >> sq.shift) & 1ULL) {
+                state._bitboards[piece] &= mask;
                 break;
             }
         }
@@ -499,26 +481,19 @@ namespace chess {
 
     void Board::execute_move(Move move) {
         // If executing a new move while in undo state, overwrite future history
-        BoardState *current = state->next;
-        while (current) {
-            BoardState *next = current->next;
-            delete current;
-            current = next;
-        }
+        _states.resize(_current_state + 1);
+        _states.emplace_back(_states[_current_state]);
+        _current_state++;
 
-        // Generate copy of the state to update with move execution
-        state->next = state->copy();
-        state->next->prev = state;
-        state = state->next;
-
-        state->_halfmoves++;
+        BoardState &state = _states[_current_state];
+        state._halfmoves++;
 
         Piece piece = get_at(move.from);
         Piece target = get_at(move.to);
 
         // Update material if move was a capture
         if (!target.is_empty()) {
-            state->_material -= piece_weights[target.get_piece_index()];
+            state._material -= piece_weights[target.get_piece_index()];
         }
 
         // Unset castling flags if relevant pieces were moved
@@ -532,29 +507,28 @@ namespace chess {
         Castle opp_king_side =
             (_turn == Color::Black) ? (Castle::WK) : (Castle::BK);
 
-        if (state->_castling_rights & (king_side | queen_side)) {
+        if (state._castling_rights & (king_side | queen_side)) {
             if (piece.type == PieceType::King) {
-                if (state->_castling_rights & king_side) {
-                    state->_hash ^= castling_bitstrings[find_lsb(king_side)];
+                if (state._castling_rights & king_side) {
+                    state._hash ^= castling_bitstrings[find_lsb(king_side)];
                 }
-                if (state->_castling_rights & queen_side) {
-                    state->_hash ^= castling_bitstrings[find_lsb(queen_side)];
+                if (state._castling_rights & queen_side) {
+                    state._hash ^= castling_bitstrings[find_lsb(queen_side)];
                 }
-                state->_castling_rights &= ~(king_side | queen_side);
+                state._castling_rights &= ~(king_side | queen_side);
             } else if (piece.type == PieceType::Rook) {
                 uint64_t mask = move.from.get_mask();
                 if (mask & fileA) {
-                    if (state->_castling_rights & queen_side) {
-                        state->_hash ^=
+                    if (state._castling_rights & queen_side) {
+                        state._hash ^=
                             castling_bitstrings[find_lsb(queen_side)];
                     }
-                    state->_castling_rights &= ~queen_side;
+                    state._castling_rights &= ~queen_side;
                 } else if (mask & fileH) {
-                    if (state->_castling_rights & king_side) {
-                        state->_hash ^=
-                            castling_bitstrings[find_lsb(king_side)];
+                    if (state._castling_rights & king_side) {
+                        state._hash ^= castling_bitstrings[find_lsb(king_side)];
                     }
-                    state->_castling_rights &= ~king_side;
+                    state._castling_rights &= ~king_side;
                 }
             }
         }
@@ -564,46 +538,45 @@ namespace chess {
             uint64_t mask = move.to.get_mask();
             uint64_t rank = (_turn == Color::White) ? 0xFF00000000000000 : 0xFF;
             if (mask & fileA & rank) {
-                if (state->_castling_rights & opp_queen_side) {
-                    state->_hash ^=
+                if (state._castling_rights & opp_queen_side) {
+                    state._hash ^=
                         castling_bitstrings[find_lsb(opp_queen_side)];
                 }
-                state->_castling_rights &= ~opp_queen_side;
+                state._castling_rights &= ~opp_queen_side;
             } else if (mask & fileH & rank) {
-                if (state->_castling_rights & opp_king_side) {
-                    state->_hash ^=
-                        castling_bitstrings[find_lsb(opp_king_side)];
+                if (state._castling_rights & opp_king_side) {
+                    state._hash ^= castling_bitstrings[find_lsb(opp_king_side)];
                 }
-                state->_castling_rights &= ~opp_king_side;
+                state._castling_rights &= ~opp_king_side;
             }
         }
 
         // Move to target square and handle promotions
         clear_at(move.from);
-        state->_hash ^= zobrist_bitstring(piece, move.from);
+        state._hash ^= zobrist_bitstring(piece, move.from);
         if (!target.is_empty()) {
-            state->_hash ^= zobrist_bitstring(target, move.to);
+            state._hash ^= zobrist_bitstring(target, move.to);
         }
         Piece promotion;
         if (move.flags & MoveFlag::BishopPromo) {
             promotion = {PieceType::Bishop, _turn};
             set_at(move.to, promotion);
-            state->_hash ^= zobrist_bitstring(promotion, move.to);
+            state._hash ^= zobrist_bitstring(promotion, move.to);
         } else if (move.flags & MoveFlag::RookPromo) {
             promotion = {PieceType::Rook, _turn};
             set_at(move.to, promotion);
-            state->_hash ^= zobrist_bitstring(promotion, move.to);
+            state._hash ^= zobrist_bitstring(promotion, move.to);
         } else if (move.flags & MoveFlag::KnightPromo) {
             promotion = {PieceType::Knight, _turn};
             set_at(move.to, promotion);
-            state->_hash ^= zobrist_bitstring(promotion, move.to);
+            state._hash ^= zobrist_bitstring(promotion, move.to);
         } else if (move.flags & MoveFlag::QueenPromo) {
             promotion = {PieceType::Queen, _turn};
             set_at(move.to, promotion);
-            state->_hash ^= zobrist_bitstring(promotion, move.to);
+            state._hash ^= zobrist_bitstring(promotion, move.to);
         } else {
             set_at(move.to, piece);
-            state->_hash ^= zobrist_bitstring(piece, move.to);
+            state._hash ^= zobrist_bitstring(piece, move.to);
         }
 
         // Move rook if castling
@@ -614,7 +587,7 @@ namespace chess {
             uint64_t rook_rank =
                 (_turn == Color::Black) ? 0xFF00000000000000 : 0xFF;
             uint64_t rook_board =
-                state->_bitboards[rook.get_piece_index()] & rook_rank;
+                state._bitboards[rook.get_piece_index()] & rook_rank;
             Square target(move.to.shift - dir);
             if (rankd < 0) {
                 rook_board &= fileA;
@@ -625,8 +598,8 @@ namespace chess {
             clear_at(initial_position);
             set_at(target, rook);
 
-            state->_hash ^= zobrist_bitstring(rook, initial_position);
-            state->_hash ^= zobrist_bitstring(rook, target);
+            state._hash ^= zobrist_bitstring(rook, initial_position);
+            state._hash ^= zobrist_bitstring(rook, target);
         }
 
         // Check for en passant capture
@@ -637,36 +610,36 @@ namespace chess {
             // One rank up or one rank down depending on current player
             int dir = (rankd > 0) - (rankd < 0);
             Square en_passant_square =
-                Square(state->_en_passant_target.shift - (dir * 8));
+                Square(state._en_passant_target.shift - (dir * 8));
             Piece en_passant_piece = get_at(en_passant_square);
             clear_at(en_passant_square);
 
-            state->_hash ^=
+            state._hash ^=
                 zobrist_bitstring(en_passant_piece, en_passant_square);
-            state->_hash ^=
-                en_passant_bitstrings[state->_en_passant_target.shift % 8];
-            state->_en_passant_target = Square();
+            state._hash ^=
+                en_passant_bitstrings[state._en_passant_target.shift % 8];
+            state._en_passant_target = Square();
         }
 
         // Update en passant position if pawn advanced two ranks
-        if (!state->_en_passant_target.is_invalid()) {
-            state->_hash ^=
-                en_passant_bitstrings[state->_en_passant_target.shift % 8];
+        if (!state._en_passant_target.is_invalid()) {
+            state._hash ^=
+                en_passant_bitstrings[state._en_passant_target.shift % 8];
         }
         if (move.flags & MoveFlag::PawnDouble) {
-            state->_en_passant_target =
+            state._en_passant_target =
                 Square(move.from.shift + (move.to.shift - move.from.shift) / 2);
-            state->_hash ^=
-                en_passant_bitstrings[state->_en_passant_target.shift % 8];
+            state._hash ^=
+                en_passant_bitstrings[state._en_passant_target.shift % 8];
         } else {
-            state->_en_passant_target = Square();
+            state._en_passant_target = Square();
         }
 
         // Reset halfmove counter if piece was pawn advance or move was a
         // capture
         if (move.flags & (MoveFlag::PawnAdvance | MoveFlag::PawnDouble |
                           MoveFlag::EnPassant | MoveFlag::Capture)) {
-            state->_halfmoves = 0;
+            state._halfmoves = 0;
         }
 
         // Update turn and fullmove counter
@@ -674,14 +647,14 @@ namespace chess {
             _fullmoves++;
         }
         _turn = static_cast<Color>(!_turn);
-        state->_hash ^= turn_bitstring;
+        state._hash ^= turn_bitstring;
 
-        state->_attackers = get_attackers();
+        state._attackers = get_attackers();
         generate_moves();
     }
 
     void Board::undo_move() {
-        state = state->prev;
+        _current_state--;
 
         _turn = static_cast<Color>(!_turn);
         if (_turn == Color::Black) {
@@ -690,7 +663,7 @@ namespace chess {
     }
 
     void Board::redo_move() {
-        state = state->next;
+        _current_state++;
 
         if (_turn == Color::Black) {
             _fullmoves++;
@@ -698,37 +671,42 @@ namespace chess {
         _turn = static_cast<Color>(!_turn);
     }
 
-    bool Board::is_initial() { return state->prev == nullptr; }
+    bool Board::is_initial() { return _current_state == 0; }
 
-    bool Board::is_latest() { return state->next == nullptr; }
+    bool Board::is_latest() { return _current_state == _states.size() - 1; }
 
     bool Board::is_check() {
         Piece king = {PieceType::King, _turn};
-        uint64_t kingbit = state->_bitboards[king.get_piece_index()];
-        return state->_attackers & kingbit;
+        BoardState &state = _states[_current_state];
+        uint64_t kingbit = state._bitboards[king.get_piece_index()];
+        return state._attackers & kingbit;
     }
 
     bool Board::is_checkmate() {
-        return state->_legal_moves.size() == 0 && is_check();
+        BoardState &state = _states[_current_state];
+        return state._legal_moves.size() == 0 && is_check();
     }
 
     bool Board::is_stalemate() {
-        return state->_legal_moves.size() == 0 && !is_check();
+        BoardState &state = _states[_current_state];
+        return state._legal_moves.size() == 0 && !is_check();
     }
 
     bool Board::is_draw() {
         // If there are only 2 pieces left (both kings), then it is a draw
-        uint64_t all_pieces = state->_bitboards[12] | state->_bitboards[13];
+        BoardState &state = _states[_current_state];
+        uint64_t all_pieces = state._bitboards[12] | state._bitboards[13];
         int pieces_left = 0;
         while (all_pieces) {
             all_pieces &= (all_pieces - 1);
             pieces_left++;
         }
-        return is_stalemate() || state->_halfmoves >= 100 || pieces_left == 2;
+        return is_stalemate() || state._halfmoves >= 100 || pieces_left == 2;
     }
 
     Move Board::create_move(Square from, Square to, char promotion) {
-        for (auto &move : state->_legal_moves) {
+        BoardState &state = _states[_current_state];
+        for (auto &move : state._legal_moves) {
             if (move.from == from && move.to == to) {
                 if (move.flags &
                     (MoveFlag::RookPromo | MoveFlag::KnightPromo |
@@ -763,7 +741,8 @@ namespace chess {
     }
 
     Move Board::create_move(std::string standard_notation) {
-        for (auto &move : state->_legal_moves) {
+        BoardState &state = _states[_current_state];
+        for (auto &move : state._legal_moves) {
             if (move.standard_notation() == standard_notation) {
                 return move;
             }
@@ -771,15 +750,27 @@ namespace chess {
         return {};
     }
 
-    const std::vector<Move> &Board::get_moves() { return state->_legal_moves; }
+    const std::vector<Move> &Board::get_moves() {
+        BoardState &state = _states[_current_state];
+        return state._legal_moves;
+    }
 
-    int Board::get_halfmoves() { return state->_halfmoves; }
+    int Board::get_halfmoves() {
+        BoardState &state = _states[_current_state];
+        return state._halfmoves;
+    }
 
-    uint8_t Board::get_castling_rights() { return state->_castling_rights; }
+    uint8_t Board::get_castling_rights() {
+        BoardState &state = _states[_current_state];
+        return state._castling_rights;
+    }
 
     Color Board::get_turn() { return _turn; }
 
-    uint64_t Board::get_hash() { return state->_hash; }
+    uint64_t Board::get_hash() {
+        BoardState &state = _states[_current_state];
+        return state._hash;
+    }
 
     void Board::print() {
         // Set code page to allow UTF16 characters to show (chcp 65001 on
