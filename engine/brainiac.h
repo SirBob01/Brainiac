@@ -13,6 +13,14 @@
 
 namespace chess {
     /**
+     * Initialize engine
+     */
+    inline void init() {
+        init_rook_tables();
+        init_bishop_tables();
+    }
+
+    /**
      * Contains per-node state data required during alpha-beta minimax
      */
     struct MinimaxNode {

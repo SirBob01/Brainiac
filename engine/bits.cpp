@@ -1,6 +1,9 @@
 #include "bits.h"
 
 namespace chess {
+    SlidingMoveTable rook_attack_tables[64] = {};
+    SlidingMoveTable bishop_attack_tables[64] = {};
+
     void print_bitboard(uint64_t bitboard) {
         std::bitset<64> bitarray(bitboard);
         std::stack<std::string> bytes;
@@ -21,5 +24,14 @@ namespace chess {
             bytes.pop();
         }
         std::cout << "\n";
+    }
+
+    int count_set_bits(uint64_t bitboard) {
+        int count = 0;
+        while (bitboard) {
+            count++;
+            bitboard &= (bitboard - 1);
+        }
+        return count;
     }
 } // namespace chess
