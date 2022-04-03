@@ -220,6 +220,8 @@ void help() {
 }
 
 int main() {
+    chess::init();
+
     std::cout << "Chess Engine C++ v.1.0\n";
     std::cout << "Enter 'help' for the list of commands.\n";
     std::string command;

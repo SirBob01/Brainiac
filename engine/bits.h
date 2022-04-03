@@ -41,6 +41,17 @@ namespace chess {
     };
 
     /**
+     * Stores necessary information for fetching the moveset
+     * of a sliding piece using magic bitboards
+     */
+    struct SlidingMoveTable {
+        int shift;
+        uint64_t block_mask;
+        uint64_t magic;
+        uint64_t move_masks[1ULL << 12];
+    };
+
+    /**
      * Values for calculating adjacent positions using bitwise operations
      */
     constexpr int direction_shift[8] = {9, 1, -7, -8, -9, -1, 7, 8};
@@ -73,18 +84,87 @@ namespace chess {
     /**
      * Bitmask constants
      */
-    constexpr uint64_t fileA = 0x0101010101010101;
-    constexpr uint64_t fileH = 0x8080808080808080;
+    constexpr uint64_t rank1 = 0x00000000000000FF;
     constexpr uint64_t rank4 = 0x00000000FF000000;
     constexpr uint64_t rank5 = 0x000000FF00000000;
-    constexpr uint64_t end_ranks = 0xFF000000000000FF;
+    constexpr uint64_t rank8 = 0xFF00000000000000;
+
+    constexpr uint64_t fileA = 0x0101010101010101;
+    constexpr uint64_t fileH = 0x8080808080808080;
+
     constexpr uint64_t main_diagonal = 0x8040201008040201;
     constexpr uint64_t anti_diagnoal = 0x0102040810204080;
+
+    constexpr uint64_t end_ranks = rank1 | rank8;
+    constexpr uint64_t end_files = fileA | fileH;
+
+    /**
+     * Move mapping for sliding pieces
+     */
+    extern SlidingMoveTable rook_attack_tables[64];
+    extern SlidingMoveTable bishop_attack_tables[64];
+
+    /**
+     * Pre-calculated magic number constants
+     */
+    constexpr uint64_t rook_magics[64] = {
+        0xa8002c000108020ULL,  0x6c00049b0002001ULL,  0x100200010090040ULL,
+        0x2480041000800801ULL, 0x280028004000800ULL,  0x900410008040022ULL,
+        0x280020001001080ULL,  0x2880002041000080ULL, 0xa000800080400034ULL,
+        0x4808020004000ULL,    0x2290802004801000ULL, 0x411000d00100020ULL,
+        0x402800800040080ULL,  0xb000401004208ULL,    0x2409000100040200ULL,
+        0x1002100004082ULL,    0x22878001e24000ULL,   0x1090810021004010ULL,
+        0x801030040200012ULL,  0x500808008001000ULL,  0xa08018014000880ULL,
+        0x8000808004000200ULL, 0x201008080010200ULL,  0x801020000441091ULL,
+        0x800080204005ULL,     0x1040200040100048ULL, 0x120200402082ULL,
+        0xd14880480100080ULL,  0x12040280080080ULL,   0x100040080020080ULL,
+        0x9020010080800200ULL, 0x813241200148449ULL,  0x491604001800080ULL,
+        0x100401000402001ULL,  0x4820010021001040ULL, 0x400402202000812ULL,
+        0x209009005000802ULL,  0x810800601800400ULL,  0x4301083214000150ULL,
+        0x204026458e001401ULL, 0x40204000808000ULL,   0x8001008040010020ULL,
+        0x8410820820420010ULL, 0x1003001000090020ULL, 0x804040008008080ULL,
+        0x12000810020004ULL,   0x1000100200040208ULL, 0x430000a044020001ULL,
+        0x280009023410300ULL,  0xe0100040002240ULL,   0x200100401700ULL,
+        0x2244100408008080ULL, 0x8000400801980ULL,    0x2000810040200ULL,
+        0x8010100228810400ULL, 0x2000009044210200ULL, 0x4080008040102101ULL,
+        0x40002080411d01ULL,   0x2005524060000901ULL, 0x502001008400422ULL,
+        0x489a000810200402ULL, 0x1004400080a13ULL,    0x4000011008020084ULL,
+        0x26002114058042ULL,
+    };
+    constexpr uint64_t bishop_magics[64] = {
+        0x89a1121896040240ULL, 0x2004844802002010ULL, 0x2068080051921000ULL,
+        0x62880a0220200808ULL, 0x4042004000000ULL,    0x100822020200011ULL,
+        0xc00444222012000aULL, 0x28808801216001ULL,   0x400492088408100ULL,
+        0x201c401040c0084ULL,  0x840800910a0010ULL,   0x82080240060ULL,
+        0x2000840504006000ULL, 0x30010c4108405004ULL, 0x1008005410080802ULL,
+        0x8144042209100900ULL, 0x208081020014400ULL,  0x4800201208ca00ULL,
+        0xf18140408012008ULL,  0x1004002802102001ULL, 0x841000820080811ULL,
+        0x40200200a42008ULL,   0x800054042000ULL,     0x88010400410c9000ULL,
+        0x520040470104290ULL,  0x1004040051500081ULL, 0x2002081833080021ULL,
+        0x400c00c010142ULL,    0x941408200c002000ULL, 0x658810000806011ULL,
+        0x188071040440a00ULL,  0x4800404002011c00ULL, 0x104442040404200ULL,
+        0x511080202091021ULL,  0x4022401120400ULL,    0x80c0040400080120ULL,
+        0x8040010040820802ULL, 0x480810700020090ULL,  0x102008e00040242ULL,
+        0x809005202050100ULL,  0x8002024220104080ULL, 0x431008804142000ULL,
+        0x19001802081400ULL,   0x200014208040080ULL,  0x3308082008200100ULL,
+        0x41010500040c020ULL,  0x4012020c04210308ULL, 0x208220a202004080ULL,
+        0x111040120082000ULL,  0x6803040141280a00ULL, 0x2101004202410000ULL,
+        0x8200000041108022ULL, 0x21082088000ULL,      0x2410204010040ULL,
+        0x40100400809000ULL,   0x822088220820214ULL,  0x40808090012004ULL,
+        0x910224040218c9ULL,   0x402814422015008ULL,  0x90014004842410ULL,
+        0x1000042304105ULL,    0x10008830412a00ULL,   0x2520081090008908ULL,
+        0x40102000a0a60140ULL,
+    };
 
     /**
      * Print a bitboard (8 bits per row)
      */
     void print_bitboard(uint64_t bitboard);
+
+    /**
+     * Count the number of set bits on a bitboard
+     */
+    int count_set_bits(uint64_t bitboard);
 
     /**
      * Vertically flip the bitboard
@@ -160,16 +240,57 @@ namespace chess {
     }
 
     /**
-     * Test if pieces on bitboards A, B, and C are colinear on the 8 directions
+     * Generate a rook move set on-the-fly
+     *
+     * This is slow, so it is used for generating the rook attack tables
      */
-    inline bool is_aligned(uint64_t A, uint64_t B, uint64_t C) {
-        const int shift = find_lsb(A);
-        const uint64_t mask1 = get_diagonal_mask(shift);
-        const uint64_t mask2 = get_antidiag_mask(shift);
-        const uint64_t mask3 = 0xFF00000000000000ULL >> (56 - 8 * (shift / 8));
-        const uint64_t mask4 = 0x0101010101010101ULL << (7 & shift);
-        return !((mask1 | C) ^ (mask1 | B)) || !((mask2 | C) ^ (mask2 | B)) ||
-               !((mask3 | C) ^ (mask3 | B)) || !((mask4 | C) ^ (mask4 | B));
+    inline uint64_t get_rook_mask_otf(uint64_t bitboard, uint64_t occupied) {
+        const int shift = find_lsb(bitboard);
+        const uint64_t rank_mask = 0xFF00000000000000 >> (56 - 8 * (shift / 8));
+        const uint64_t file_mask = 0x0101010101010101 << (7 & shift);
+
+        uint64_t rank_positive =
+            get_ray_attack(bitboard, occupied & rank_mask) & rank_mask;
+        uint64_t rank_negative =
+            get_ray_attack(flip_horizontal(bitboard),
+                           flip_horizontal(occupied & rank_mask)) &
+            rank_mask;
+
+        uint64_t file_positive =
+            get_ray_attack(bitboard, occupied & file_mask) & file_mask;
+        uint64_t file_negative =
+            get_ray_attack(flip_vertical(bitboard),
+                           flip_vertical(occupied & file_mask)) &
+            file_mask;
+        return (rank_positive | flip_horizontal(rank_negative) | file_positive |
+                flip_vertical(file_negative));
+    }
+
+    /**
+     * Generate a bishop move set on-the-fly
+     *
+     * This is slow, so it is used for generating the bishop attack tables
+     */
+    inline uint64_t get_bishop_mask_otf(uint64_t bitboard, uint64_t occupied) {
+        int shift = find_lsb(bitboard);
+        uint64_t diagonal_mask = get_diagonal_mask(shift);
+        uint64_t antidiag_mask = get_antidiag_mask(shift);
+
+        uint64_t diagonal_positive =
+            get_ray_attack(bitboard, occupied & diagonal_mask) & diagonal_mask;
+        uint64_t diagonal_negative =
+            get_ray_attack(flip_vertical(bitboard),
+                           flip_vertical(occupied & diagonal_mask)) &
+            flip_vertical(diagonal_mask);
+
+        uint64_t antidiag_positive =
+            get_ray_attack(bitboard, occupied & antidiag_mask) & antidiag_mask;
+        uint64_t antidiag_negative =
+            get_ray_attack(flip_vertical(bitboard),
+                           flip_vertical(occupied & antidiag_mask)) &
+            flip_vertical(antidiag_mask);
+        return (diagonal_positive | flip_vertical(diagonal_negative) |
+                antidiag_positive | flip_vertical(antidiag_negative));
     }
 
     /**
@@ -250,27 +371,11 @@ namespace chess {
      */
     inline uint64_t get_rook_mask(uint64_t bitboard, uint64_t allies,
                                   uint64_t enemies) {
-        const int shift = find_lsb(bitboard);
-        const uint64_t rank_mask = 0xFF00000000000000 >> (56 - 8 * (shift / 8));
-        const uint64_t file_mask = 0x0101010101010101 << (7 & shift);
-
-        const uint64_t occupied = allies | enemies;
-        uint64_t rank_positive =
-            get_ray_attack(bitboard, occupied & rank_mask) & rank_mask;
-        uint64_t rank_negative =
-            get_ray_attack(flip_horizontal(bitboard),
-                           flip_horizontal(occupied & rank_mask)) &
-            rank_mask;
-
-        uint64_t file_positive =
-            get_ray_attack(bitboard, occupied & file_mask) & file_mask;
-        uint64_t file_negative =
-            get_ray_attack(flip_vertical(bitboard),
-                           flip_vertical(occupied & file_mask)) &
-            file_mask;
-        return (rank_positive | flip_horizontal(rank_negative) | file_positive |
-                flip_vertical(file_negative)) &
-               ~allies;
+        const int square = find_lsb(bitboard);
+        const SlidingMoveTable &table = rook_attack_tables[square];
+        const uint64_t blockers = table.block_mask & (allies | enemies);
+        const uint64_t index = (blockers * table.magic) >> (64 - table.shift);
+        return table.move_masks[index] & ~allies;
     }
 
     /**
@@ -278,27 +383,11 @@ namespace chess {
      */
     inline uint64_t get_bishop_mask(uint64_t bitboard, uint64_t allies,
                                     uint64_t enemies) {
-        int shift = find_lsb(bitboard);
-        uint64_t diagonal_mask = get_diagonal_mask(shift);
-        uint64_t antidiag_mask = get_antidiag_mask(shift);
-
-        const uint64_t occupied = allies | enemies;
-        uint64_t diagonal_positive =
-            get_ray_attack(bitboard, occupied & diagonal_mask) & diagonal_mask;
-        uint64_t diagonal_negative =
-            get_ray_attack(flip_vertical(bitboard),
-                           flip_vertical(occupied & diagonal_mask)) &
-            flip_vertical(diagonal_mask);
-
-        uint64_t antidiag_positive =
-            get_ray_attack(bitboard, occupied & antidiag_mask) & antidiag_mask;
-        uint64_t antidiag_negative =
-            get_ray_attack(flip_vertical(bitboard),
-                           flip_vertical(occupied & antidiag_mask)) &
-            flip_vertical(antidiag_mask);
-        return (diagonal_positive | flip_vertical(diagonal_negative) |
-                antidiag_positive | flip_vertical(antidiag_negative)) &
-               ~allies;
+        const int square = find_lsb(bitboard);
+        const SlidingMoveTable &table = bishop_attack_tables[square];
+        const uint64_t blockers = table.block_mask & (allies | enemies);
+        const uint64_t index = (blockers * table.magic) >> (64 - table.shift);
+        return table.move_masks[index] & ~allies;
     }
 
     /**
@@ -307,8 +396,23 @@ namespace chess {
      */
     inline uint64_t get_queen_mask(uint64_t bitboard, uint64_t allies,
                                    uint64_t enemies) {
-        return get_rook_mask(bitboard, allies, enemies) |
-               get_bishop_mask(bitboard, allies, enemies);
+        const int square = find_lsb(bitboard);
+
+        const SlidingMoveTable &rook_table = rook_attack_tables[square];
+        const uint64_t rook_blockers =
+            rook_table.block_mask & (allies | enemies);
+        const uint64_t rook_index =
+            (rook_blockers * rook_table.magic) >> (64 - rook_table.shift);
+        const uint64_t rook_mask = rook_table.move_masks[rook_index];
+
+        const SlidingMoveTable &bishop_table = bishop_attack_tables[square];
+        const uint64_t bishop_blockers =
+            bishop_table.block_mask & (allies | enemies);
+        const uint64_t bishop_index =
+            (bishop_blockers * bishop_table.magic) >> (64 - bishop_table.shift);
+        const uint64_t bishop_mask = bishop_table.move_masks[bishop_index];
+
+        return (rook_mask | bishop_mask) & ~allies;
     }
 
     /**
@@ -339,6 +443,79 @@ namespace chess {
             break;
         }
         return 0;
+    }
+
+    /**
+     * Generate an occupancy bitboard from a given index
+     */
+    inline uint64_t generate_occupancy(int index, int bit_count,
+                                       uint64_t mask) {
+        uint64_t occupancy = 0;
+        for (int i = 0; i < bit_count; i++) {
+            int shift = find_lsb(mask);
+            mask &= (mask - 1ULL);
+            if (index & (1ULL << i)) {
+                occupancy |= (1ULL << shift);
+            }
+        }
+        return occupancy;
+    }
+
+    /**
+     * Initialize the rook attack tables
+     */
+    inline void init_rook_tables() {
+        for (int i = 0; i < 64; i++) {
+            uint64_t bitboard = 1ULL << i;
+
+            uint64_t rank_mask = 0xFF00000000000000 >> (56 - 8 * (i / 8));
+            uint64_t file_mask = 0x0101010101010101 << (7 & i);
+
+            rank_mask &= ~end_files;
+            file_mask &= ~end_ranks;
+
+            uint64_t block_mask = ~bitboard & (rank_mask | file_mask);
+
+            SlidingMoveTable &table = rook_attack_tables[i];
+            table.block_mask = block_mask;
+            table.shift = count_set_bits(block_mask);
+            table.magic = rook_magics[i];
+
+            for (int j = 0; j < (1 << table.shift); j++) {
+                uint64_t blockers =
+                    generate_occupancy(j, table.shift, block_mask);
+                uint64_t index = (blockers * table.magic) >> (64 - table.shift);
+                table.move_masks[index] = get_rook_mask_otf(bitboard, blockers);
+            }
+        }
+    }
+
+    /**
+     * Initialize the bishop attack tables
+     */
+    inline void init_bishop_tables() {
+        for (int i = 0; i < 64; i++) {
+            uint64_t bitboard = 1ULL << i;
+
+            uint64_t diagonal_mask = get_diagonal_mask(i);
+            uint64_t antidiag_mask = get_antidiag_mask(i);
+
+            uint64_t block_mask = diagonal_mask | antidiag_mask;
+            block_mask &= ~(bitboard | end_ranks | end_files);
+
+            SlidingMoveTable &table = bishop_attack_tables[i];
+            table.block_mask = block_mask;
+            table.shift = count_set_bits(block_mask);
+            table.magic = bishop_magics[i];
+
+            for (int j = 0; j < (1 << table.shift); j++) {
+                uint64_t blockers =
+                    generate_occupancy(j, table.shift, block_mask);
+                uint64_t index = (blockers * table.magic) >> (64 - table.shift);
+                table.move_masks[index] =
+                    get_bishop_mask_otf(bitboard, blockers);
+            }
+        }
     }
 } // namespace chess
 
