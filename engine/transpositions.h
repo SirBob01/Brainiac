@@ -1,46 +1,51 @@
 #ifndef CHESS_TRANSPOSITIONS_H_
 #define CHESS_TRANSPOSITIONS_H_
 
-#define TRANSPOSITION_TABLE_SIZE 1 << 16
+#define TRANSPOSITION_TABLE_SIZE 0x100000
+#define TRANSPOSITION_HASH_MASK  0xFFFFF
 
-#include <array>
 #include <vector>
 
 #include "board.h"
 
 namespace chess {
+    /**
+     * Types of nodes depending on their value
+     */
+    enum NodeType { Exact = 0, Lower = 1, Upper = 2 };
+
+    /**
+     * An entry in the table
+     */
     struct TableNode {
         uint64_t key;
         int depth;
-        int value;
+        float value;
+        NodeType type;
     };
 
     /**
      * A hash table of visited nodes
      */
     class Transpositions {
-        std::array<std::vector<TableNode>, TRANSPOSITION_TABLE_SIZE> _table;
+        std::vector<TableNode> _table;
 
       public:
-        /**
-         * Set the value of a board position
-         */
-        void set(Board &board, int depth, int value);
+        Transpositions() : _table(TRANSPOSITION_TABLE_SIZE){};
 
         /**
-         * Get the stored value of a position
+         * Set the entry of a board position
          */
-        int get(Board &board);
+        inline void set(Board &board, TableNode &node) {
+            _table[board.get_hash() & TRANSPOSITION_HASH_MASK] = node;
+        }
 
         /**
-         * Check if board has been visited
+         * Get the entry of a board position
          */
-        bool contains(Board &board);
-
-        /**
-         * Print the transposition table for debugging
-         */
-        void print();
+        inline TableNode &get(Board &board) {
+            return _table[board.get_hash() & TRANSPOSITION_HASH_MASK];
+        }
     };
 } // namespace chess
 

@@ -58,7 +58,7 @@ namespace chess {
         /**
          * Alpha-beta pruning algorithm with quiescence search
          */
-        float search(Board &board, SearchNode &node);
+        float search(Board &board, SearchNode node);
 
         /**
          * Estimate the value of a move to optimize search in
