@@ -9,7 +9,10 @@
 #include <vector>
 
 #include "board.h"
+#include "heuristic.h"
 #include "transpositions.h"
+
+#define MAX_SCORE 1000.0f
 
 namespace chess {
     /**
@@ -23,10 +26,10 @@ namespace chess {
     /**
      * Contains per-node state data required during alpha-beta minimax
      */
-    struct MinimaxNode {
+    struct SearchNode {
         int depth;
-        int alpha;
-        int beta;
+        float alpha;
+        float beta;
         Move move;
         Color turn;
     };
@@ -38,20 +41,30 @@ namespace chess {
     class Brainiac {
         int _max_depth;
         int _max_quiescence_depth;
-
-        // Transposition table
         Transpositions _transpositions;
 
-        // Statistics for measuring search pruning performance
-        int _hits;
-        int _total;
+        // Statistic for measuring search pruning performance
         int _visited;
+
+        // Pairing of move with its heuristic score for ordering
+        struct MoveScore {
+            Move move;
+            float score;
+
+            MoveScore(const Move &move, float score)
+                : move(move), score(score){};
+        };
 
         /**
          * Alpha-beta pruning algorithm with quiescence search
          */
-        int search(Board &board, MinimaxNode node, Color player,
-                   bool quiescence);
+        float search(Board &board, SearchNode &node);
+
+        /**
+         * Estimate the value of a move to optimize search in
+         * alpha-beta pruning
+         */
+        float ordering_heuristic(Board &board, const Move &move);
 
       public:
         Brainiac();
@@ -60,7 +73,7 @@ namespace chess {
          * Calculates the score of the maximizing player based
          * on the board state
          */
-        int evaluate(Board &board, Color maximizing_player);
+        float evaluate(Board &board, Color maximizing_player);
 
         /**
          * Selects the best possible move for the current position
