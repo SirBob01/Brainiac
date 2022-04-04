@@ -15,8 +15,17 @@ To build the engine executable, run
 
 ## TODO
 
+### Performance Enhancements
+
+- Integrate transposition table into search
+- Implement PV-search (principal variation)
+- Implement killer-move heuristic for move ordering
+- Implement iterative deepening
+
+### Engine Interface
+
 - Fix up main program command-line interface
-- Refine search algorithm, improve tree pruning
+- Integrate UCI protocol
 
 ## License
 

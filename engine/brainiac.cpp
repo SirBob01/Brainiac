@@ -9,7 +9,6 @@ namespace chess {
 
     float Brainiac::search(Board &board, SearchNode &node) {
         _visited++;
-        // TODO: Integrate transposition tables and iterative deepening
         // Terminal conditions
         if (board.is_checkmate()) {
             return board.get_turn() != node.turn ? MAX_SCORE : -MAX_SCORE;
