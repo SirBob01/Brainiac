@@ -17,7 +17,6 @@ To build the engine executable, run
 
 ### Performance Enhancements
 
-- Integrate transposition table into search
 - Implement PV-search (principal variation)
 - Implement killer-move heuristic for move ordering
 - Implement iterative deepening

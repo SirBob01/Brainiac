@@ -7,9 +7,31 @@ namespace chess {
         _visited = 0;
     }
 
-    float Brainiac::search(Board &board, SearchNode &node) {
-        _visited++;
+    float Brainiac::search(Board &board, SearchNode node) {
+        // Read from the transposition table
+        float alpha_orig = node.alpha;
+        TableNode &entry = _transpositions.get(board);
+        if (entry.key == board.get_hash() && entry.depth >= node.depth) {
+            switch (entry.type) {
+            case NodeType::Exact:
+                return entry.value;
+                break;
+            case NodeType::Lower:
+                node.alpha = std::max(node.alpha, entry.value);
+                break;
+            case NodeType::Upper:
+                node.beta = std::min(node.beta, entry.value);
+                break;
+            default:
+                break;
+            }
+            if (node.alpha >= node.beta) {
+                return entry.value;
+            }
+        }
+
         // Terminal conditions
+        _visited++;
         if (board.is_checkmate()) {
             return board.get_turn() != node.turn ? MAX_SCORE : -MAX_SCORE;
         } else if (board.is_draw()) {
@@ -39,7 +61,6 @@ namespace chess {
 
         // Prioritize better moves to optimize pruning with selection sort
         float value = -MAX_SCORE;
-        float alpha = node.alpha;
         for (int i = 0; i < n - 1; i++) {
             int best_index = i;
             for (int j = i + 1; j < n; j++) {
@@ -56,12 +77,26 @@ namespace chess {
             // Negamax
             board.execute_move(move);
             value = std::max(value, -search(board, new_node));
-            alpha = std::max(value, alpha);
+            node.alpha = std::max(value, node.alpha);
             board.undo_move();
-            if (alpha >= node.beta) {
+            if (node.alpha >= node.beta) {
                 break;
             }
         }
+
+        // Update the transposition table
+        TableNode new_entry;
+        new_entry.key = board.get_hash();
+        new_entry.value = value;
+        new_entry.depth = node.depth;
+        if (value <= alpha_orig) {
+            new_entry.type = NodeType::Upper;
+        } else if (value >= node.beta) {
+            new_entry.type = NodeType::Lower;
+        } else {
+            new_entry.type = NodeType::Exact;
+        }
+        _transpositions.set(board, new_entry);
         return value;
     }
 
