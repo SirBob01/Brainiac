@@ -17,6 +17,7 @@ To build the engine executable, run
 
 ### Performance Enhancements
 
+- Implement null-move pruning
 - Implement PV-search (principal variation)
 
 ### Engine Interface
