@@ -1,9 +1,9 @@
 #ifndef CHESS_BRAINIAC_H_
 #define CHESS_BRAINIAC_H_
 
+#include <chrono>
 #include <iostream>
 #include <memory>
-#include <mutex>
 #include <thread>
 #include <unordered_map>
 #include <vector>
@@ -12,9 +12,12 @@
 #include "heuristic.h"
 #include "transpositions.h"
 
-#define MAX_SCORE 1000.0f
+#define MAX_SCORE       1000.0f
+#define SECONDS_TO_NANO 1000000000.0f
 
 namespace chess {
+    using Time = std::chrono::time_point<std::chrono::steady_clock>;
+
     /**
      * Initialize engine
      */
@@ -41,7 +44,9 @@ namespace chess {
     class Brainiac {
         int _max_depth;
         int _max_quiescence_depth;
+        double _iterative_timeout_ns;
         Transpositions _transpositions;
+        Time _start_time;
 
         // Statistic for measuring search pruning performance
         int _visited;
@@ -58,7 +63,12 @@ namespace chess {
         /**
          * Alpha-beta pruning algorithm with quiescence search
          */
-        float search(Board &board, SearchNode node);
+        float negamax(Board &board, SearchNode node);
+
+        /**
+         * Iterative deepening search
+         */
+        float search(Board &board, SearchNode &node);
 
         /**
          * Estimate the value of a move to optimize search in
