@@ -104,16 +104,14 @@ namespace chess {
      * Calculate the MMV-LVA heuristic of the board
      */
     inline float mmv_lva_heuristic(Board &board, const Move &move) {
-        const Square &from = move.from;
-        const Square &to = move.to;
-
-        Piece attacker = board.get_at(from);
-        Piece victim = board.get_at(to);
+        Piece attacker = board.get_at(move.from);
+        Piece victim = board.get_at(move.to);
         if (victim.is_empty()) {
             return 0;
         }
-
-        return piece_weights[victim.type] - piece_weights[attacker.type];
+        float mvv = piece_weights[victim.type];
+        float lva = piece_weights[attacker.type];
+        return mvv - lva;
     }
 } // namespace chess
 

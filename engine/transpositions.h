@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "board.h"
+#include "move.h"
 
 namespace chess {
     /**
@@ -22,6 +23,7 @@ namespace chess {
         int depth;
         float value;
         NodeType type;
+        Move best_move;
     };
 
     /**

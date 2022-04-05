@@ -2,15 +2,22 @@
 
 namespace chess {
     Brainiac::Brainiac() {
-        _max_depth = 4;
-        _max_quiescence_depth = 4;
+        _max_depth = 128;
+        _max_quiescence_depth = 8;
+        _iterative_timeout_ns = 0.5 * SECONDS_TO_NANO;
         _visited = 0;
     }
 
-    float Brainiac::search(Board &board, SearchNode node) {
+    float Brainiac::negamax(Board &board, SearchNode node) {
         // Read from the transposition table
         float alpha_orig = node.alpha;
         TableNode &entry = _transpositions.get(board);
+
+        // Terminate early and return last known search result
+        Time end_time = std::chrono::steady_clock::now();
+        if ((end_time - _start_time).count() >= _iterative_timeout_ns) {
+            return entry.value;
+        }
         if (entry.key == board.get_hash() && entry.depth >= node.depth) {
             switch (entry.type) {
             case NodeType::Exact:
@@ -61,6 +68,7 @@ namespace chess {
 
         // Prioritize better moves to optimize pruning with selection sort
         float value = -MAX_SCORE;
+        Move best_move;
         for (int i = 0; i < n - 1; i++) {
             int best_index = i;
             for (int j = i + 1; j < n; j++) {
@@ -76,10 +84,12 @@ namespace chess {
 
             // Negamax
             board.execute_move(move);
-            value = std::max(value, -search(board, new_node));
+            value = std::max(value, -negamax(board, new_node));
             node.alpha = std::max(value, node.alpha);
             board.undo_move();
             if (node.alpha >= node.beta) {
+                // Hash move to be prioritized in next search iteration
+                best_move = move;
                 break;
             }
         }
@@ -89,6 +99,7 @@ namespace chess {
         new_entry.key = board.get_hash();
         new_entry.value = value;
         new_entry.depth = node.depth;
+        new_entry.best_move = best_move;
         if (value <= alpha_orig) {
             new_entry.type = NodeType::Upper;
         } else if (value >= node.beta) {
@@ -100,8 +111,33 @@ namespace chess {
         return value;
     }
 
+    float Brainiac::search(Board &board, SearchNode &node) {
+        _start_time = std::chrono::steady_clock::now();
+        float value = -MAX_SCORE;
+
+        // Iterative deepening from an initial depth until it runs out of time
+        for (int depth = 1; depth <= _max_depth; depth++) {
+            node.depth = depth;
+            value = negamax(board, node);
+
+            Time end_time = std::chrono::steady_clock::now();
+            if ((end_time - _start_time).count() >= _iterative_timeout_ns) {
+                return value;
+            }
+            depth++;
+        }
+        return value;
+    }
+
     float Brainiac::ordering_heuristic(Board &board, const Move &move) {
-        return mmv_lva_heuristic(board, move);
+        float score = mmv_lva_heuristic(board, move);
+
+        // Hashed move should be evaluated first
+        TableNode &node = _transpositions.get(board);
+        if (node.best_move == move) {
+            score += 1000.0f;
+        }
+        return score;
     }
 
     float Brainiac::evaluate(Board &board, Color maximizer) {
@@ -111,17 +147,17 @@ namespace chess {
     }
 
     Move Brainiac::move(Board &board) {
+        Time start = std::chrono::steady_clock::now();
+
         Color player = board.get_turn();
         std::vector<Move> moves = board.get_moves();
         Move best_move = moves[0];
         float best_value = -MAX_SCORE;
 
-        auto start = std::chrono::high_resolution_clock::now();
-
+        _visited = 0;
         for (auto &move : moves) {
             // Create initial search node
             SearchNode node;
-            node.depth = _max_depth;
             node.alpha = -MAX_SCORE;
             node.beta = MAX_SCORE;
             node.move = move;
@@ -132,7 +168,7 @@ namespace chess {
             float value = search(board, node);
             board.undo_move();
 
-            // Select best move
+            // Update best move
             if (value > best_value) {
                 best_value = value;
                 best_move = move;
@@ -140,11 +176,10 @@ namespace chess {
         }
 
         // DEBUGGING - Calculate search time and nodes visited
-        auto stop = std::chrono::high_resolution_clock::now();
-        auto duration =
-            std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+        Time stop = std::chrono::steady_clock::now();
+        auto duration = (stop - start) / SECONDS_TO_NANO;
         std::cout << _visited << " nodes searched"
-                  << " (" << duration.count() / 1000000.0 << " s)\n";
+                  << " (" << duration.count() << " s)\n";
         return best_move;
     }
 } // namespace chess

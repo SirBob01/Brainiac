@@ -71,6 +71,10 @@ namespace chess {
 
         inline bool is_invalid() const { return flags & MoveFlag::Invalid; };
 
+        inline bool operator==(const Move &other) {
+            return from == other.from && to == other.to && flags == other.flags;
+        }
+
         inline std::string standard_notation() const {
             std::string s = from.standard_notation() + to.standard_notation();
             if (flags & MoveFlag::RookPromo)

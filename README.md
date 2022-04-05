@@ -18,8 +18,6 @@ To build the engine executable, run
 ### Performance Enhancements
 
 - Implement PV-search (principal variation)
-- Implement killer-move heuristic for move ordering
-- Implement iterative deepening
 
 ### Engine Interface
 
