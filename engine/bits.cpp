@@ -17,8 +17,7 @@ namespace chess {
                 s = "";
             }
         }
-        if (s.length())
-            bytes.push(s);
+        if (s.length()) bytes.push(s);
         while (bytes.size()) {
             std::cout << bytes.top();
             bytes.pop();

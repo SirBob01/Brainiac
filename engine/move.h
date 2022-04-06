@@ -77,14 +77,10 @@ namespace chess {
 
         inline std::string standard_notation() const {
             std::string s = from.standard_notation() + to.standard_notation();
-            if (flags & MoveFlag::RookPromo)
-                s += 'r';
-            if (flags & MoveFlag::BishopPromo)
-                s += 'b';
-            if (flags & MoveFlag::KnightPromo)
-                s += 'n';
-            if (flags & MoveFlag::QueenPromo)
-                s += 'q';
+            if (flags & MoveFlag::RookPromo) s += 'r';
+            if (flags & MoveFlag::BishopPromo) s += 'b';
+            if (flags & MoveFlag::KnightPromo) s += 'n';
+            if (flags & MoveFlag::QueenPromo) s += 'q';
             return s;
         }
     };

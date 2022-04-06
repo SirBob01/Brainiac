@@ -26,8 +26,10 @@ namespace chess {
     /**
      * Generate a Zobrist hash for a given board
      */
-    uint64_t zobrist_hash(Color turn, uint64_t *bitboards,
-                          uint8_t castling_rights, Square en_passant);
+    uint64_t zobrist_hash(Color turn,
+                          uint64_t *bitboards,
+                          uint8_t castling_rights,
+                          Square en_passant);
 
     /**
      * Get the bitstring associated with a piece at a square

@@ -17,16 +17,35 @@ namespace chess {
     enum Color { White = 0, Black = 1, Empty = 2 };
 
     static const char *PieceChars = "KPRNBQkprnbq";
-    static const char *PieceDisplay[] = {
-        "\u2654", "\u2659", "\u2656", "\u2658", "\u2657", "\u2655",
-        "\u265A", "\u265F", "\u265C", "\u265E", "\u265D", "\u265B"};
+    static const char *PieceDisplay[] = {"\u2654",
+                                         "\u2659",
+                                         "\u2656",
+                                         "\u2658",
+                                         "\u2657",
+                                         "\u2655",
+                                         "\u265A",
+                                         "\u265F",
+                                         "\u265C",
+                                         "\u265E",
+                                         "\u265D",
+                                         "\u265B"};
 
     /**
      * Calculate the material score of the board state
      */
     static const int piece_weights[] = {
-        4,  1,  5,  3,  3,  9, // White pieces
-        -4, -1, -5, -3, -3, -9 // Black pieces
+        4,
+        1,
+        5,
+        3,
+        3,
+        9, // White pieces
+        -4,
+        -1,
+        -5,
+        -3,
+        -3,
+        -9 // Black pieces
     };
 
     /**
