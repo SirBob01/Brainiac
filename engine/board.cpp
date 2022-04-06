@@ -36,14 +36,10 @@ namespace chess {
         _turn = (fields[1][0] == 'w') ? Color::White : Color::Black;
         state._castling_rights = 0;
         for (auto &c : fields[2]) {
-            if (c == 'K')
-                state._castling_rights |= Castle::WK;
-            else if (c == 'Q')
-                state._castling_rights |= Castle::WQ;
-            else if (c == 'k')
-                state._castling_rights |= Castle::BK;
-            else if (c == 'q')
-                state._castling_rights |= Castle::BQ;
+            if (c == 'K') state._castling_rights |= Castle::WK;
+            else if (c == 'Q') state._castling_rights |= Castle::WQ;
+            else if (c == 'k') state._castling_rights |= Castle::BK;
+            else if (c == 'q') state._castling_rights |= Castle::BQ;
         }
 
         if (fields[3].length() == 2) {
@@ -56,9 +52,10 @@ namespace chess {
         generate_moves();
 
         // Calculate the Zobrist hash
-        state._hash =
-            zobrist_hash(_turn, state._bitboards, state._castling_rights,
-                         state._en_passant_target);
+        state._hash = zobrist_hash(_turn,
+                                   state._bitboards,
+                                   state._castling_rights,
+                                   state._en_passant_target);
     }
 
     bool Board::is_legal(Move move) {
@@ -112,8 +109,10 @@ namespace chess {
         uint64_t enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
         uint64_t all_pieces = allies | enemies;
 
-        MoveFlag promotions[4] = {MoveFlag::KnightPromo, MoveFlag::QueenPromo,
-                                  MoveFlag::BishopPromo, MoveFlag::RookPromo};
+        MoveFlag promotions[4] = {MoveFlag::KnightPromo,
+                                  MoveFlag::QueenPromo,
+                                  MoveFlag::BishopPromo,
+                                  MoveFlag::RookPromo};
         uint64_t en_passant_mask = 0;
         if (!state._en_passant_target.is_invalid()) {
             en_passant_mask = state._en_passant_target.get_mask();
@@ -126,7 +125,8 @@ namespace chess {
             unsigned flags = MoveFlag::Quiet | MoveFlag::PawnAdvance;
             if (move & end_ranks) {
                 for (int i = 0; i < 4; i++) {
-                    Move moveobj = {find_lsb(bitboard), find_lsb(move),
+                    Move moveobj = {find_lsb(bitboard),
+                                    find_lsb(move),
                                     flags | promotions[i]};
                     register_move(moveobj);
                 }
@@ -145,7 +145,8 @@ namespace chess {
                 MoveFlag::Quiet | MoveFlag::PawnAdvance | MoveFlag::PawnDouble;
             if (move & end_ranks) {
                 for (int i = 0; i < 4; i++) {
-                    Move moveobj = {find_lsb(bitboard), find_lsb(move),
+                    Move moveobj = {find_lsb(bitboard),
+                                    find_lsb(move),
                                     flags | promotions[i]};
                     register_move(moveobj);
                 }
@@ -163,7 +164,8 @@ namespace chess {
             unsigned flags = MoveFlag::Capture;
             if (move & end_ranks) {
                 for (int i = 0; i < 4; i++) {
-                    Move moveobj = {find_lsb(bitboard), find_lsb(move),
+                    Move moveobj = {find_lsb(bitboard),
+                                    find_lsb(move),
                                     flags | promotions[i]};
                     register_move(moveobj);
                 }
@@ -181,7 +183,8 @@ namespace chess {
             unsigned flags = MoveFlag::Capture | MoveFlag::EnPassant;
             if (move & end_ranks) {
                 for (int i = 0; i < 4; i++) {
-                    Move moveobj = {find_lsb(bitboard), find_lsb(move),
+                    Move moveobj = {find_lsb(bitboard),
+                                    find_lsb(move),
                                     flags | promotions[i]};
                     register_move(moveobj);
                 }
@@ -193,7 +196,8 @@ namespace chess {
         }
     }
 
-    void Board::generate_step_moves(uint64_t bitboard, bool is_king,
+    void Board::generate_step_moves(uint64_t bitboard,
+                                    bool is_king,
                                     uint64_t (*mask_func)(uint64_t)) {
         // Generate single step moves (knight, king)
         BoardState &state = _states[_current_state];
@@ -210,14 +214,16 @@ namespace chess {
         uint64_t quiet_board = moves & ~enemies;
         while (quiet_board) {
             uint64_t move = quiet_board & (-quiet_board);
-            Move moveobj = {find_lsb(bitboard), find_lsb(move),
+            Move moveobj = {find_lsb(bitboard),
+                            find_lsb(move),
                             MoveFlag::Quiet};
             register_move(moveobj);
             quiet_board &= (quiet_board - 1);
         }
         while (capture_board) {
             uint64_t move = capture_board & (-capture_board);
-            Move moveobj = {find_lsb(bitboard), find_lsb(move),
+            Move moveobj = {find_lsb(bitboard),
+                            find_lsb(move),
                             MoveFlag::Capture};
             register_move(moveobj);
             capture_board &= (capture_board - 1);
@@ -225,7 +231,8 @@ namespace chess {
     }
 
     void Board::generate_slider_moves(uint64_t bitboard,
-                                      uint64_t (*mask_func)(uint64_t, uint64_t,
+                                      uint64_t (*mask_func)(uint64_t,
+                                                            uint64_t,
                                                             uint64_t)) {
         BoardState &state = _states[_current_state];
         uint64_t allies = state._bitboards[PieceType::NPieces * 2 + _turn];
@@ -237,14 +244,16 @@ namespace chess {
         uint64_t quiet_board = moves & ~enemies;
         while (quiet_board) {
             uint64_t move = quiet_board & (-quiet_board);
-            Move moveobj = {find_lsb(bitboard), find_lsb(move),
+            Move moveobj = {find_lsb(bitboard),
+                            find_lsb(move),
                             MoveFlag::Quiet};
             register_move(moveobj);
             quiet_board &= (quiet_board - 1);
         }
         while (capture_board) {
             uint64_t move = capture_board & (-capture_board);
-            Move moveobj = {find_lsb(bitboard), find_lsb(move),
+            Move moveobj = {find_lsb(bitboard),
+                            find_lsb(move),
                             MoveFlag::Capture};
             register_move(moveobj);
             capture_board &= (capture_board - 1);
@@ -317,7 +326,8 @@ namespace chess {
                     uint64_t unit = bitboard & (-bitboard);
                     switch (piece.type) {
                     case PieceType::Bishop:
-                        attacked |= get_bishop_mask(unit, source_squares,
+                        attacked |= get_bishop_mask(unit,
+                                                    source_squares,
                                                     target_squares);
                         break;
                     case PieceType::Rook:
@@ -325,7 +335,8 @@ namespace chess {
                             get_rook_mask(unit, source_squares, target_squares);
                         break;
                     case PieceType::Queen:
-                        attacked |= get_queen_mask(unit, source_squares,
+                        attacked |= get_queen_mask(unit,
+                                                   source_squares,
                                                    target_squares);
                         break;
                     default:
@@ -392,26 +403,19 @@ namespace chess {
                     counter += 1;
                 }
             }
-            if (counter)
-                fen += counter + '0';
-            if (row)
-                fen += '/';
+            if (counter) fen += counter + '0';
+            if (row) fen += '/';
         }
         fen += " ";
         fen += _turn == Color::White ? "w" : "b";
 
         std::string castling_rights = "";
 
-        if (state._castling_rights & Castle::WK)
-            castling_rights += 'K';
-        if (state._castling_rights & Castle::WQ)
-            castling_rights += 'Q';
-        if (state._castling_rights & Castle::BK)
-            castling_rights += 'k';
-        if (state._castling_rights & Castle::BQ)
-            castling_rights += 'q';
-        if (castling_rights.length() == 0)
-            castling_rights = "-";
+        if (state._castling_rights & Castle::WK) castling_rights += 'K';
+        if (state._castling_rights & Castle::WQ) castling_rights += 'Q';
+        if (state._castling_rights & Castle::BK) castling_rights += 'k';
+        if (state._castling_rights & Castle::BQ) castling_rights += 'q';
+        if (castling_rights.length() == 0) castling_rights = "-";
         fen += " " + castling_rights;
 
         if (state._en_passant_target.is_invalid()) {
@@ -713,20 +717,16 @@ namespace chess {
                      MoveFlag::BishopPromo | MoveFlag::QueenPromo)) {
                     switch (promotion) {
                     case 'r':
-                        if (move.flags & MoveFlag::RookPromo)
-                            return move;
+                        if (move.flags & MoveFlag::RookPromo) return move;
                         break;
                     case 'n':
-                        if (move.flags & MoveFlag::KnightPromo)
-                            return move;
+                        if (move.flags & MoveFlag::KnightPromo) return move;
                         break;
                     case 'b':
-                        if (move.flags & MoveFlag::BishopPromo)
-                            return move;
+                        if (move.flags & MoveFlag::BishopPromo) return move;
                         break;
                     case 'q':
-                        if (move.flags & MoveFlag::QueenPromo)
-                            return move;
+                        if (move.flags & MoveFlag::QueenPromo) return move;
                         break;
                     default:
                         return {};
@@ -775,10 +775,8 @@ namespace chess {
     void Board::print() {
         // Set code page to allow UTF16 characters to show (chcp 65001 on
         // powershell)
-        if (_turn == Color::White)
-            std::cout << "White's turn.\n";
-        if (_turn == Color::Black)
-            std::cout << "Black's turn.\n";
+        if (_turn == Color::White) std::cout << "White's turn.\n";
+        if (_turn == Color::Black) std::cout << "Black's turn.\n";
         std::string files = "ABCDEFGH";
         for (int rank = 7; rank >= 0; rank--) {
             std::cout << rank + 1 << " ";

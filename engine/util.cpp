@@ -6,15 +6,13 @@ namespace chess::util {
         std::string current = "";
         for (auto &c : base) {
             if (c == delimiter) {
-                if (current.length())
-                    tokens.push_back(current);
+                if (current.length()) tokens.push_back(current);
                 current = "";
             } else {
                 current += c;
             }
         }
-        if (current.length())
-            tokens.push_back(current);
+        if (current.length()) tokens.push_back(current);
         return tokens;
     }
 } // namespace chess::util

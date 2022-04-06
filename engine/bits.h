@@ -60,9 +60,14 @@ namespace chess {
      * Constant bitmasks to eliminate overflowing bits during shift operations
      */
     constexpr uint64_t wrap_bitmasks[8] = {
-        0xfefefefefefefe00, 0xfefefefefefefefe, 0x00fefefefefefefe,
-        0x00ffffffffffffff, 0x007f7f7f7f7f7f7f, 0x7f7f7f7f7f7f7f7f,
-        0x7f7f7f7f7f7f7f00, 0xffffffffffffff00,
+        0xfefefefefefefe00,
+        0xfefefefefefefefe,
+        0x00fefefefefefefe,
+        0x00ffffffffffffff,
+        0x007f7f7f7f7f7f7f,
+        0x7f7f7f7f7f7f7f7f,
+        0x7f7f7f7f7f7f7f00,
+        0xffffffffffffff00,
     };
 
     /**
@@ -78,7 +83,8 @@ namespace chess {
     /**
      * Horizontal bitboard flip constants
      */
-    constexpr uint64_t horflip_k[3] = {0x5555555555555555, 0x3333333333333333,
+    constexpr uint64_t horflip_k[3] = {0x5555555555555555,
+                                       0x3333333333333333,
                                        0x0f0f0f0f0f0f0f0f};
 
     /**
@@ -334,8 +340,8 @@ namespace chess {
     /**
      * Get the position of the pawn after advancing a single rank
      */
-    inline uint64_t get_pawn_advance_mask(uint64_t bitboard,
-                                          uint64_t all_pieces, Color color) {
+    inline uint64_t
+    get_pawn_advance_mask(uint64_t bitboard, uint64_t all_pieces, Color color) {
         return (color == Color::White)
                    ? get_adjacent(bitboard, Direction::Down) & ~all_pieces
                    : get_adjacent(bitboard, Direction::Up) & ~all_pieces;
@@ -344,12 +350,13 @@ namespace chess {
     /**
      * Get the position of the pawn after advancing 2 ranks
      */
-    inline uint64_t get_pawn_double_mask(uint64_t bitboard, uint64_t all_pieces,
-                                         Color color) {
+    inline uint64_t
+    get_pawn_double_mask(uint64_t bitboard, uint64_t all_pieces, Color color) {
         // Move twice, assuming both cells are clear
         // Only move if target square is rank 4 or rank 5
         uint64_t advance = get_pawn_advance_mask(
-            get_pawn_advance_mask(bitboard, all_pieces, color), all_pieces,
+            get_pawn_advance_mask(bitboard, all_pieces, color),
+            all_pieces,
             color);
         return (color == Color::White) ? advance & rank4 : advance & rank5;
     }
@@ -369,8 +376,8 @@ namespace chess {
     /**
      * Get all possible moves for the rook
      */
-    inline uint64_t get_rook_mask(uint64_t bitboard, uint64_t allies,
-                                  uint64_t enemies) {
+    inline uint64_t
+    get_rook_mask(uint64_t bitboard, uint64_t allies, uint64_t enemies) {
         const int square = find_lsb(bitboard);
         const SlidingMoveTable &table = rook_attack_tables[square];
         const uint64_t blockers = table.block_mask & (allies | enemies);
@@ -381,8 +388,8 @@ namespace chess {
     /**
      * Get all possible moves for the bishop
      */
-    inline uint64_t get_bishop_mask(uint64_t bitboard, uint64_t allies,
-                                    uint64_t enemies) {
+    inline uint64_t
+    get_bishop_mask(uint64_t bitboard, uint64_t allies, uint64_t enemies) {
         const int square = find_lsb(bitboard);
         const SlidingMoveTable &table = bishop_attack_tables[square];
         const uint64_t blockers = table.block_mask & (allies | enemies);
@@ -394,8 +401,8 @@ namespace chess {
      * Get all possible moves for the queen
      * Simply perform bitwise OR on the rook and bishop masks
      */
-    inline uint64_t get_queen_mask(uint64_t bitboard, uint64_t allies,
-                                   uint64_t enemies) {
+    inline uint64_t
+    get_queen_mask(uint64_t bitboard, uint64_t allies, uint64_t enemies) {
         const int square = find_lsb(bitboard);
 
         const SlidingMoveTable &rook_table = rook_attack_tables[square];
@@ -422,23 +429,19 @@ namespace chess {
         // BC and FG files must be clear on the end ranks
         switch (side) {
         case Castle::WK:
-            if (all_pieces & 0x60)
-                return 0;
+            if (all_pieces & 0x60) return 0;
             return 0x40;
             break;
         case Castle::WQ:
-            if (all_pieces & 0xE)
-                return 0;
+            if (all_pieces & 0xE) return 0;
             return 0x4;
             break;
         case Castle::BK:
-            if (all_pieces & 0x6000000000000000)
-                return 0;
+            if (all_pieces & 0x6000000000000000) return 0;
             return 0x4000000000000000;
             break;
         case Castle::BQ:
-            if (all_pieces & 0x0E00000000000000)
-                return 0;
+            if (all_pieces & 0x0E00000000000000) return 0;
             return 0x0400000000000000;
             break;
         }
@@ -448,8 +451,8 @@ namespace chess {
     /**
      * Generate an occupancy bitboard from a given index
      */
-    inline uint64_t generate_occupancy(int index, int bit_count,
-                                       uint64_t mask) {
+    inline uint64_t
+    generate_occupancy(int index, int bit_count, uint64_t mask) {
         uint64_t occupancy = 0;
         for (int i = 0; i < bit_count; i++) {
             int shift = find_lsb(mask);

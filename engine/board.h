@@ -51,14 +51,16 @@ namespace chess {
         /**
          * Generate all pseudo-legal moves for single step moves
          */
-        void generate_step_moves(uint64_t bitboard, bool is_king,
+        void generate_step_moves(uint64_t bitboard,
+                                 bool is_king,
                                  uint64_t (*mask_func)(uint64_t));
 
         /**
          * Slider moves need more information about the board
          */
         void generate_slider_moves(uint64_t bitboard,
-                                   uint64_t (*mask_func)(uint64_t, uint64_t,
+                                   uint64_t (*mask_func)(uint64_t,
+                                                         uint64_t,
                                                          uint64_t));
 
         /**

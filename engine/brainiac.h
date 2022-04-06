@@ -56,8 +56,8 @@ namespace chess {
             Move move;
             float score;
 
-            MoveScore(const Move &move, float score)
-                : move(move), score(score){};
+            MoveScore(const Move &move, float score) :
+                move(move), score(score){};
         };
 
         /**

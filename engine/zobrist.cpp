@@ -18,8 +18,10 @@ namespace chess {
         turn_bitstring = uniform(rng);
     }
 
-    uint64_t zobrist_hash(Color turn, uint64_t *bitboards,
-                          uint8_t castling_rights, Square en_passant) {
+    uint64_t zobrist_hash(Color turn,
+                          uint64_t *bitboards,
+                          uint8_t castling_rights,
+                          Square en_passant) {
         // Silently perform initialization
         if (piece_bitstrings.empty()) {
             zobrist_init();
