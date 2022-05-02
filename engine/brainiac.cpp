@@ -161,11 +161,11 @@ namespace chess {
             node.alpha = -MAX_SCORE;
             node.beta = MAX_SCORE;
             node.move = move;
-            node.turn = player;
+            node.turn = static_cast<Color>(!player);
 
             // Get the value of the resulting board state
             board.execute_move(move);
-            float value = search(board, node);
+            float value = -search(board, node);
             board.undo_move();
 
             // Update best move
