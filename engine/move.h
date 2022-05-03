@@ -62,6 +62,14 @@ namespace chess {
     };
 
     /**
+     * Flags for promotions
+     */
+    constexpr MoveFlag promotions[4] = {MoveFlag::KnightPromo,
+                                        MoveFlag::QueenPromo,
+                                        MoveFlag::BishopPromo,
+                                        MoveFlag::RookPromo};
+
+    /**
      * Container of a chess move
      */
     struct Move {

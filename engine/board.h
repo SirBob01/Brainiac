@@ -82,12 +82,12 @@ namespace chess {
          * - If non-king piece, it must not be pinned, or if it is, to and from
          * pieces must be aligned with king
          */
-        bool is_legal(Move move);
+        bool is_legal(Move &move);
 
         /**
          * If a pseudo-legal move is legal, register it to the move list
          */
-        void register_move(Move move);
+        void register_move(Move &move);
 
         /**
          * Get the pieces attacking the king
