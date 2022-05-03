@@ -143,7 +143,8 @@ namespace chess {
     float Brainiac::evaluate(Board &board, Color maximizer) {
         float material = material_score(board, maximizer);
         float placement = placement_score(board, maximizer);
-        return 0.3 * material + 0.7 * placement;
+        float mobility = board.get_moves().size();
+        return 0.2 * material + 0.4 * placement + 0.4 * mobility;
     }
 
     Move Brainiac::move(Board &board) {
