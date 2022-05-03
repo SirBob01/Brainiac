@@ -17,13 +17,14 @@ To build the engine executable, run
 
 ### Performance Enhancements
 
-- Implement null-move pruning
+- Implement static exchange evaluation (SEE)
 - Implement PV-search (principal variation)
+- Implement null-move pruning
 
 ### Engine Interface
 
 - Fix up main program command-line interface
-- Integrate UCI protocol
+- Integrate [UCI protocol](http://wbec-ridderkerk.nl/html/UCIProtocol.html)
 
 ## License
 
