@@ -58,7 +58,7 @@ namespace chess {
                                    state._en_passant_target);
     }
 
-    bool Board::is_legal(Move move) {
+    bool Board::is_legal(Move &move) {
         Piece king = {PieceType::King, _turn};
         BoardState &state = _states[_current_state];
         uint64_t kingbit = state._bitboards[king.get_piece_index()];
@@ -96,7 +96,7 @@ namespace chess {
         return (new_attackers & kingbit) == 0;
     }
 
-    void Board::register_move(Move move) {
+    void Board::register_move(Move &move) {
         BoardState &state = _states[_current_state];
         if (is_legal(move)) {
             state._legal_moves.push_back(move);
@@ -109,10 +109,6 @@ namespace chess {
         uint64_t enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
         uint64_t all_pieces = allies | enemies;
 
-        MoveFlag promotions[4] = {MoveFlag::KnightPromo,
-                                  MoveFlag::QueenPromo,
-                                  MoveFlag::BishopPromo,
-                                  MoveFlag::RookPromo};
         uint64_t en_passant_mask = 0;
         if (!state._en_passant_target.is_invalid()) {
             en_passant_mask = state._en_passant_target.get_mask();
@@ -282,7 +278,8 @@ namespace chess {
                 get_castling_mask(all_pieces, side) & ~state._attackers;
             if (mask) {
                 Square to(find_lsb(mask));
-                register_move({from, to, MoveFlag::Quiet | MoveFlag::Castling});
+                Move move = {from, to, MoveFlag::Quiet | MoveFlag::Castling};
+                register_move(move);
             }
             rights &= (rights - 1);
         }
