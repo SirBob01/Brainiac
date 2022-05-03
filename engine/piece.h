@@ -33,7 +33,7 @@ namespace chess {
     /**
      * Calculate the material score of the board state
      */
-    static const int piece_weights[] = {
+    constexpr int piece_weights[] = {
         4,
         1,
         5,
@@ -57,22 +57,18 @@ namespace chess {
         Color color = Color::Empty;
 
         inline int get_piece_index() const {
-            assert(!is_empty());
             return PieceType::NPieces * color + type;
         };
 
         inline int get_color_index() const {
-            assert(!is_empty());
             return PieceType::NPieces * 2 + color;
         };
 
         inline const char *get_display() const {
-            assert(!is_empty());
             return PieceDisplay[get_piece_index()];
         }
 
         inline const char get_char() const {
-            assert(!is_empty());
             return PieceChars[get_piece_index()];
         }
 

@@ -70,6 +70,12 @@ namespace chess {
                                         MoveFlag::RookPromo};
 
     /**
+     * Castling rights grouped by color
+     */
+    constexpr uint64_t color_castling_rights[2] = {Castle::WK | Castle::WQ,
+                                                   Castle::BK | Castle::BQ};
+
+    /**
      * Container of a chess move
      */
     struct Move {
