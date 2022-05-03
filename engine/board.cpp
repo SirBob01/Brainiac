@@ -262,13 +262,7 @@ namespace chess {
         uint64_t enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
         uint64_t all_pieces = allies | enemies;
 
-        uint8_t rights = 0;
-        if (_turn == Color::White) {
-            rights = state._castling_rights & (Castle::WK | Castle::WQ);
-        } else {
-            rights = state._castling_rights & (Castle::BK | Castle::BQ);
-        }
-
+        uint8_t rights = state._castling_rights & color_castling_rights[_turn];
         Square from(find_lsb(bitboard));
         while (rights) {
             Castle side = static_cast<Castle>(rights & (-rights));
