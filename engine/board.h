@@ -34,6 +34,7 @@ namespace chess {
         uint64_t _attackers = 0;
         std::vector<Move> _legal_moves;
 
+        int _mobility = 0;
         int _material = 0;
         uint64_t _hash;
     };
@@ -113,10 +114,16 @@ namespace chess {
         std::string generate_fen();
 
         /**
-         * Calculate the material score for the current board state
+         * Get the material score for the current board state
          * Positive values mean white has more material than black
          */
-        int calculate_material();
+        int get_material();
+
+        /**
+         * Get the mobility score, which is the number of pseudo-legal moves
+         * calculated for this turn
+         */
+        int get_mobility();
 
         /**
          * Get a piece on the board
