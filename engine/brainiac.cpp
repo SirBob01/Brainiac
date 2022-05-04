@@ -4,7 +4,7 @@ namespace chess {
     Brainiac::Brainiac() {
         _max_depth = 128;
         _max_quiescence_depth = 8;
-        _iterative_timeout_ns = 0.75 * SECONDS_TO_NANO;
+        _iterative_timeout_ns = 1 * SECONDS_TO_NANO;
         _visited = 0;
     }
 
@@ -130,25 +130,25 @@ namespace chess {
     }
 
     float Brainiac::ordering_heuristic(Board &board, const Move &move) {
-        float score = mmv_lva_heuristic(board, move);
+        float score = 0;
 
         // Hashed move should be evaluated first
         TableNode &node = _transpositions.get(board);
         if (node.best_move == move) {
             score += 1000.0f;
         }
+
+        // Evaluate captures based on SEE heuristic
+        if (move.flags & MoveFlag::Capture) {
+            score += see_heuristic(board, move);
+        }
         return score;
     }
 
     float Brainiac::evaluate(Board &board, Color maximizer) {
         float material = material_score(board, maximizer);
-        float placement = placement_score(board, maximizer);
-
-        float my_mobility = board.get_moves().size();
-        board.skip_turn();
-        float opponent_mobility = board.get_moves().size();
-        board.undo_move();
-        float mobility = my_mobility - opponent_mobility;
+        float placement = placement_score(board);
+        float mobility = mobility_score(board);
 
         return 0.2 * material + 0.4 * placement + 0.4 * mobility;
     }

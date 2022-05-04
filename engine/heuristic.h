@@ -49,7 +49,7 @@ namespace chess {
      * Calculate the material score of the board
      */
     inline float material_score(Board &board, Color maximizer) {
-        float material = board.calculate_material();
+        float material = board.get_material();
         if (maximizer == Color::Black) {
             return -material;
         }
@@ -57,9 +57,23 @@ namespace chess {
     }
 
     /**
+     * Calculate the mobility heuristic of the board state
+     *
+     * This performs a null move to get the mobility score of the opposing
+     * player
+     */
+    inline float mobility_score(Board &board) {
+        float mobility = board.get_mobility();
+        board.skip_turn();
+        mobility -= board.get_mobility();
+        board.undo_move();
+        return mobility;
+    }
+
+    /**
      * Calculate the placement score of the board
      */
-    inline float placement_score(Board &board, Color maximizer) {
+    inline float placement_score(Board &board) {
         float score = 0;
         for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
@@ -94,24 +108,69 @@ namespace chess {
                 }
             }
         }
-        if (maximizer == Color::Black) {
-            return -score;
-        }
         return score;
     }
 
     /**
-     * Calculate the MMV-LVA heuristic of the board
+     * Calculate the MVV-LVA heuristic of the board
      */
-    inline float mmv_lva_heuristic(Board &board, const Move &move) {
+    inline float mvv_lva_heuristic(Board &board, const Move &move) {
         Piece attacker = board.get_at(move.from);
         Piece victim = board.get_at(move.to);
-        if (victim.is_empty()) {
-            return 0;
-        }
+
         float mvv = piece_weights[victim.type];
         float lva = piece_weights[attacker.type];
         return mvv - lva;
+    }
+
+    /**
+     * Calculate the static exchange evaluation for a square
+     */
+    inline int static_exchange_evaluation(Board &board,
+                                          const Square &square,
+                                          Color color) {
+        int value = 0;
+        const std::vector<Move> &moves = board.get_moves();
+        Color opponent = static_cast<Color>(!color);
+
+        Piece victim = board.get_at(square);
+        int victim_value = std::fabs(piece_weights[victim.get_piece_index()]);
+
+        Move best_move;
+        int min_value = 100000; // Some arbitrary large number lol
+        for (const Move &move : moves) {
+            if (move.flags & MoveFlag::Capture) {
+                Piece attacker = board.get_at(move.from);
+                int attacker_value =
+                    std::fabs(piece_weights[attacker.get_piece_index()]);
+                if (attacker_value < min_value) {
+                    min_value = attacker_value;
+                }
+                best_move = move;
+            }
+        }
+
+        if (!best_move.is_invalid()) {
+            board.execute_move(best_move);
+            int see = static_exchange_evaluation(board, square, opponent);
+            value = std::max(0, victim_value - see);
+            board.undo_move();
+        }
+        return value;
+    }
+
+    /**
+     * Calculate the resulting SEE heuristic after performing a capture move
+     */
+    inline float see_heuristic(Board &board, const Move &move) {
+        Color opponent = static_cast<Color>(!board.get_turn());
+
+        Piece victim = board.get_at(move.to);
+        float value = piece_weights[victim.get_piece_index()];
+        board.execute_move(move);
+        value -= static_exchange_evaluation(board, move.to, opponent);
+        board.undo_move();
+        return value;
     }
 } // namespace chess
 

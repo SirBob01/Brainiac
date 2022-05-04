@@ -98,6 +98,7 @@ namespace chess {
 
     void Board::register_move(Move &move) {
         BoardState &state = _states[_current_state];
+        state._mobility++;
         if (is_legal(move)) {
             state._legal_moves.push_back(move);
         }
@@ -423,9 +424,14 @@ namespace chess {
         return fen;
     }
 
-    int Board::calculate_material() {
+    int Board::get_material() {
         BoardState &state = _states[_current_state];
         return state._material;
+    }
+
+    int Board::get_mobility() {
+        BoardState &state = _states[_current_state];
+        return state._mobility;
     }
 
     Piece Board::get_at(Square sq) {
