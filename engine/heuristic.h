@@ -46,17 +46,6 @@ namespace chess {
         2,  2,  0,  0,  0,  0,  2,  2,  2,  3,  1,  0,  0,  1,  3,  2};
 
     /**
-     * Calculate the material score of the board
-     */
-    inline float material_score(Board &board, Color maximizer) {
-        float material = board.get_material();
-        if (maximizer == Color::Black) {
-            return -material;
-        }
-        return material;
-    }
-
-    /**
      * Calculate the mobility heuristic of the board state
      *
      * This performs a null move to get the mobility score of the opposing
@@ -67,6 +56,10 @@ namespace chess {
         board.skip_turn();
         mobility -= board.get_mobility();
         board.undo_move();
+
+        if (board.get_turn() == Color::Black) {
+            return -mobility;
+        }
         return mobility;
     }
 
@@ -82,7 +75,7 @@ namespace chess {
                     continue;
                 }
                 int shift = r * 8 + c;
-                int sign = piece.color == Color::Black ? -1 : 1;
+                int sign = piece.color == Color::White ? 1 : -1;
 
                 switch (piece.type) {
                 case PieceType::Queen:
@@ -126,12 +119,9 @@ namespace chess {
     /**
      * Calculate the static exchange evaluation for a square
      */
-    inline int static_exchange_evaluation(Board &board,
-                                          const Square &square,
-                                          Color color) {
+    inline int static_exchange_evaluation(Board &board, const Square &square) {
         int value = 0;
         const std::vector<Move> &moves = board.get_moves();
-        Color opponent = static_cast<Color>(!color);
 
         Piece victim = board.get_at(square);
         int victim_value = std::fabs(piece_weights[victim.get_piece_index()]);
@@ -152,7 +142,7 @@ namespace chess {
 
         if (!best_move.is_invalid()) {
             board.execute_move(best_move);
-            int see = static_exchange_evaluation(board, square, opponent);
+            int see = static_exchange_evaluation(board, square);
             value = std::max(0, victim_value - see);
             board.undo_move();
         }
@@ -163,12 +153,10 @@ namespace chess {
      * Calculate the resulting SEE heuristic after performing a capture move
      */
     inline float see_heuristic(Board &board, const Move &move) {
-        Color opponent = static_cast<Color>(!board.get_turn());
-
         Piece victim = board.get_at(move.to);
         float value = piece_weights[victim.get_piece_index()];
         board.execute_move(move);
-        value -= static_exchange_evaluation(board, move.to, opponent);
+        value -= static_exchange_evaluation(board, move.to);
         board.undo_move();
         return value;
     }
