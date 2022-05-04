@@ -4,7 +4,7 @@ namespace chess {
     Brainiac::Brainiac() {
         _max_depth = 128;
         _max_quiescence_depth = 8;
-        _iterative_timeout_ns = 0.5 * SECONDS_TO_NANO;
+        _iterative_timeout_ns = 0.75 * SECONDS_TO_NANO;
         _visited = 0;
     }
 
@@ -143,7 +143,13 @@ namespace chess {
     float Brainiac::evaluate(Board &board, Color maximizer) {
         float material = material_score(board, maximizer);
         float placement = placement_score(board, maximizer);
-        float mobility = board.get_moves().size();
+
+        float my_mobility = board.get_moves().size();
+        board.skip_turn();
+        float opponent_mobility = board.get_moves().size();
+        board.undo_move();
+        float mobility = my_mobility - opponent_mobility;
+
         return 0.2 * material + 0.4 * placement + 0.4 * mobility;
     }
 

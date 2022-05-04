@@ -474,6 +474,26 @@ namespace chess {
         }
     }
 
+    void Board::skip_turn() {
+        // If executing a new move while in undo state, overwrite future history
+        _states.resize(_current_state + 1);
+        _states.emplace_back(_states[_current_state]);
+        _current_state++;
+
+        BoardState &state = _states[_current_state];
+        state._halfmoves++;
+
+        // Null move does not do anything, current turn is skipped
+        if (_turn == Color::Black) {
+            _fullmoves++;
+        }
+        _turn = static_cast<Color>(!_turn);
+        state._hash ^= turn_bitstring;
+
+        state._attackers = get_attackers();
+        generate_moves();
+    }
+
     void Board::execute_move(Move move) {
         // If executing a new move while in undo state, overwrite future history
         _states.resize(_current_state + 1);
