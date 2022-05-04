@@ -3,8 +3,8 @@
 namespace chess {
     Brainiac::Brainiac() {
         _max_depth = 128;
-        _max_quiescence_depth = 8;
-        _iterative_timeout_ns = 1 * SECONDS_TO_NANO;
+        _max_quiescence_depth = 16;
+        _iterative_timeout_ns = 0.75 * SECONDS_TO_NANO;
         _visited = 0;
     }
 
@@ -45,7 +45,8 @@ namespace chess {
             return 0;
         } else if ((node.depth == -_max_quiescence_depth) ||
                    (node.depth <= 0 && (node.move.flags & MoveFlag::Quiet))) {
-            return evaluate(board, node.turn);
+            float score = evaluate(board);
+            return node.turn == Color::White ? score : -score;
         }
 
         // Set parameters for successor nodes
@@ -145,12 +146,12 @@ namespace chess {
         return score;
     }
 
-    float Brainiac::evaluate(Board &board, Color maximizer) {
-        float material = material_score(board, maximizer);
+    float Brainiac::evaluate(Board &board) {
+        float material = board.get_material();
         float placement = placement_score(board);
         float mobility = mobility_score(board);
 
-        return 0.2 * material + 0.4 * placement + 0.4 * mobility;
+        return 1.0 * material + 0.4 * placement + 0.5 * mobility;
     }
 
     Move Brainiac::move(Board &board) {

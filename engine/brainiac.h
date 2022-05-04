@@ -80,10 +80,9 @@ namespace chess {
         Brainiac();
 
         /**
-         * Calculates the score of the maximizing player based
-         * on the board state
+         * Evaluate the board position relative to White
          */
-        float evaluate(Board &board, Color maximizing_player);
+        float evaluate(Board &board);
 
         /**
          * Selects the best possible move for the current position
