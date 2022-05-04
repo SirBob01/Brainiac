@@ -144,6 +144,11 @@ namespace chess {
         void clear_at(Square sq);
 
         /**
+         * Perform a null move, skipping the current turn
+         */
+        void skip_turn();
+
+        /**
          * Execute a move and update internal state
          * Assumes move is legal
          */
