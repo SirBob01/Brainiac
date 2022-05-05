@@ -18,6 +18,11 @@
 namespace chess {
     using Time = std::chrono::time_point<std::chrono::steady_clock>;
 
+    const uint64_t LMS_MOVE_FILTER =
+        MoveFlag::Capture | MoveFlag::BishopPromo | MoveFlag::KnightPromo |
+        MoveFlag::QueenPromo | MoveFlag::RookPromo | MoveFlag::EnPassant |
+        MoveFlag::Castling;
+
     /**
      * Initialize engine
      */
