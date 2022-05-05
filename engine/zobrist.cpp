@@ -21,7 +21,7 @@ namespace chess {
     uint64_t zobrist_hash(Color turn,
                           uint64_t *bitboards,
                           uint8_t castling_rights,
-                          Square en_passant) {
+                          const Square &en_passant) {
         // Silently perform initialization
         if (piece_bitstrings.empty()) {
             zobrist_init();
@@ -66,11 +66,5 @@ namespace chess {
             r ^= en_passant_bitstrings[en_passant.shift % 8];
         }
         return r;
-    }
-
-    uint64_t zobrist_bitstring(Piece piece, Square square) {
-        int piece_index = piece.get_piece_index();
-        return piece_bitstrings[(square.shift * PieceType::NPieces * 2) +
-                                piece_index];
     }
 } // namespace chess
