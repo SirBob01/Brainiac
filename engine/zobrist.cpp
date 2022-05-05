@@ -5,7 +5,7 @@ namespace chess {
         std::default_random_engine rng;
         std::uniform_real_distribution<double> uniform(0, UINT64_MAX);
 
-        rng.seed(std::chrono::system_clock::now().time_since_epoch().count());
+        rng.seed(1118943);
         for (int i = 0; i < PieceType::NPieces * 2 * 64; i++) {
             piece_bitstrings.push_back(uniform(rng));
         }
