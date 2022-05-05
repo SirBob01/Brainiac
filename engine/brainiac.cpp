@@ -3,8 +3,8 @@
 namespace chess {
     Brainiac::Brainiac() {
         _max_depth = 128;
-        _max_quiescence_depth = 16;
-        _iterative_timeout_ns = 0.75 * SECONDS_TO_NANO;
+        _max_quiescence_depth = 8;
+        _iterative_timeout_ns = 0.5 * SECONDS_TO_NANO;
         _visited = 0;
     }
 
@@ -53,7 +53,6 @@ namespace chess {
 
         // Set parameters for successor nodes
         SearchNode new_node;
-        new_node.depth = node.depth - 1;
         new_node.alpha = -node.beta;
         new_node.beta = -node.alpha;
         new_node.turn = static_cast<Color>(!node.turn);
@@ -85,8 +84,23 @@ namespace chess {
             Move &move = move_scores[i].move;
             new_node.move = move;
 
-            // Negamax
+            // Reduce depth search for moves after the best 2
+            if (i > 2 && node.depth > 3 && !board.is_check() &&
+                !(move.flags & LMS_MOVE_FILTER)) {
+                board.execute_move(move);
+                new_node.depth = node.depth - 2;
+                float reduction_search = -negamax(board, new_node);
+                board.undo_move();
+
+                // This move is proven to be not good
+                if (reduction_search < node.alpha) {
+                    continue;
+                }
+            }
+
+            // Full search negamax
             board.execute_move(move);
+            new_node.depth = node.depth - 1;
             value = std::max(value, -negamax(board, new_node));
             node.alpha = std::max(value, node.alpha);
             board.undo_move();
