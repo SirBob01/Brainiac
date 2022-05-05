@@ -40,7 +40,9 @@ namespace chess {
         // Terminal conditions
         _visited++;
         if (board.is_checkmate()) {
-            return board.get_turn() != node.turn ? MAX_SCORE : -MAX_SCORE;
+            // Prioritize earlier-found checkmates
+            float score = MAX_SCORE + node.depth;
+            return board.get_turn() != node.turn ? score : -score;
         } else if (board.is_draw()) {
             return 0;
         } else if ((node.depth == -_max_quiescence_depth) ||
