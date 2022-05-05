@@ -72,7 +72,7 @@ namespace chess {
         // Prioritize better moves to optimize pruning with selection sort
         float value = -INFINITY;
         Move best_move;
-        for (int i = 0; i < n - 1; i++) {
+        for (int i = 0; i < n; i++) {
             int best_index = i;
             for (int j = i + 1; j < n; j++) {
                 if (move_scores[j].score > move_scores[best_index].score) {
