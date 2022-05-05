@@ -446,7 +446,7 @@ namespace chess {
         return state._mobility;
     }
 
-    Piece Board::get_at(Square sq) {
+    Piece Board::get_at(const Square &sq) {
         BoardState &state = _states[_current_state];
         uint64_t mask = sq.get_mask();
         for (int idx = 0; idx < 12; idx++) {
@@ -460,7 +460,7 @@ namespace chess {
         return {};
     }
 
-    void Board::set_at(Square sq, Piece piece) {
+    void Board::set_at(const Square &sq, const Piece &piece) {
         clear_at(sq);
         uint64_t mask = sq.get_mask();
 
@@ -473,11 +473,11 @@ namespace chess {
         return get_at(Square(row * 8 + col));
     }
 
-    void Board::set_at_coords(int row, int col, Piece piece) {
+    void Board::set_at_coords(int row, int col, const Piece &piece) {
         set_at(Square(row * 8 + col), piece);
     }
 
-    void Board::clear_at(Square sq) {
+    void Board::clear_at(const Square &sq) {
         // Clear all bitboards at this Square
         BoardState &state = _states[_current_state];
         uint64_t mask = ~(sq.get_mask());
@@ -506,7 +506,7 @@ namespace chess {
         generate_moves();
     }
 
-    void Board::execute_move(Move move) {
+    void Board::execute_move(const Move &move) {
         BoardState &state = push_state();
 
         Piece piece = get_at(move.from);
@@ -724,7 +724,8 @@ namespace chess {
         return is_stalemate() || state._halfmoves >= 100 || pieces_left == 2;
     }
 
-    Move Board::create_move(Square from, Square to, char promotion) {
+    Move
+    Board::create_move(const Square &from, const Square &to, char promotion) {
         BoardState &state = _states[_current_state];
         for (auto &move : state._legal_moves) {
             if (move.from == from && move.to == to) {

@@ -29,12 +29,17 @@ namespace chess {
     uint64_t zobrist_hash(Color turn,
                           uint64_t *bitboards,
                           uint8_t castling_rights,
-                          Square en_passant);
+                          const Square &en_passant);
 
     /**
      * Get the bitstring associated with a piece at a square
      */
-    uint64_t zobrist_bitstring(Piece piece, Square square);
+    inline uint64_t zobrist_bitstring(const Piece &piece,
+                                      const Square &square) {
+        int piece_index = piece.get_piece_index();
+        return piece_bitstrings[(square.shift * PieceType::NPieces * 2) +
+                                piece_index];
+    }
 } // namespace chess
 
 #endif

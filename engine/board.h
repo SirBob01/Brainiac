@@ -133,12 +133,12 @@ namespace chess {
         /**
          * Get a piece on the board
          */
-        Piece get_at(Square sq);
+        Piece get_at(const Square &sq);
 
         /**
          * Set a piece on the board
          */
-        void set_at(Square sq, Piece piece);
+        void set_at(const Square &sq, const Piece &piece);
 
         /**
          * Get a piece on the board by coordinates
@@ -148,12 +148,12 @@ namespace chess {
         /**
          * Set a piece on the board by coordinates
          */
-        void set_at_coords(int row, int col, Piece piece);
+        void set_at_coords(int row, int col, const Piece &piece);
 
         /**
          * Clear a square on the board
          */
-        void clear_at(Square sq);
+        void clear_at(const Square &sq);
 
         /**
          * Perform a null move, skipping the current turn
@@ -164,7 +164,7 @@ namespace chess {
          * Execute a move and update internal state
          * Assumes move is legal
          */
-        void execute_move(Move move);
+        void execute_move(const Move &move);
 
         /**
          * Return board to the previous state
@@ -212,7 +212,8 @@ namespace chess {
          * Generate a valid chess move given shift positions
          * Used to validate move positions from user input
          */
-        Move create_move(Square from, Square to, char promotion = 0);
+        Move
+        create_move(const Square &from, const Square &to, char promotion = 0);
 
         /**
          * Generate a valid chess move given a standard notation string
