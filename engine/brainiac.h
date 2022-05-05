@@ -12,7 +12,7 @@
 #include "heuristic.h"
 #include "transpositions.h"
 
-#define MAX_SCORE       1000.0f
+#define MAX_SCORE       100000.0f
 #define SECONDS_TO_NANO 1000000000.0f
 
 namespace chess {

@@ -70,7 +70,7 @@ namespace chess {
         }
 
         // Prioritize better moves to optimize pruning with selection sort
-        float value = -MAX_SCORE;
+        float value = -INFINITY;
         Move best_move;
         for (int i = 0; i < n - 1; i++) {
             int best_index = i;
@@ -116,7 +116,7 @@ namespace chess {
 
     float Brainiac::search(Board &board, SearchNode &node) {
         _start_time = std::chrono::steady_clock::now();
-        float value = -MAX_SCORE;
+        float value;
 
         // Iterative deepening from an initial depth until it runs out of time
         for (int depth = 1; depth <= _max_depth; depth++) {
@@ -161,14 +161,14 @@ namespace chess {
         Color player = board.get_turn();
         std::vector<Move> moves = board.get_moves();
         Move best_move = moves[0];
-        float best_value = -MAX_SCORE;
+        float best_value = -INFINITY;
 
         _visited = 0;
         for (auto &move : moves) {
             // Create initial search node
             SearchNode node;
-            node.alpha = -MAX_SCORE;
-            node.beta = MAX_SCORE;
+            node.alpha = -INFINITY;
+            node.beta = INFINITY;
             node.move = move;
             node.turn = static_cast<Color>(!player);
 
