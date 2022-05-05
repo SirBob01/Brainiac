@@ -378,6 +378,18 @@ namespace chess {
         }
     }
 
+    BoardState &Board::push_state() {
+        // If executing a new move while in undo state, overwrite future history
+        _states.resize(_current_state + 1);
+        _states.emplace_back(_states[_current_state]);
+        _current_state++;
+
+        BoardState &state = _states[_current_state];
+        state._halfmoves++;
+        state._mobility = 0;
+        return state;
+    }
+
     std::string Board::generate_fen() {
         BoardState &state = _states[_current_state];
         std::string fen = "";
@@ -481,13 +493,7 @@ namespace chess {
     }
 
     void Board::skip_turn() {
-        // If executing a new move while in undo state, overwrite future history
-        _states.resize(_current_state + 1);
-        _states.emplace_back(_states[_current_state]);
-        _current_state++;
-
-        BoardState &state = _states[_current_state];
-        state._halfmoves++;
+        BoardState &state = push_state();
 
         // Null move does not do anything, current turn is skipped
         if (_turn == Color::Black) {
@@ -501,13 +507,7 @@ namespace chess {
     }
 
     void Board::execute_move(Move move) {
-        // If executing a new move while in undo state, overwrite future history
-        _states.resize(_current_state + 1);
-        _states.emplace_back(_states[_current_state]);
-        _current_state++;
-
-        BoardState &state = _states[_current_state];
-        state._halfmoves++;
+        BoardState &state = push_state();
 
         Piece piece = get_at(move.from);
         Piece target = get_at(move.to);

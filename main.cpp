@@ -79,7 +79,8 @@ void debug_command(
             if (move_input.length() == 5) {
                 promotion = move_input[4];
             }
-            move = b.create_move(chess::Square(from), chess::Square(to),
+            move = b.create_move(chess::Square(from),
+                                 chess::Square(to),
                                  promotion);
         }
         b.execute_move(move);
@@ -99,6 +100,16 @@ void play_bot(chess::Color player_color) {
     while (!b.is_checkmate() && !b.is_draw()) {
         b.print();
         std::cout << b.generate_fen() << "\n";
+        float evaluation = bot.evaluate(b);
+        std::cout << "Evaluation: " << evaluation << "\n";
+        if (evaluation > 1) {
+            std::cout << "White winning\n";
+        } else if (evaluation < -1) {
+            std::cout << "Black winning\n";
+        } else {
+            std::cout << "White and black are evenly matched\n";
+        }
+
         if (b.is_check()) {
             std::cout << "Check!\n";
         }
@@ -132,7 +143,8 @@ void play_bot(chess::Color player_color) {
                     if (move_input.length() == 5) {
                         promotion = move_input[4];
                     }
-                    move = b.create_move(chess::Square(from), chess::Square(to),
+                    move = b.create_move(chess::Square(from),
+                                         chess::Square(to),
                                          promotion);
                 }
             }
@@ -184,7 +196,8 @@ void play_command() {
                 if (move_input.length() == 5) {
                     promotion = move_input[4];
                 }
-                move = b.create_move(chess::Square(from), chess::Square(to),
+                move = b.create_move(chess::Square(from),
+                                     chess::Square(to),
                                      promotion);
             }
         }

@@ -17,9 +17,9 @@ To build the engine executable, run
 
 ### Performance Enhancements
 
-- Implement static exchange evaluation (SEE)
-- Implement PV-search (principal variation)
 - Implement null-move pruning
+- Implement aspiration search
+- Implement PV-search (principal variation)
 
 ### Engine Interface
 

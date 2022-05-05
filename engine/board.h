@@ -103,6 +103,11 @@ namespace chess {
          */
         void generate_moves();
 
+        /**
+         * Clone the current board state for the next turn
+         */
+        BoardState &push_state();
+
       public:
         Board(std::string fen_string =
                   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");

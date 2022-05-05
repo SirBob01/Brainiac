@@ -74,8 +74,16 @@ namespace chess {
                 if (piece.is_empty()) {
                     continue;
                 }
-                int shift = r * 8 + c;
-                int sign = piece.color == Color::White ? 1 : -1;
+
+                // Piece-square tables are relative to white
+                int shift, sign;
+                if (piece.color == Color::White) {
+                    shift = r * 8 + c;
+                    sign = 1;
+                } else {
+                    shift = (8 - r - 1) * 8 + c;
+                    sign = -1;
+                }
 
                 switch (piece.type) {
                 case PieceType::Queen:
