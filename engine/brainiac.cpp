@@ -127,7 +127,6 @@ namespace chess {
             if ((end_time - _start_time).count() >= _iterative_timeout_ns) {
                 return value;
             }
-            depth++;
         }
         return value;
     }
