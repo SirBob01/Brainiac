@@ -252,8 +252,8 @@ namespace chess {
      */
     inline uint64_t get_rook_mask_otf(uint64_t bitboard, uint64_t occupied) {
         const int shift = find_lsb(bitboard);
-        const uint64_t rank_mask = 0xFF00000000000000 >> (56 - 8 * (shift / 8));
-        const uint64_t file_mask = 0x0101010101010101 << (7 & shift);
+        const uint64_t rank_mask = rank8 >> (56 - 8 * (shift / 8));
+        const uint64_t file_mask = fileA << (7 & shift);
 
         uint64_t rank_positive =
             get_ray_attack(bitboard, occupied & rank_mask) & rank_mask;
@@ -471,8 +471,8 @@ namespace chess {
         for (int i = 0; i < 64; i++) {
             uint64_t bitboard = 1ULL << i;
 
-            uint64_t rank_mask = 0xFF00000000000000 >> (56 - 8 * (i / 8));
-            uint64_t file_mask = 0x0101010101010101 << (7 & i);
+            uint64_t rank_mask = rank8 >> (56 - 8 * (i / 8));
+            uint64_t file_mask = fileA << (7 & i);
 
             rank_mask &= ~end_files;
             file_mask &= ~end_ranks;

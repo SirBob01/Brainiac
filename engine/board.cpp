@@ -557,7 +557,7 @@ namespace chess {
         // Unset castling opponent flags if pieces were captured
         if (target.type == PieceType::Rook) {
             uint64_t mask = move.to.get_mask();
-            uint64_t rank = (_turn == Color::White) ? 0xFF00000000000000 : 0xFF;
+            uint64_t rank = (_turn == Color::White) ? rank8 : rank1;
             if (mask & fileA & rank) {
                 if (state._castling_rights & opp_queen_side) {
                     state._hash ^=
@@ -605,8 +605,7 @@ namespace chess {
             int rankd = move.to.shift - move.from.shift;
             int dir = (rankd > 0) - (rankd < 0);
             Piece rook = {PieceType::Rook, _turn};
-            uint64_t rook_rank =
-                (_turn == Color::Black) ? 0xFF00000000000000 : 0xFF;
+            uint64_t rook_rank = (_turn == Color::Black) ? rank8 : rank1;
             uint64_t rook_board =
                 state._bitboards[rook.get_piece_index()] & rook_rank;
             Square target(move.to.shift - dir);
