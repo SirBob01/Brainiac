@@ -17,12 +17,12 @@ To build the engine executable, run
 
 ### Performance Enhancements
 
+- Aspiration search
+- PV-search
 - Null-move pruning
 - Futility pruning
 - Killer heuristic (move ordering)
 - King safety (evaluation)
-- Aspiration search
-- PV-search
 
 ### Engine Interface
 
