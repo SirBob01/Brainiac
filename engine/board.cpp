@@ -98,7 +98,6 @@ namespace chess {
 
     void Board::register_move(Move &move) {
         BoardState &state = _states[_current_state];
-        state._mobility++;
         if (is_legal(move)) {
             state._legal_moves.push_back(move);
         }
@@ -386,7 +385,6 @@ namespace chess {
 
         BoardState &state = _states[_current_state];
         state._halfmoves++;
-        state._mobility = 0;
         return state;
     }
 
@@ -443,7 +441,7 @@ namespace chess {
 
     int Board::get_mobility() {
         BoardState &state = _states[_current_state];
-        return state._mobility;
+        return state._legal_moves.size();
     }
 
     Piece Board::get_at(const Square &sq) {
