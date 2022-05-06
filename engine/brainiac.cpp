@@ -84,6 +84,11 @@ namespace chess {
             Move &move = move_scores[i].move;
             new_node.move = move;
 
+            // Prune bad captures during quiescence search
+            if (node.depth < 0 && move_scores[i].score < 0) {
+                continue;
+            }
+
             // Reduce depth search for moves after the best 2
             if (i > 2 && node.depth > 3 && !board.is_check() &&
                 !(move.flags & LMS_MOVE_FILTER)) {
