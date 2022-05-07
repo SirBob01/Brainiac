@@ -11,7 +11,7 @@ file(GLOB_RECURSE SOURCES "./src/*.cpp" "./src/*.c")
 add_library(brainiac STATIC ${SOURCES} ${INCLUDE})
 target_include_directories(brainiac PUBLIC "./src")
  
-add_executable(main "./main.cpp")
+add_executable(main "./src/main.cpp")
 
 if(UNIX OR MSVC)
     target_link_libraries(main pthread brainiac)
