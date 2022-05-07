@@ -1,10 +1,10 @@
-#ifndef CHESS_MOVE_H_
-#define CHESS_MOVE_H_
+#ifndef BRAINIAC_MOVE_H_
+#define BRAINIAC_MOVE_H_
 
 #include <cassert>
 #include <string>
 
-namespace chess {
+namespace brainiac {
     /**
      * A position on the board represented by a bitshift value (0 - 63)
      */
@@ -98,6 +98,6 @@ namespace chess {
             return s;
         }
     };
-} // namespace chess
+} // namespace brainiac
 
 #endif

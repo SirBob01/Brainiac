@@ -1,5 +1,5 @@
-#ifndef CHESS_ZOBRIST_H_
-#define CHESS_ZOBRIST_H_
+#ifndef BRAINIAC_ZOBRIST_H_
+#define BRAINIAC_ZOBRIST_H_
 
 #include <chrono>
 #include <random>
@@ -9,7 +9,7 @@
 #include "move.h"
 #include "piece.h"
 
-namespace chess {
+namespace brainiac {
     /**
      * Bitstrings
      */
@@ -40,6 +40,6 @@ namespace chess {
         return piece_bitstrings[(square.shift * PieceType::NPieces * 2) +
                                 piece_index];
     }
-} // namespace chess
+} // namespace brainiac
 
 #endif

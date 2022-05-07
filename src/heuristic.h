@@ -4,7 +4,7 @@
 #include "board.h"
 #include "piece.h"
 
-namespace chess {
+namespace brainiac {
     /**
      * The matrices below determine the placement scores of each piece
      * on the board
@@ -168,6 +168,6 @@ namespace chess {
         board.undo_move();
         return value;
     }
-} // namespace chess
+} // namespace brainiac
 
 #endif

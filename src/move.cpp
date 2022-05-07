@@ -1,6 +1,6 @@
 #include "move.h"
 
-namespace chess {
+namespace brainiac {
     Square::Square(char file, char rank) {
         int row = rank - '1';
         int col = file - 'a';

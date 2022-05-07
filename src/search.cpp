@@ -1,14 +1,14 @@
-#include "brainiac.h"
+#include "search.h"
 
-namespace chess {
-    Brainiac::Brainiac() {
+namespace brainiac {
+    Search::Search() {
         _max_depth = 128;
         _max_quiescence_depth = 8;
         _iterative_timeout_ns = 0.5 * SECONDS_TO_NANO;
         _visited = 0;
     }
 
-    float Brainiac::negamax(Board &board, SearchNode node) {
+    float Search::negamax(Board &board, SearchNode node) {
         // Read from the transposition table
         float alpha_orig = node.alpha;
         TableNode &entry = _transpositions.get(board);
@@ -133,7 +133,7 @@ namespace chess {
         return value;
     }
 
-    float Brainiac::search(Board &board, SearchNode &node) {
+    float Search::search(Board &board, SearchNode &node) {
         _start_time = std::chrono::steady_clock::now();
         float value;
 
@@ -150,7 +150,7 @@ namespace chess {
         return value;
     }
 
-    float Brainiac::ordering_heuristic(Board &board, const Move &move) {
+    float Search::ordering_heuristic(Board &board, const Move &move) {
         float score = 0;
 
         // Hashed move should be evaluated first
@@ -166,7 +166,7 @@ namespace chess {
         return score;
     }
 
-    float Brainiac::evaluate(Board &board) {
+    float Search::evaluate(Board &board) {
         float material = board.get_material();
         float placement = placement_score(board);
         float mobility = mobility_score(board);
@@ -174,7 +174,7 @@ namespace chess {
         return 1.0 * material + 0.1 * placement + 0.1 * mobility;
     }
 
-    Move Brainiac::move(Board &board) {
+    Move Search::move(Board &board) {
         Time start = std::chrono::steady_clock::now();
 
         Color player = board.get_turn();
@@ -210,4 +210,4 @@ namespace chess {
                   << " (" << duration.count() << " s)\n";
         return best_move;
     }
-} // namespace chess
+} // namespace brainiac

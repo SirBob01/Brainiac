@@ -1,9 +1,9 @@
 #include "board.h"
 
-namespace chess {
+namespace brainiac {
     Board::Board(std::string fen_string) {
         std::vector<std::string> fields =
-            chess::util::tokenize(fen_string, ' ');
+            brainiac::util::tokenize(fen_string, ' ');
         _states.reserve(64);
         _states.emplace_back();
         _current_state = 0;
@@ -811,4 +811,4 @@ namespace chess {
         }
         std::cout << "\n";
     }
-} // namespace chess
+} // namespace brainiac

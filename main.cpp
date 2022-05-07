@@ -1,10 +1,10 @@
-#include "engine/brainiac.h"
+#include "src/brainiac.h"
 #include <chrono>
 #include <iomanip>
 #include <iostream>
 #include <vector>
 
-uint64_t perft(chess::Board &b, int depth, int max_depth, bool verbose) {
+uint64_t perft(brainiac::Board &b, int depth, int max_depth, bool verbose) {
     uint64_t nodes = 0;
     auto moves = b.get_moves();
     if (depth == 1) {
@@ -29,7 +29,7 @@ void perft_command(
     std::cout << "Enter perft depth: ";
     std::cin >> depth;
 
-    chess::Board b(fen_string);
+    brainiac::Board b(fen_string);
     b.print();
     std::cout << b.generate_fen() << "\n";
 
@@ -55,12 +55,12 @@ void debug_command(
     std::cout << "Enter perft depth: ";
     std::cin >> depth;
 
-    chess::Board b(fen_string);
+    brainiac::Board b(fen_string);
     b.print();
     std::cout << b.generate_fen() << "\n";
 
     std::string move_input;
-    chess::Move move = {};
+    brainiac::Move move = {};
     while (depth) {
         uint64_t nodes = perft(b, depth, depth, true);
         if (depth == 1) {
@@ -79,8 +79,8 @@ void debug_command(
             if (move_input.length() == 5) {
                 promotion = move_input[4];
             }
-            move = b.create_move(chess::Square(from),
-                                 chess::Square(to),
+            move = b.create_move(brainiac::Square(from),
+                                 brainiac::Square(to),
                                  promotion);
         }
         b.execute_move(move);
@@ -91,11 +91,11 @@ void debug_command(
     }
 }
 
-void play_bot(chess::Color player_color) {
-    chess::Board b;
-    chess::Brainiac bot;
+void play_bot(brainiac::Color player_color) {
+    brainiac::Board b;
+    brainiac::Search bot;
 
-    chess::Move move;
+    brainiac::Move move;
     std::string move_input;
     while (!b.is_checkmate() && !b.is_draw()) {
         b.print();
@@ -143,8 +143,8 @@ void play_bot(chess::Color player_color) {
                     if (move_input.length() == 5) {
                         promotion = move_input[4];
                     }
-                    move = b.create_move(chess::Square(from),
-                                         chess::Square(to),
+                    move = b.create_move(brainiac::Square(from),
+                                         brainiac::Square(to),
                                          promotion);
                 }
             }
@@ -157,7 +157,8 @@ void play_bot(chess::Color player_color) {
     b.print();
     std::cout << b.generate_fen() << "\n";
     if (b.is_checkmate()) {
-        std::cout << (b.get_turn() == chess::Color::White ? "Black" : "White")
+        std::cout << (b.get_turn() == brainiac::Color::White ? "Black"
+                                                             : "White")
                   << " wins!\n";
     } else {
         std::cout << "Draw!\n";
@@ -165,8 +166,8 @@ void play_bot(chess::Color player_color) {
 }
 
 void play_command() {
-    chess::Board b;
-    chess::Move move;
+    brainiac::Board b;
+    brainiac::Move move;
     std::string move_input;
     while (!b.is_checkmate() && !b.is_draw()) {
         b.print();
@@ -196,8 +197,8 @@ void play_command() {
                 if (move_input.length() == 5) {
                     promotion = move_input[4];
                 }
-                move = b.create_move(chess::Square(from),
-                                     chess::Square(to),
+                move = b.create_move(brainiac::Square(from),
+                                     brainiac::Square(to),
                                      promotion);
             }
         }
@@ -209,7 +210,8 @@ void play_command() {
     b.print();
     std::cout << b.generate_fen() << "\n";
     if (b.is_checkmate()) {
-        std::cout << (b.get_turn() == chess::Color::White ? "Black" : "White")
+        std::cout << (b.get_turn() == brainiac::Color::White ? "Black"
+                                                             : "White")
                   << " wins!\n";
     } else {
         std::cout << "Draw!\n";
@@ -233,7 +235,7 @@ void help() {
 }
 
 int main() {
-    chess::init();
+    brainiac::init();
 
     std::cout << "Chess Engine C++ v.1.0\n";
     std::cout << "Enter 'help' for the list of commands.\n";
@@ -241,7 +243,7 @@ int main() {
     while (true) {
         std::cout << "Enter command> ";
         std::getline(std::cin, command);
-        auto tokens = chess::util::tokenize(command, ' ');
+        auto tokens = brainiac::util::tokenize(command, ' ');
         if (tokens.empty()) {
             continue;
         }
@@ -263,9 +265,9 @@ int main() {
         } else if (tokens[0] == "bot") {
             if (tokens.size() == 2) {
                 if (tokens[1] == "w") {
-                    play_bot(chess::Color::White);
+                    play_bot(brainiac::Color::White);
                 } else if (tokens[1] == "b") {
-                    play_bot(chess::Color::Black);
+                    play_bot(brainiac::Color::Black);
                 } else {
                     std::cout << "Please select your color (w/b).\n";
                 }

@@ -1,6 +1,6 @@
 #include "bits.h"
 
-namespace chess {
+namespace brainiac {
     SlidingMoveTable rook_attack_tables[64] = {};
     SlidingMoveTable bishop_attack_tables[64] = {};
 
@@ -33,4 +33,4 @@ namespace chess {
         }
         return count;
     }
-} // namespace chess
+} // namespace brainiac

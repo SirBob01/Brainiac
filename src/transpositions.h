@@ -1,5 +1,5 @@
-#ifndef CHESS_TRANSPOSITIONS_H_
-#define CHESS_TRANSPOSITIONS_H_
+#ifndef BRAINIAC_TRANSPOSITIONS_H_
+#define BRAINIAC_TRANSPOSITIONS_H_
 
 #define TRANSPOSITION_TABLE_SIZE 0x1000000
 #define TRANSPOSITION_HASH_MASK  0xFFFFFF
@@ -9,7 +9,7 @@
 #include "board.h"
 #include "move.h"
 
-namespace chess {
+namespace brainiac {
     /**
      * Types of nodes depending on their value
      */
@@ -49,6 +49,6 @@ namespace chess {
             return _table[board.get_hash() & TRANSPOSITION_HASH_MASK];
         }
     };
-} // namespace chess
+} // namespace brainiac
 
 #endif

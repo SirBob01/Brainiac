@@ -1,9 +1,9 @@
-#ifndef CHESS_PIECE_H_
-#define CHESS_PIECE_H_
+#ifndef BRAINIAC_PIECE_H_
+#define BRAINIAC_PIECE_H_
 
 #include <cassert>
 
-namespace chess {
+namespace brainiac {
     enum PieceType {
         King = 0,
         Pawn = 1,
@@ -74,6 +74,6 @@ namespace chess {
 
         inline bool is_empty() const { return color == Color::Empty; }
     };
-} // namespace chess
+} // namespace brainiac
 
 #endif
