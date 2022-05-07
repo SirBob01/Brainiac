@@ -1,5 +1,5 @@
-#ifndef CHESS_BRAINIAC_H_
-#define CHESS_BRAINIAC_H_
+#ifndef BRAINIAC_SEARCH_H_
+#define BRAINIAC_SEARCHs_H_
 
 #include <chrono>
 #include <iostream>
@@ -15,7 +15,7 @@
 #define MAX_SCORE       100000.0f
 #define SECONDS_TO_NANO 1000000000.0f
 
-namespace chess {
+namespace brainiac {
     using Time = std::chrono::time_point<std::chrono::steady_clock>;
 
     const uint64_t LMS_MOVE_FILTER =
@@ -46,7 +46,7 @@ namespace chess {
      * Core algorithm for strategically finding the best
      * next move
      */
-    class Brainiac {
+    class Search {
         int _max_depth;
         int _max_quiescence_depth;
         double _iterative_timeout_ns;
@@ -82,7 +82,7 @@ namespace chess {
         float ordering_heuristic(Board &board, const Move &move);
 
       public:
-        Brainiac();
+        Search();
 
         /**
          * Evaluate the board position relative to White
@@ -94,6 +94,6 @@ namespace chess {
          */
         Move move(Board &board);
     };
-} // namespace chess
+} // namespace brainiac
 
 #endif

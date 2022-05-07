@@ -1,5 +1,5 @@
-#ifndef CHESS_BITS_H_
-#define CHESS_BITS_H_
+#ifndef BRAINIAC_BITS_H_
+#define BRAINIAC_BITS_H_
 
 #ifdef _WIN32
 
@@ -25,7 +25,7 @@
 #include "move.h"
 #include "piece.h"
 
-namespace chess {
+namespace brainiac {
     /**
      * Cardinal and ordinal directions on the board
      */
@@ -520,6 +520,6 @@ namespace chess {
             }
         }
     }
-} // namespace chess
+} // namespace brainiac
 
 #endif

@@ -1,6 +1,6 @@
 #include "util.h"
 
-namespace chess::util {
+namespace brainiac::util {
     std::vector<std::string> tokenize(std::string base, char delimiter) {
         std::vector<std::string> tokens;
         std::string current = "";
@@ -15,4 +15,4 @@ namespace chess::util {
         if (current.length()) tokens.push_back(current);
         return tokens;
     }
-} // namespace chess::util
+} // namespace brainiac::util

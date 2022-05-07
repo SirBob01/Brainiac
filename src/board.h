@@ -1,5 +1,5 @@
-#ifndef CHESS_BOARD_H_
-#define CHESS_BOARD_H_
+#ifndef BRAINIAC_BOARD_H_
+#define BRAINIAC_BOARD_H_
 
 #include <iostream>
 #include <string>
@@ -10,7 +10,7 @@
 #include "util.h"
 #include "zobrist.h"
 
-namespace chess {
+namespace brainiac {
     /**
      * Linked list representing chronological board state
      * Allows forward and backward movement in time (undo/redo moves)
@@ -249,6 +249,6 @@ namespace chess {
          */
         void print();
     };
-} // namespace chess
+} // namespace brainiac
 
 #endif

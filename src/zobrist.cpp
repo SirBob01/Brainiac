@@ -1,6 +1,6 @@
 #include "zobrist.h"
 
-namespace chess {
+namespace brainiac {
     void zobrist_init() {
         std::default_random_engine rng;
         std::uniform_real_distribution<double> uniform(0, UINT64_MAX);
@@ -67,4 +67,4 @@ namespace chess {
         }
         return r;
     }
-} // namespace chess
+} // namespace brainiac

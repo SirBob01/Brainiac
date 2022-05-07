@@ -4,12 +4,12 @@ project(.)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3")
 
 # Engine source files
-file(GLOB_RECURSE INCLUDE "./engine/*.h")
-file(GLOB_RECURSE SOURCES "./engine/*.cpp" "./engine/*.c")
+file(GLOB_RECURSE INCLUDE "./src/*.h")
+file(GLOB_RECURSE SOURCES "./src/*.cpp" "./src/*.c")
 
 # Make the Brainiac engine a library
 add_library(brainiac STATIC ${SOURCES} ${INCLUDE})
-target_include_directories(brainiac PUBLIC "./engine")
+target_include_directories(brainiac PUBLIC "./src")
  
 add_executable(main "./main.cpp")
 
