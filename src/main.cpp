@@ -1,4 +1,4 @@
-#include "src/brainiac.h"
+#include "brainiac.h"
 #include <chrono>
 #include <iomanip>
 #include <iostream>
