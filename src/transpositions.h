@@ -18,7 +18,7 @@ namespace brainiac {
     /**
      * An entry in the table
      */
-    struct TableNode {
+    struct TableEntry {
         uint64_t key;
         int depth;
         float value;
@@ -30,7 +30,7 @@ namespace brainiac {
      * A hash table of visited nodes
      */
     class Transpositions {
-        std::vector<TableNode> _table;
+        std::vector<TableEntry> _table;
 
       public:
         Transpositions() : _table(TRANSPOSITION_TABLE_SIZE){};
@@ -38,14 +38,14 @@ namespace brainiac {
         /**
          * Set the entry of a board position
          */
-        inline void set(Board &board, TableNode &node) {
+        inline void set(Board &board, TableEntry &node) {
             _table[board.get_hash() & TRANSPOSITION_HASH_MASK] = node;
         }
 
         /**
          * Get the entry of a board position
          */
-        inline TableNode &get(Board &board) {
+        inline TableEntry &get(Board &board) {
             return _table[board.get_hash() & TRANSPOSITION_HASH_MASK];
         }
     };
