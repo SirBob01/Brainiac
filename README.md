@@ -17,7 +17,6 @@ To build the engine executable, run
 
 ### Performance Enhancements
 
-- Aspiration search
 - PV-search
 - Null-move pruning
 - Futility pruning
