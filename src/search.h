@@ -1,5 +1,5 @@
 #ifndef BRAINIAC_SEARCH_H_
-#define BRAINIAC_SEARCHs_H_
+#define BRAINIAC_SEARCH_H_
 
 #include <chrono>
 #include <iostream>
