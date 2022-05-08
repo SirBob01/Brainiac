@@ -190,7 +190,7 @@ namespace brainiac {
         float placement = placement_score(board);
         float mobility = mobility_score(board);
 
-        return 1.0 * material + 0.1 * placement + 0.1 * mobility;
+        return 1.0 * material + 0.1 * placement + 0.5 * mobility;
     }
 
     Move Search::move(Board &board) {
