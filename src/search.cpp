@@ -135,16 +135,24 @@ namespace brainiac {
 
     float Search::search(Board &board, SearchNode &node) {
         _start_time = std::chrono::steady_clock::now();
-        float value;
+        float value = -INFINITY;
 
         // Iterative deepening from an initial depth until it runs out of time
         for (int depth = 1; depth <= _max_depth; depth++) {
             node.depth = depth;
             value = negamax(board, node);
 
+            // Update aspiration window based on current depth
+            if (value <= node.alpha || node.alpha == -INFINITY) {
+                node.alpha = value - (depth / 2.0);
+            }
+            if (value >= node.beta || node.beta == INFINITY) {
+                node.beta = value + (depth / 2.0);
+            }
+
             Time end_time = std::chrono::steady_clock::now();
             if ((end_time - _start_time).count() >= _iterative_timeout_ns) {
-                return value;
+                break;
             }
         }
         return value;
