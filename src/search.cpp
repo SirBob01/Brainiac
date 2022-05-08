@@ -8,9 +8,14 @@ namespace brainiac {
         _visited = 0;
     }
 
-    float Search::negamax(Board &board, SearchNode node) {
+    float Search::negamax(Board &board,
+                          float alpha,
+                          float beta,
+                          int depth,
+                          Color turn,
+                          Move &move) {
         // Read from the transposition table
-        float alpha_orig = node.alpha;
+        float alpha_orig = alpha;
         TableEntry &entry = _transpositions.get(board);
 
         // Terminate early and return last known search result
@@ -18,21 +23,21 @@ namespace brainiac {
         if ((end_time - _start_time).count() >= _iterative_timeout_ns) {
             return entry.value;
         }
-        if (entry.key == board.get_hash() && entry.depth >= node.depth) {
+        if (entry.key == board.get_hash() && entry.depth >= depth) {
             switch (entry.type) {
             case NodeType::Exact:
                 return entry.value;
                 break;
             case NodeType::Lower:
-                node.alpha = std::max(node.alpha, entry.value);
+                alpha = std::max(alpha, entry.value);
                 break;
             case NodeType::Upper:
-                node.beta = std::min(node.beta, entry.value);
+                beta = std::min(beta, entry.value);
                 break;
             default:
                 break;
             }
-            if (node.alpha >= node.beta) {
+            if (alpha >= beta) {
                 return entry.value;
             }
         }
@@ -41,21 +46,18 @@ namespace brainiac {
         _visited++;
         if (board.is_checkmate()) {
             // Prioritize earlier-found checkmates
-            float score = MAX_SCORE + node.depth;
-            return board.get_turn() != node.turn ? score : -score;
+            float score = MAX_SCORE + depth;
+            return board.get_turn() != turn ? score : -score;
         } else if (board.is_draw()) {
             return 0;
-        } else if ((node.depth == -_max_quiescence_depth) ||
-                   (node.depth <= 0 && (node.move.flags & MoveFlag::Quiet))) {
+        } else if ((depth == -_max_quiescence_depth) ||
+                   (depth <= 0 && (move.flags & MoveFlag::Quiet))) {
             float score = evaluate(board);
-            return node.turn == Color::White ? score : -score;
+            return turn == Color::White ? score : -score;
         }
 
-        // Set parameters for successor nodes
-        SearchNode new_node;
-        new_node.alpha = -node.beta;
-        new_node.beta = -node.alpha;
-        new_node.turn = static_cast<Color>(!node.turn);
+        // Get opponent color
+        Color opp = static_cast<Color>(!turn);
 
         // Get move list
         const std::vector<Move> &moves = board.get_moves();
@@ -73,6 +75,8 @@ namespace brainiac {
 
         // Prioritize better moves to optimize pruning with selection sort
         for (int i = 0; i < n; i++) {
+            // Selection sort assumes the search will cutoff early with a good
+            // move ordering heuristic
             int best_index = i;
             for (int j = i + 1; j < n; j++) {
                 if (move_scores[j].score > move_scores[best_index].score) {
@@ -83,34 +87,35 @@ namespace brainiac {
                 std::swap(move_scores[i], move_scores[best_index]);
             }
             Move &move = move_scores[i].move;
-            new_node.move = move;
 
             // Prune bad captures during quiescence search
-            if (node.depth < 0 && move_scores[i].score < 0) {
+            if (depth < 0 && move_scores[i].score < 0) {
                 continue;
             }
 
             // Reduce depth search for moves after the best 2
-            if (i > 2 && node.depth > 3 && !board.is_check() &&
-                !(move.flags & LMS_MOVE_FILTER)) {
+            // Bad captures should not be reduced
+            if (i > 2 && depth > 3 && !board.is_check() &&
+                !(move.flags & LMS_MOVE_FILTER) && move_scores[i].score >= 0) {
                 board.execute_move(move);
-                new_node.depth = node.depth - 2;
-                float reduction_search = -negamax(board, new_node);
+                float reduction_search =
+                    -negamax(board, -beta, -alpha, depth - 2, opp, move);
                 board.undo_move();
 
                 // This move is proven to be not good
-                if (reduction_search < node.alpha) {
+                if (reduction_search < alpha) {
                     continue;
                 }
             }
 
             // Full search negamax
             board.execute_move(move);
-            new_node.depth = node.depth - 1;
-            value = std::max(value, -negamax(board, new_node));
-            node.alpha = std::max(value, node.alpha);
+            value =
+                std::max(value,
+                         -negamax(board, -beta, -alpha, depth - 1, opp, move));
+            alpha = std::max(value, alpha);
             board.undo_move();
-            if (node.alpha >= node.beta) {
+            if (alpha >= beta) {
                 // Hash move to be prioritized in next search iteration
                 best_move = move;
                 break;
@@ -121,11 +126,11 @@ namespace brainiac {
         TableEntry new_entry;
         new_entry.key = board.get_hash();
         new_entry.value = value;
-        new_entry.depth = node.depth;
+        new_entry.depth = depth;
         new_entry.best_move = best_move;
         if (value <= alpha_orig) {
             new_entry.type = NodeType::Upper;
-        } else if (value >= node.beta) {
+        } else if (value >= beta) {
             new_entry.type = NodeType::Lower;
         } else {
             new_entry.type = NodeType::Exact;
@@ -134,21 +139,24 @@ namespace brainiac {
         return value;
     }
 
-    float Search::search(Board &board, SearchNode &node) {
+    float Search::search(Board &board, Move &move) {
         _start_time = std::chrono::steady_clock::now();
         float value = -INFINITY;
+        float alpha = -INFINITY;
+        float beta = INFINITY;
+        Color opp = static_cast<Color>(!board.get_turn());
 
         // Iterative deepening from an initial depth until it runs out of time
+        board.execute_move(move);
         for (int depth = 1; depth <= _max_depth; depth++) {
-            node.depth = depth;
-            value = negamax(board, node);
+            value = negamax(board, alpha, beta, depth, opp, move);
 
             // Update aspiration window based on current depth
-            if (value <= node.alpha || node.alpha == -INFINITY) {
-                node.alpha = value - (depth / 2.0);
+            if (value < alpha || alpha == -INFINITY) {
+                alpha = value - (depth / 2.0);
             }
-            if (value >= node.beta || node.beta == INFINITY) {
-                node.beta = value + (depth / 2.0);
+            if (value > beta || beta == INFINITY) {
+                beta = value + (depth / 2.0);
             }
 
             Time end_time = std::chrono::steady_clock::now();
@@ -156,6 +164,8 @@ namespace brainiac {
                 break;
             }
         }
+        board.undo_move();
+
         return value;
     }
 
@@ -186,24 +196,15 @@ namespace brainiac {
     Move Search::move(Board &board) {
         Time start = std::chrono::steady_clock::now();
 
-        Color player = board.get_turn();
         std::vector<Move> moves = board.get_moves();
         Move best_move = moves[0];
         float best_value = -INFINITY;
 
         _visited = 0;
         for (auto &move : moves) {
-            // Create initial search node
-            SearchNode node;
-            node.alpha = -INFINITY;
-            node.beta = INFINITY;
-            node.move = move;
-            node.turn = static_cast<Color>(!player);
-
-            // Get the value of the resulting board state
-            board.execute_move(move);
-            float value = -search(board, node);
-            board.undo_move();
+            // Get the value making this move
+            // Search will return the value from the opponent's POV
+            float value = -search(board, move);
 
             // Update best move
             if (value > best_value) {
