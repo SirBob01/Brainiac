@@ -23,6 +23,7 @@ To build the engine executable, run
 - Futility pruning
 - Killer heuristic (move ordering)
 - King safety (evaluation)
+- Dynamic thinking time for live games
 
 ### Engine Interface
 
