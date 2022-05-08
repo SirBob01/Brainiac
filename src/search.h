@@ -32,17 +32,6 @@ namespace brainiac {
     }
 
     /**
-     * Contains per-node state data required during alpha-beta minimax
-     */
-    struct SearchNode {
-        int depth;
-        float alpha;
-        float beta;
-        Move move;
-        Color turn;
-    };
-
-    /**
      * Core algorithm for strategically finding the best
      * next move
      */
@@ -68,12 +57,17 @@ namespace brainiac {
         /**
          * Alpha-beta pruning algorithm with quiescence search
          */
-        float negamax(Board &board, SearchNode node);
+        float negamax(Board &board,
+                      float alpha,
+                      float beta,
+                      int depth,
+                      Color turn,
+                      Move &move);
 
         /**
          * Iterative deepening search
          */
-        float search(Board &board, SearchNode &node);
+        float search(Board &board, Move &move);
 
         /**
          * Estimate the value of a move to optimize search in
