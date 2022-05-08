@@ -11,7 +11,7 @@ namespace brainiac {
     float Search::negamax(Board &board, SearchNode node) {
         // Read from the transposition table
         float alpha_orig = node.alpha;
-        TableNode &entry = _transpositions.get(board);
+        TableEntry &entry = _transpositions.get(board);
 
         // Terminate early and return last known search result
         Time end_time = std::chrono::steady_clock::now();
@@ -68,9 +68,10 @@ namespace brainiac {
             move_scores.emplace_back(move, score);
         }
 
-        // Prioritize better moves to optimize pruning with selection sort
         float value = -INFINITY;
         Move best_move;
+
+        // Prioritize better moves to optimize pruning with selection sort
         for (int i = 0; i < n; i++) {
             int best_index = i;
             for (int j = i + 1; j < n; j++) {
@@ -117,7 +118,7 @@ namespace brainiac {
         }
 
         // Update the transposition table
-        TableNode new_entry;
+        TableEntry new_entry;
         new_entry.key = board.get_hash();
         new_entry.value = value;
         new_entry.depth = node.depth;
@@ -162,8 +163,8 @@ namespace brainiac {
         float score = 0;
 
         // Hashed move should be evaluated first
-        TableNode &node = _transpositions.get(board);
-        if (node.best_move == move) {
+        TableEntry &entry = _transpositions.get(board);
+        if (entry.best_move == move) {
             score += 1000.0f;
         }
 
