@@ -3,7 +3,7 @@
 namespace brainiac {
     Search::Search() {
         _max_depth = 128;
-        _max_quiescence_depth = 8;
+        _max_quiescence_depth = 16;
         _iterative_timeout_ns = 0.5 * SECONDS_TO_NANO;
         _visited = 0;
     }
@@ -94,16 +94,20 @@ namespace brainiac {
             }
 
             // Reduce depth search for moves after the best 2
-            // Bad captures should not be reduced
-            if (i > 2 && depth > 3 && !board.is_check() &&
-                !(move.flags & LMS_MOVE_FILTER) && move_scores[i].score >= 0) {
+            // Tactical moves should not be reduced
+            if (i > 2 && depth >= 3 && !board.is_check() &&
+                !(move.flags & LMS_MOVE_FILTER)) {
                 board.execute_move(move);
-                float reduction_search =
-                    -negamax(board, -beta, -alpha, depth - 2, opp, move);
+                int R = 1;
+                if (i > 6) {
+                    R++;
+                }
+                float reduction =
+                    -negamax(board, -beta, -alpha, depth - R - 1, opp, move);
                 board.undo_move();
 
-                // This move is proven to be not good
-                if (reduction_search < alpha) {
+                // This move is proven to be not good, skip it
+                if (reduction < alpha) {
                     continue;
                 }
             }
