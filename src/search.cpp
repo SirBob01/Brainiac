@@ -143,7 +143,7 @@ namespace brainiac {
         return value;
     }
 
-    float Search::search(Board &board, Move &move) {
+    float Search::negamax_root(Board &board, Move &move) {
         _start_time = std::chrono::steady_clock::now();
         float value = -INFINITY;
         float alpha = -INFINITY;
@@ -170,7 +170,8 @@ namespace brainiac {
         }
         board.undo_move();
 
-        return value;
+        // Value returned from negamax was from the opponent's perspective
+        return -value;
     }
 
     float Search::ordering_heuristic(Board &board, const Move &move) {
@@ -208,7 +209,7 @@ namespace brainiac {
         for (auto &move : moves) {
             // Get the value making this move
             // Search will return the value from the opponent's POV
-            float value = -search(board, move);
+            float value = negamax_root(board, move);
 
             // Update best move
             if (value > best_value) {

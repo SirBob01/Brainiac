@@ -65,9 +65,9 @@ namespace brainiac {
                       Move &move);
 
         /**
-         * Iterative deepening search
+         * Root of the negamax routine with iterative deepening
          */
-        float search(Board &board, Move &move);
+        float negamax_root(Board &board, Move &move);
 
         /**
          * Estimate the value of a move to optimize search in
