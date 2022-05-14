@@ -39,6 +39,10 @@ namespace brainiac {
         int _max_depth;
         int _max_quiescence_depth;
         double _iterative_timeout_ns;
+
+        // Index by [piece type][to]
+        int _history_heuristic[64][64] = {0};
+
         Transpositions _transpositions;
         Time _start_time;
 
