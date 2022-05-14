@@ -21,7 +21,7 @@ namespace brainiac {
     struct TableEntry {
         uint64_t key;
         int depth;
-        float value;
+        float value = -INFINITY;
         NodeType type;
         Move best_move;
     };

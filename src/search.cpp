@@ -166,7 +166,8 @@ namespace brainiac {
         board.execute_move(move);
         int depth = 1;
         while (depth <= _max_depth) {
-            value = negamax(board, alpha, beta, depth, opp, move);
+            value =
+                std::max(value, -negamax(board, alpha, beta, depth, opp, move));
 
             // Search timeout
             Time end_time = std::chrono::steady_clock::now();
@@ -190,8 +191,7 @@ namespace brainiac {
         }
         board.undo_move();
 
-        // Value returned from negamax was from the opponent's perspective
-        return -value;
+        return value;
     }
 
     float Search::ordering_heuristic(Board &board, const Move &move) {
