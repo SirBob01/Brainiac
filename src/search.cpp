@@ -90,6 +90,8 @@ namespace brainiac {
 
             // Prune bad captures during quiescence search
             if (depth < 0 && move_scores[i].score < 0) {
+                float score = evaluate(board);
+                value = std::max(value, turn == Color::White ? score : -score);
                 continue;
             }
 
@@ -113,6 +115,7 @@ namespace brainiac {
                 board.undo_move();
 
                 // This move is proven to be not good, skip it
+                value = std::max(value, reduction);
                 if (reduction < alpha) {
                     continue;
                 }
@@ -120,11 +123,15 @@ namespace brainiac {
 
             // Full search negamax
             board.execute_move(move);
-            value =
-                std::max(value,
-                         -negamax(board, -beta, -alpha, depth - 1, opp, move));
-            alpha = std::max(value, alpha);
+            float search = -negamax(board, -beta, -alpha, depth - 1, opp, move);
             board.undo_move();
+
+            // Ignore timedout search
+            if (search == INFINITY) {
+                return -INFINITY;
+            }
+            value = std::max(value, search);
+            alpha = std::max(value, alpha);
             if (alpha >= beta) {
                 // Hash move to be prioritized in next search iteration
                 best_move = move;
@@ -141,7 +148,7 @@ namespace brainiac {
         // Update the transposition table
         TableEntry new_entry;
         new_entry.key = board.get_hash();
-        new_entry.value = value;
+        new_entry.value = alpha;
         new_entry.depth = depth;
         new_entry.best_move = best_move;
         if (value <= alpha_orig) {
@@ -152,7 +159,7 @@ namespace brainiac {
             new_entry.type = NodeType::Exact;
         }
         _transpositions.set(board, new_entry);
-        return value;
+        return alpha;
     }
 
     float Search::negamax_root(Board &board, Move &move) {
@@ -166,8 +173,10 @@ namespace brainiac {
         board.execute_move(move);
         int depth = 1;
         while (depth <= _max_depth) {
-            value =
-                std::max(value, -negamax(board, alpha, beta, depth, opp, move));
+            float search = -negamax(board, alpha, beta, depth, opp, move);
+            if (search != INFINITY) {
+                value = search;
+            }
 
             // Search timeout
             Time end_time = std::chrono::steady_clock::now();
