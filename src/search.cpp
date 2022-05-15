@@ -90,8 +90,6 @@ namespace brainiac {
 
             // Prune bad captures during quiescence search
             if (depth < 0 && move_scores[i].score < 0) {
-                float score = evaluate(board);
-                value = std::max(value, turn == Color::White ? score : -score);
                 continue;
             }
 
@@ -115,7 +113,6 @@ namespace brainiac {
                 board.undo_move();
 
                 // This move is proven to be not good, skip it
-                value = std::max(value, reduction);
                 if (reduction < alpha) {
                     continue;
                 }
@@ -174,6 +171,7 @@ namespace brainiac {
         int depth = 1;
         while (depth <= _max_depth) {
             float search = -negamax(board, alpha, beta, depth, opp, move);
+            // std::cout << depth << " " << search << "\n";
             if (search != INFINITY) {
                 value = search;
             }
