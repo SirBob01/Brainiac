@@ -90,6 +90,9 @@ namespace brainiac {
 
             // Prune bad captures during quiescence search
             if (depth < 0 && move_scores[i].score < 0) {
+                float score = evaluate(board);
+                value = std::max(value, turn == Color::White ? score : -score);
+                alpha = std::max(value, alpha);
                 continue;
             }
 
@@ -104,6 +107,7 @@ namespace brainiac {
                         R++;
                     }
                 }
+                // Search with reduced depth and null-window
                 float reduction = -negamax(board,
                                            -alpha - 1,
                                            -alpha,
@@ -113,6 +117,8 @@ namespace brainiac {
                 board.undo_move();
 
                 // This move is proven to be not good, skip it
+                value = std::max(value, reduction);
+                alpha = std::max(value, alpha);
                 if (reduction < alpha) {
                     continue;
                 }
@@ -162,8 +168,8 @@ namespace brainiac {
     float Search::negamax_root(Board &board, Move &move) {
         _start_time = std::chrono::steady_clock::now();
         float value = -INFINITY;
-        float alpha = -3;
-        float beta = 3;
+        float alpha = -INFINITY;
+        float beta = INFINITY;
         Color opp = static_cast<Color>(!board.get_turn());
 
         // Iterative deepening from an initial depth until it runs out of time
@@ -171,7 +177,6 @@ namespace brainiac {
         int depth = 1;
         while (depth <= _max_depth) {
             float search = -negamax(board, alpha, beta, depth, opp, move);
-            // std::cout << depth << " " << search << "\n";
             if (search != INFINITY) {
                 value = search;
             }
@@ -182,18 +187,24 @@ namespace brainiac {
                 break;
             }
 
-            // Update aspiration window based on current depth
-            bool re_search = false;
-            if (value <= alpha) {
-                alpha = std::max(-INFINITY, value - (10 << depth));
-                re_search = true;
-            }
-            if (value >= beta) {
-                beta = std::min(INFINITY, value + (10 << depth));
-                re_search = true;
-            }
-            if (!re_search) {
+            // Update aspiration window as a function of depth
+            if (depth == 1) {
+                alpha = value - (10 << depth);
+                beta = value + (10 << depth);
                 depth++;
+            } else {
+                bool research = false;
+                if (value <= alpha) {
+                    research = true;
+                    alpha = value - (10 << depth);
+                }
+                if (value >= beta) {
+                    research = true;
+                    beta = value + (10 << depth);
+                }
+                if (!research) {
+                    depth++;
+                }
             }
         }
         board.undo_move();
@@ -270,6 +281,8 @@ namespace brainiac {
         auto duration = (stop - start) / SECONDS_TO_NANO;
         std::cout << _visited << " nodes searched"
                   << " (" << duration.count() << " s)\n";
+        std::cout << best_move.standard_notation() << " | " << best_value
+                  << "\n";
         return best_move;
     }
 } // namespace brainiac
