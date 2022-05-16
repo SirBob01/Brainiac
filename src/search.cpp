@@ -2,8 +2,6 @@
 
 namespace brainiac {
     Search::Search() {
-        _max_depth = 50;
-        _max_quiescence_depth = 16;
         _iterative_timeout_ns = 0.5 * SECONDS_TO_NANO;
         _visited = 0;
     }
@@ -50,7 +48,7 @@ namespace brainiac {
             return board.get_turn() != turn ? score : -score;
         } else if (board.is_draw()) {
             return 0;
-        } else if ((depth == -_max_quiescence_depth) ||
+        } else if ((depth == -MAX_QUIESCENCE_DEPTH) ||
                    (depth <= 0 && (move.flags & MoveFlag::Quiet))) {
             float score = evaluate(board);
             return turn == Color::White ? score : -score;
@@ -66,7 +64,7 @@ namespace brainiac {
         // Map moves to heuristic scores for move ordering
         std::vector<MoveScore> move_scores;
         for (const Move &move : moves) {
-            float score = ordering_heuristic(board, move);
+            float score = ordering_heuristic(board, move, depth);
             move_scores.emplace_back(move, score);
         }
 
@@ -88,39 +86,37 @@ namespace brainiac {
             }
             Move &move = move_scores[i].move;
 
-            // Prune bad captures during quiescence search
-            if (depth < 0 && move_scores[i].score < 0) {
-                float score = evaluate(board);
-                value = std::max(value, turn == Color::White ? score : -score);
-                alpha = std::max(value, alpha);
-                continue;
-            }
-
-            // PV search with late move reduction
-            // Tactical moves should not be reduced
-            if (i > 1 && depth >= 3 && !board.is_check()) {
-                board.execute_move(move);
-                int R = 0;
-                if (!(move.flags & LMS_MOVE_FILTER)) {
-                    R++;
-                    if (i > 6) {
-                        R++;
-                    }
-                }
-                // Search with reduced depth and null-window
-                float reduction = -negamax(board,
-                                           -alpha - 1,
-                                           -alpha,
-                                           depth - R - 1,
-                                           opp,
-                                           move);
-                board.undo_move();
-
-                // This move is proven to be not good, skip it
-                value = std::max(value, reduction);
-                alpha = std::max(value, alpha);
-                if (reduction < alpha) {
+            // Prune only after a PV move has been found
+            if (value != -INFINITY) {
+                // Prune bad captures during quiescence search
+                if (depth < 0 && move_scores[i].score < 0) {
                     continue;
+                }
+
+                // PV search with late move reduction
+                // Tactical moves should not be reduced
+                if (i > 1 && depth > 3 && !board.is_check()) {
+                    board.execute_move(move);
+                    int R = 0;
+                    if (!(move.flags & LMS_MOVE_FILTER)) {
+                        R++;
+                        if (i > 6) {
+                            R++;
+                        }
+                    }
+                    // Search with reduced depth and null-window
+                    float reduction = -negamax(board,
+                                               -alpha - 1,
+                                               -alpha,
+                                               depth - R - 1,
+                                               opp,
+                                               move);
+                    board.undo_move();
+
+                    // This move is proven to be not good, skip it
+                    if (reduction < alpha) {
+                        continue;
+                    }
                 }
             }
 
@@ -133,16 +129,26 @@ namespace brainiac {
             if (search == INFINITY) {
                 return -INFINITY;
             }
-            value = std::max(value, search);
-            alpha = std::max(value, alpha);
-            if (alpha >= beta) {
-                // Hash move to be prioritized in next search iteration
-                best_move = move;
 
+            if (search >= value) {
+                value = search;
+            }
+            if (value >= alpha) {
+                alpha = value;
+                best_move = move;
+            }
+            if (alpha >= beta) {
                 // Update history heuristic
                 if (move.flags & MoveFlag::Quiet) {
-                    _history_heuristic[move.from.shift][move.to.shift] +=
-                        (1 << depth);
+                    int from = move.from.shift;
+                    int to = move.to.shift;
+                    _history_heuristic[from][to] += (1 << depth);
+                }
+
+                // Update PV
+                if (depth > 0) {
+                    int index = (2 * MAX_DEPTH + 1 - depth) / 2;
+                    _principal_variation[index] = best_move;
                 }
                 break;
             }
@@ -175,7 +181,7 @@ namespace brainiac {
         // Iterative deepening from an initial depth until it runs out of time
         board.execute_move(move);
         int depth = 1;
-        while (depth <= _max_depth) {
+        while (depth <= MAX_DEPTH) {
             float search = -negamax(board, alpha, beta, depth, opp, move);
             if (search != INFINITY) {
                 value = search;
@@ -188,23 +194,14 @@ namespace brainiac {
             }
 
             // Update aspiration window as a function of depth
-            if (depth == 1) {
-                alpha = value - (10 << depth);
-                beta = value + (10 << depth);
-                depth++;
+            if (value <= alpha || value >= beta) {
+                alpha = -INFINITY;
+                beta = INFINITY;
             } else {
-                bool research = false;
-                if (value <= alpha) {
-                    research = true;
-                    alpha = value - (10 << depth);
-                }
-                if (value >= beta) {
-                    research = true;
-                    beta = value + (10 << depth);
-                }
-                if (!research) {
-                    depth++;
-                }
+                float window_delta = 10 << depth;
+                alpha = value - window_delta;
+                beta = value + window_delta;
+                depth++;
             }
         }
         board.undo_move();
@@ -212,8 +209,17 @@ namespace brainiac {
         return value;
     }
 
-    float Search::ordering_heuristic(Board &board, const Move &move) {
+    float
+    Search::ordering_heuristic(Board &board, const Move &move, int depth) {
         float score = 0;
+
+        // PV move
+        if (depth > 0) {
+            int pv_index = (2 * MAX_DEPTH + 1 - depth) / 2;
+            if (_principal_variation[pv_index] == move) {
+                score += 10000.0f;
+            }
+        }
 
         // Hashed move
         TableEntry &entry = _transpositions.get(board);
