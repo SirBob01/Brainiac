@@ -12,8 +12,10 @@
 #include "heuristic.h"
 #include "transpositions.h"
 
-#define MAX_SCORE       100000.0f
-#define SECONDS_TO_NANO 1000000000.0f
+#define MAX_SCORE            100000.0f
+#define SECONDS_TO_NANO      1000000000.0f
+#define MAX_DEPTH            50
+#define MAX_QUIESCENCE_DEPTH 8
 
 namespace brainiac {
     using Time = std::chrono::time_point<std::chrono::steady_clock>;
@@ -36,12 +38,13 @@ namespace brainiac {
      * next move
      */
     class Search {
-        int _max_depth;
-        int _max_quiescence_depth;
         double _iterative_timeout_ns;
 
         // Index by [piece type][to]
         int _history_heuristic[64][64] = {0};
+
+        // PV table
+        Move _principal_variation[MAX_DEPTH * (MAX_DEPTH + 1) / 2];
 
         Transpositions _transpositions;
         Time _start_time;
@@ -77,7 +80,7 @@ namespace brainiac {
          * Estimate the value of a move to optimize search in
          * alpha-beta pruning
          */
-        float ordering_heuristic(Board &board, const Move &move);
+        float ordering_heuristic(Board &board, const Move &move, int depth);
 
       public:
         Search();

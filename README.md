@@ -17,7 +17,6 @@ To build the engine executable, run
 
 ### Performance Enhancements
 
-- PV-search
 - Null-move pruning
 - Futility pruning
 - Killer heuristic (move ordering)
