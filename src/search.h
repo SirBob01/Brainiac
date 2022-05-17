@@ -20,7 +20,7 @@
 namespace brainiac {
     using Time = std::chrono::time_point<std::chrono::steady_clock>;
 
-    const uint64_t LMS_MOVE_FILTER =
+    const uint64_t LMR_MOVE_FILTER =
         MoveFlag::Capture | MoveFlag::BishopPromo | MoveFlag::KnightPromo |
         MoveFlag::QueenPromo | MoveFlag::RookPromo | MoveFlag::EnPassant |
         MoveFlag::Castling;
@@ -42,10 +42,6 @@ namespace brainiac {
 
         // Index by [piece type][to]
         int _history_heuristic[64][64] = {0};
-
-        // PV table
-        Move _principal_variation[MAX_DEPTH * (MAX_DEPTH + 1) / 2];
-
         Transpositions _transpositions;
         Time _start_time;
 
@@ -94,6 +90,11 @@ namespace brainiac {
          * Selects the best possible move for the current position
          */
         Move move(Board &board);
+
+        /**
+         * Get the current principal variation
+         */
+        std::vector<Move> get_principal_variation(Board &board);
     };
 } // namespace brainiac
 

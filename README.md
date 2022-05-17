@@ -20,6 +20,7 @@ To build the engine executable, run
 - Null-move pruning
 - Futility pruning
 - Killer heuristic (move ordering)
+- Passed pawns (evaluation)
 - King safety (evaluation)
 - Dynamic thinking time for live games
 

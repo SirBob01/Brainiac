@@ -102,6 +102,11 @@ void play_bot(brainiac::Color player_color) {
         std::cout << b.generate_fen() << "\n";
         float evaluation = bot.evaluate(b);
         std::cout << "Evaluation: " << evaluation << "\n";
+        std::cout << "PV: ";
+        for (auto move : bot.get_principal_variation(b)) {
+            std::cout << move.standard_notation() << " ";
+        }
+        std::cout << "\n";
         if (evaluation > 1) {
             std::cout << "White winning\n";
         } else if (evaluation < -1) {

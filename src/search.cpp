@@ -96,15 +96,17 @@ namespace brainiac {
                 // PV search with late move reduction
                 // Tactical moves should not be reduced
                 if (i > 1 && depth > 3 && !board.is_check()) {
-                    board.execute_move(move);
+                    // Adjust reduction value
                     int R = 0;
-                    if (!(move.flags & LMS_MOVE_FILTER)) {
+                    if (!(move.flags & LMR_MOVE_FILTER)) {
                         R++;
                         if (i > 6) {
                             R++;
                         }
                     }
+
                     // Search with reduced depth and null-window
+                    board.execute_move(move);
                     float reduction = -negamax(board,
                                                -alpha - 1,
                                                -alpha,
@@ -114,7 +116,7 @@ namespace brainiac {
                     board.undo_move();
 
                     // This move is proven to be not good, skip it
-                    if (reduction < alpha) {
+                    if (reduction <= alpha || reduction >= beta) {
                         continue;
                     }
                 }
@@ -132,25 +134,19 @@ namespace brainiac {
 
             if (search >= value) {
                 value = search;
-            }
-            if (value >= alpha) {
-                alpha = value;
                 best_move = move;
-            }
-            if (alpha >= beta) {
-                // Update history heuristic
-                if (move.flags & MoveFlag::Quiet) {
-                    int from = move.from.shift;
-                    int to = move.to.shift;
-                    _history_heuristic[from][to] += (1 << depth);
+                if (value >= alpha) {
+                    alpha = value;
                 }
-
-                // Update PV
-                if (depth > 0) {
-                    int index = (2 * MAX_DEPTH + 1 - depth) / 2;
-                    _principal_variation[index] = best_move;
+                if (alpha >= beta) {
+                    // Update history heuristic
+                    if (move.flags & MoveFlag::Quiet) {
+                        int from = move.from.shift;
+                        int to = move.to.shift;
+                        _history_heuristic[from][to] += (1 << depth);
+                    }
+                    break;
                 }
-                break;
             }
         }
 
@@ -212,14 +208,6 @@ namespace brainiac {
     float
     Search::ordering_heuristic(Board &board, const Move &move, int depth) {
         float score = 0;
-
-        // PV move
-        if (depth > 0) {
-            int pv_index = (2 * MAX_DEPTH + 1 - depth) / 2;
-            if (_principal_variation[pv_index] == move) {
-                score += 10000.0f;
-            }
-        }
 
         // Hashed move
         TableEntry &entry = _transpositions.get(board);
@@ -290,5 +278,29 @@ namespace brainiac {
         std::cout << best_move.standard_notation() << " | " << best_value
                   << "\n";
         return best_move;
+    }
+
+    std::vector<Move> Search::get_principal_variation(Board &board) {
+        std::vector<Move> pv;
+
+        // Search for PV moves from the transposition table
+        int count = 0;
+        for (int ply = 0; ply < MAX_DEPTH; ply++) {
+            TableEntry &entry = _transpositions.get(board);
+            if (!entry.best_move.is_invalid()) {
+                count++;
+                pv.push_back(entry.best_move);
+                board.execute_move(entry.best_move);
+            } else {
+                break;
+            }
+        }
+
+        // Move board back to initial position
+        while (count) {
+            board.undo_move();
+            count--;
+        }
+        return pv;
     }
 } // namespace brainiac
