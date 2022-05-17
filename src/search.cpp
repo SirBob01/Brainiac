@@ -188,17 +188,7 @@ namespace brainiac {
             if ((end_time - _start_time).count() >= _iterative_timeout_ns) {
                 break;
             }
-
-            // Update aspiration window as a function of depth
-            if (value <= alpha || value >= beta) {
-                alpha = -INFINITY;
-                beta = INFINITY;
-            } else {
-                float window_delta = 10 << depth;
-                alpha = value - window_delta;
-                beta = value + window_delta;
-                depth++;
-            }
+            depth++;
         }
         board.undo_move();
 
