@@ -146,6 +146,22 @@ namespace brainiac {
     }
 
     /**
+     * The side with both bishops has a tactical advantage over the side with
+     * only one. This is because a bishop only covers EITHER a white or black
+     * square ONLY.
+     *
+     * Losing a bishop means losing control of half the board
+     */
+    inline float bishop_pair_score(Board &board) {
+        Piece white_bishop = {PieceType::Bishop, Color::White};
+        Piece black_bishop = {PieceType::Bishop, Color::Black};
+
+        uint64_t white_bishops = board.get_bitboard(white_bishop);
+        uint64_t black_bishops = board.get_bitboard(black_bishop);
+        return count_set_bits(white_bishops) - count_set_bits(black_bishops);
+    }
+
+    /**
      * Calculate the MVV-LVA heuristic of the board
      */
     inline float mvv_lva_heuristic(Board &board, const Move &move) {

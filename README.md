@@ -17,14 +17,13 @@ To build the engine executable, run
 
 ### Performance Enhancements
 
-- Optimize datastructures
 - AB prune root node moves
+- Dynamic thinking time for live games
+- Optimize datastructures
 - Mate distance pruning
 - Killer heuristic (move ordering)
 - Passed pawns (evaluation)
-- Bishop pair (evaluation)
 - King safety (evaluation)
-- Dynamic thinking time for live games
 
 ### Engine Interface
 
