@@ -245,6 +245,11 @@ namespace brainiac {
         uint64_t get_hash();
 
         /**
+         * Get a bitboard
+         */
+        uint64_t get_bitboard(Piece &piece);
+
+        /**
          * Print the board on the console
          */
         void print();
