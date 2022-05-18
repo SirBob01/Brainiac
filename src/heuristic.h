@@ -156,9 +156,19 @@ namespace brainiac {
         Piece white_bishop = {PieceType::Bishop, Color::White};
         Piece black_bishop = {PieceType::Bishop, Color::Black};
 
-        uint64_t white_bishops = board.get_bitboard(white_bishop);
-        uint64_t black_bishops = board.get_bitboard(black_bishop);
-        return count_set_bits(white_bishops) - count_set_bits(black_bishops);
+        uint64_t white_bishops =
+            count_set_bits(board.get_bitboard(white_bishop));
+        uint64_t black_bishops =
+            count_set_bits(board.get_bitboard(black_bishop));
+
+        float score = 0;
+        if (white_bishops == 2) {
+            score++;
+        }
+        if (black_bishops == 2) {
+            score--;
+        }
+        return score;
     }
 
     /**

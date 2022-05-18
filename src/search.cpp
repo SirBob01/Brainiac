@@ -250,7 +250,7 @@ namespace brainiac {
         float bishop_pair = bishop_pair_score(board);
 
         return 2 * material + 0.2 * placement + 0.5 * mobility +
-               0.25 * pawn_connected + 2 * bishop_pair;
+               0.25 * pawn_connected + 1.5 * bishop_pair;
     }
 
     Move Search::move(Board &board) {
