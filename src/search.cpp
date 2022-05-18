@@ -247,9 +247,10 @@ namespace brainiac {
         float placement = placement_score(board);
         float mobility = mobility_score(board);
         float pawn_connected = connected_pawn_score(board);
+        float bishop_pair = bishop_pair_score(board);
 
-        return 2 * material + 0.1 * placement + 0.5 * mobility +
-               0.25 * pawn_connected;
+        return 2 * material + 0.2 * placement + 0.5 * mobility +
+               0.25 * pawn_connected + 2 * bishop_pair;
     }
 
     Move Search::move(Board &board) {
