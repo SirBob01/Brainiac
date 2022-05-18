@@ -19,7 +19,7 @@ namespace brainiac {
         // Terminate early and return last known search result
         Time end_time = std::chrono::steady_clock::now();
         if ((end_time - _start_time).count() >= _iterative_timeout_ns) {
-            return entry.value;
+            return entry.value; // Entry is invalid, this will return -INFINITY
         }
         if (entry.key == board.get_hash() && entry.depth >= depth) {
             switch (entry.type) {
@@ -246,8 +246,10 @@ namespace brainiac {
         float material = board.get_material();
         float placement = placement_score(board);
         float mobility = mobility_score(board);
+        float pawn_connected = connected_pawn_score(board);
 
-        return 2 * material + 0.1 * placement + 0.5 * mobility;
+        return 2 * material + 0.1 * placement + 0.5 * mobility +
+               0.25 * pawn_connected;
     }
 
     Move Search::move(Board &board) {

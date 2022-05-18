@@ -113,6 +113,39 @@ namespace brainiac {
     }
 
     /**
+     * Calculate the heuristic based on the number of connected pawns for each
+     * side (from white's perspective)
+     */
+    inline float connected_pawn_score(Board &board) {
+        Piece white_pawn = {PieceType::Pawn, Color::White};
+        Piece black_pawn = {PieceType::Pawn, Color::Black};
+
+        uint64_t white_pawns = board.get_bitboard(white_pawn);
+        uint64_t black_pawns = board.get_bitboard(black_pawn);
+
+        float connected = 0;
+        for (int i = 0; i < 8; i++) {
+            if (i < 7) {
+                if ((files[i] & white_pawns) && (files[i + 1] & white_pawns)) {
+                    connected++;
+                }
+                if ((files[i] & black_pawns) && (files[i + 1] & black_pawns)) {
+                    connected--;
+                }
+            }
+            if (i > 0) {
+                if ((files[i] & white_pawns) && (files[i - 1] & white_pawns)) {
+                    connected++;
+                }
+                if ((files[i] & black_pawns) && (files[i - 1] & black_pawns)) {
+                    connected--;
+                }
+            }
+        }
+        return connected;
+    }
+
+    /**
      * Calculate the MVV-LVA heuristic of the board
      */
     inline float mvv_lva_heuristic(Board &board, const Move &move) {

@@ -17,6 +17,8 @@ To build the engine executable, run
 
 ### Performance Enhancements
 
+- Optimize datastructures
+- AB prune root node moves
 - Mate distance pruning
 - Killer heuristic (move ordering)
 - Passed pawns (evaluation)
