@@ -17,10 +17,10 @@ To build the engine executable, run
 
 ### Performance Enhancements
 
-- Null-move pruning
-- Futility pruning
+- Mate distance pruning
 - Killer heuristic (move ordering)
 - Passed pawns (evaluation)
+- Bishop pair (evaluation)
 - King safety (evaluation)
 - Dynamic thinking time for live games
 

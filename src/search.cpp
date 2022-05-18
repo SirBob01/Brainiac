@@ -54,8 +54,21 @@ namespace brainiac {
             return turn == Color::White ? score : -score;
         }
 
-        // Get opponent color
         Color opp = static_cast<Color>(!turn);
+        float value = -INFINITY;
+        Move best_move;
+
+        // Null move reduction
+        if (depth > 4 && !board.is_check()) {
+            int R = depth > 6 ? 4 : 3;
+            board.skip_turn();
+            float reduction =
+                -negamax(board, -beta, -beta + 1, depth - R - 1, opp, move);
+            board.undo_move();
+            if (reduction >= beta) {
+                depth -= 3;
+            }
+        }
 
         // Get move list
         const std::vector<Move> &moves = board.get_moves();
@@ -67,9 +80,6 @@ namespace brainiac {
             float score = ordering_heuristic(board, move, depth);
             move_scores.emplace_back(move, score);
         }
-
-        float value = -INFINITY;
-        Move best_move;
 
         // Prioritize better moves to optimize pruning with selection sort
         for (int i = 0; i < n; i++) {
@@ -153,7 +163,7 @@ namespace brainiac {
         // Update the transposition table
         TableEntry new_entry;
         new_entry.key = board.get_hash();
-        new_entry.value = alpha;
+        new_entry.value = value;
         new_entry.depth = depth;
         new_entry.best_move = best_move;
         if (value <= alpha_orig) {
@@ -164,7 +174,7 @@ namespace brainiac {
             new_entry.type = NodeType::Exact;
         }
         _transpositions.set(board, new_entry);
-        return alpha;
+        return value;
     }
 
     float Search::negamax_root(Board &board, Move &move) {
