@@ -91,12 +91,27 @@ namespace brainiac {
      * Bitmask constants
      */
     constexpr uint64_t rank1 = 0x00000000000000FF;
+    constexpr uint64_t rank2 = 0x000000000000FF00;
+    constexpr uint64_t rank3 = 0x0000000000FF0000;
     constexpr uint64_t rank4 = 0x00000000FF000000;
     constexpr uint64_t rank5 = 0x000000FF00000000;
+    constexpr uint64_t rank6 = 0x0000FF0000000000;
+    constexpr uint64_t rank7 = 0x00FF000000000000;
     constexpr uint64_t rank8 = 0xFF00000000000000;
 
     constexpr uint64_t fileA = 0x0101010101010101;
+    constexpr uint64_t fileB = 0x0202020202020202;
+    constexpr uint64_t fileC = 0x0404040404040404;
+    constexpr uint64_t fileD = 0x0808080808080808;
+    constexpr uint64_t fileE = 0x1010101010101010;
+    constexpr uint64_t fileF = 0x2020202020202020;
+    constexpr uint64_t fileG = 0x4040404040404040;
     constexpr uint64_t fileH = 0x8080808080808080;
+
+    constexpr uint64_t ranks[8] =
+        {rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8};
+    constexpr uint64_t files[8] =
+        {fileA, fileB, fileC, fileD, fileE, fileF, fileG, fileH};
 
     constexpr uint64_t main_diagonal = 0x8040201008040201;
     constexpr uint64_t anti_diagnoal = 0x0102040810204080;
