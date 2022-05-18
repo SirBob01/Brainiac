@@ -135,11 +135,11 @@ namespace brainiac {
         int victim_value = std::fabs(piece_weights[victim.get_piece_index()]);
 
         Move best_move;
-        int min_value = 100000; // Some arbitrary large number lol
+        float min_value = INFINITY;
         for (const Move &move : moves) {
             if (move.flags & MoveFlag::Capture) {
                 Piece attacker = board.get_at(move.from);
-                int attacker_value =
+                float attacker_value =
                     std::fabs(piece_weights[attacker.get_piece_index()]);
                 if (attacker_value < min_value) {
                     min_value = attacker_value;
