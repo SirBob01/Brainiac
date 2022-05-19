@@ -75,10 +75,10 @@ namespace brainiac {
         int n = moves.size();
 
         // Map moves to heuristic scores for move ordering
-        std::vector<MoveScore> move_scores;
-        for (const Move &move : moves) {
-            float score = ordering_heuristic(board, move, depth);
-            move_scores.emplace_back(move, score);
+        MoveScore move_scores[moves.size()];
+        for (int i = 0; i < n; i++) {
+            move_scores[i] = {moves[i],
+                              ordering_heuristic(board, moves[i], depth)};
         }
 
         // Prioritize better moves to optimize pruning with selection sort

@@ -58,6 +58,8 @@ namespace brainiac {
             Move move;
             float score;
 
+            MoveScore() : move({}), score(-INFINITY){};
+
             MoveScore(const Move &move, float score) :
                 move(move), score(score){};
         };
