@@ -14,8 +14,8 @@
 
 #define MAX_SCORE            100000.0f
 #define SECONDS_TO_NANO      1000000000.0f
-#define MAX_DEPTH            50
-#define MAX_QUIESCENCE_DEPTH 20
+#define MAX_DEPTH            128
+#define MAX_QUIESCENCE_DEPTH 32
 
 namespace brainiac {
     using Time = std::chrono::time_point<std::chrono::steady_clock>;
@@ -42,6 +42,10 @@ namespace brainiac {
 
         // Index by [piece type][to]
         int _history_heuristic[64][64] = {0};
+
+        // Index by depth
+        Move _killer_moves[MAX_DEPTH + 1];
+
         Transpositions _transpositions;
         Time _start_time;
 
