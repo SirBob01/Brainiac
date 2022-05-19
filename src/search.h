@@ -16,6 +16,7 @@
 #define SECONDS_TO_NANO      1000000000.0f
 #define MAX_DEPTH            128
 #define MAX_QUIESCENCE_DEPTH 32
+#define FUTILITY_MARGIN      100
 
 namespace brainiac {
     using Time = std::chrono::time_point<std::chrono::steady_clock>;

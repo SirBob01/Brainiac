@@ -17,7 +17,6 @@ To build the engine executable, run
 
 ### Performance Enhancements
 
-- AB prune root node moves
 - Dynamic thinking time for live games
 - Optimize datastructures
 - Mate distance pruning

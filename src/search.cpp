@@ -98,6 +98,23 @@ namespace brainiac {
 
             // Prune only after a PV move has been found
             if (value != -INFINITY) {
+                // Futility pruning - static evaluation is so poor, it's not
+                // worth looking into
+                if ((depth == 1 || depth == 2) &&
+                    !(move.flags & LMR_MOVE_FILTER) && !board.is_check()) {
+                    // Make sure that this move does not give check
+                    board.execute_move(move);
+                    bool check_move = board.is_check();
+                    board.undo_move();
+                    if (!check_move) {
+                        float score = evaluate(board);
+                        float value = turn == Color::White ? score : -score;
+                        if (value + FUTILITY_MARGIN <= alpha) {
+                            continue;
+                        }
+                    }
+                }
+
                 // Prune bad captures during quiescence search
                 if (depth < 0 && move_scores[i].score < 0) {
                     continue;
