@@ -37,9 +37,15 @@ namespace brainiac {
 
         /**
          * Set the entry of a board position
+         *
+         * If an entry already exists, only overwrite if the depth is higher
          */
-        inline void set(Board &board, TableEntry &node) {
-            _table[board.get_hash() & TRANSPOSITION_HASH_MASK] = node;
+        inline void set(Board &board, TableEntry &entry) {
+            uint64_t index = board.get_hash() & TRANSPOSITION_HASH_MASK;
+            TableEntry &curr = _table[index];
+            if (curr.value == -INFINITY || entry.depth >= curr.depth) {
+                _table[index] = entry;
+            }
         }
 
         /**
