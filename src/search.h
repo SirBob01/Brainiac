@@ -33,6 +33,7 @@ namespace brainiac {
         init_rook_tables();
         init_bishop_tables();
         init_king_tables();
+        init_knight_tables();
     }
 
     /**

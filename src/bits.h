@@ -124,7 +124,8 @@ namespace brainiac {
      */
     extern SlidingMoveTable rook_attack_tables[64];
     extern SlidingMoveTable bishop_attack_tables[64];
-    extern uint64_t king_move_mask[64];
+    extern uint64_t king_move_masks[64];
+    extern uint64_t knight_move_masks[64];
 
     /**
      * Pre-calculated magic number constants
@@ -321,30 +322,20 @@ namespace brainiac {
      * position
      */
     inline uint64_t get_king_mask(uint64_t bitboard) {
-        return king_move_mask[find_lsb(bitboard)];
+        return king_move_masks[find_lsb(bitboard)];
     }
 
     /**
      * Get the all possible directions the knight can move to from its current
      * position
      */
-    constexpr inline uint64_t get_knight_mask(uint64_t bitboard) {
-        return get_adjacent(get_adjacent(bitboard, Direction::UpLeft),
-                            Direction::Left) |
-               get_adjacent(get_adjacent(bitboard, Direction::DownLeft),
-                            Direction::Left) |
-               get_adjacent(get_adjacent(bitboard, Direction::UpRight),
-                            Direction::Right) |
-               get_adjacent(get_adjacent(bitboard, Direction::DownRight),
-                            Direction::Right) |
-               get_adjacent(get_adjacent(bitboard, Direction::UpLeft),
-                            Direction::Up) |
-               get_adjacent(get_adjacent(bitboard, Direction::UpRight),
-                            Direction::Up) |
-               get_adjacent(get_adjacent(bitboard, Direction::DownLeft),
-                            Direction::Down) |
-               get_adjacent(get_adjacent(bitboard, Direction::DownRight),
-                            Direction::Down);
+    inline uint64_t get_knight_mask(uint64_t bitboard) {
+        uint64_t mask = 0;
+        while (bitboard) {
+            mask |= knight_move_masks[find_lsb(bitboard)];
+            bitboard &= (bitboard - 1);
+        }
+        return mask;
     }
 
     /**
@@ -539,14 +530,40 @@ namespace brainiac {
     constexpr inline void init_king_tables() {
         for (int i = 0; i < 64; i++) {
             uint64_t bitboard = 1ULL << i;
-            king_move_mask[i] = get_adjacent(bitboard, Direction::Left) |
-                                get_adjacent(bitboard, Direction::Right) |
-                                get_adjacent(bitboard, Direction::Up) |
-                                get_adjacent(bitboard, Direction::Down) |
-                                get_adjacent(bitboard, Direction::UpLeft) |
-                                get_adjacent(bitboard, Direction::UpRight) |
-                                get_adjacent(bitboard, Direction::DownLeft) |
-                                get_adjacent(bitboard, Direction::DownRight);
+            king_move_masks[i] = get_adjacent(bitboard, Direction::Left) |
+                                 get_adjacent(bitboard, Direction::Right) |
+                                 get_adjacent(bitboard, Direction::Up) |
+                                 get_adjacent(bitboard, Direction::Down) |
+                                 get_adjacent(bitboard, Direction::UpLeft) |
+                                 get_adjacent(bitboard, Direction::UpRight) |
+                                 get_adjacent(bitboard, Direction::DownLeft) |
+                                 get_adjacent(bitboard, Direction::DownRight);
+        }
+    }
+
+    /**
+     * Initialize the movement masks for the knight
+     */
+    constexpr inline void init_knight_tables() {
+        for (int i = 0; i < 64; i++) {
+            uint64_t bitboard = 1ULL << i;
+            knight_move_masks[i] =
+                get_adjacent(get_adjacent(bitboard, Direction::UpLeft),
+                             Direction::Left) |
+                get_adjacent(get_adjacent(bitboard, Direction::DownLeft),
+                             Direction::Left) |
+                get_adjacent(get_adjacent(bitboard, Direction::UpRight),
+                             Direction::Right) |
+                get_adjacent(get_adjacent(bitboard, Direction::DownRight),
+                             Direction::Right) |
+                get_adjacent(get_adjacent(bitboard, Direction::UpLeft),
+                             Direction::Up) |
+                get_adjacent(get_adjacent(bitboard, Direction::UpRight),
+                             Direction::Up) |
+                get_adjacent(get_adjacent(bitboard, Direction::DownLeft),
+                             Direction::Down) |
+                get_adjacent(get_adjacent(bitboard, Direction::DownRight),
+                             Direction::Down);
         }
     }
 } // namespace brainiac
