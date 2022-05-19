@@ -207,7 +207,6 @@ namespace brainiac {
             float search = -negamax(board, alpha, beta, depth, opp, move);
             if (search != INFINITY) {
                 value = search;
-                std::cout << depth << " " << value << "\n";
             }
 
             // Search timeout
