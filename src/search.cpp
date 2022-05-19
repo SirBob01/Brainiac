@@ -207,6 +207,7 @@ namespace brainiac {
             float search = -negamax(board, alpha, beta, depth, opp, move);
             if (search != INFINITY) {
                 value = search;
+                std::cout << depth << " " << value << "\n";
             }
 
             // Search timeout
@@ -272,7 +273,7 @@ namespace brainiac {
         float bishop_pair = bishop_pair_score(board);
 
         return 2 * material + 0.2 * placement + 0.5 * mobility +
-               0.25 * pawns_connected + 1.5 * bishop_pair + 0.3 * pawns_passed;
+               0.25 * pawns_connected + 1.5 * bishop_pair + 1.3 * pawns_passed;
     }
 
     Move Search::move(Board &board) {
