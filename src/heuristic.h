@@ -146,6 +146,65 @@ namespace brainiac {
     }
 
     /**
+     * Calculate the heuristic based on the number of passed pawns from each
+     * side (from white's perspective)
+     *
+     * Passed pawns have no opposing pawns ahead of it on its left, current, and
+     * right files
+     */
+    inline float passed_pawn_score(Board &board) {
+        constexpr Piece white_pawn = {PieceType::Pawn, Color::White};
+        constexpr Piece black_pawn = {PieceType::Pawn, Color::Black};
+
+        uint64_t temp;
+        uint64_t white_pawns = board.get_bitboard(white_pawn);
+        uint64_t black_pawns = board.get_bitboard(black_pawn);
+
+        float passed = 0;
+
+        // Calculate passed pawns for white
+        temp = white_pawns;
+        while (temp) {
+            int shift = find_lsb(temp);
+            int rank = shift / 8;
+            int file = shift % 8;
+
+            uint64_t mask = 0;
+            uint64_t file_mask = files[file];
+            if (file > 0) file_mask |= files[file - 1];
+            if (file < 7) file_mask |= files[file + 1];
+            for (int r = rank + 1; r < 8; r++) {
+                mask |= (ranks[r] & file_mask);
+            }
+            if (count_set_bits(mask & black_pawns) == 0) {
+                passed++;
+            }
+            temp &= (temp - 1);
+        }
+
+        // Calculate passed pawns for black
+        temp = black_pawns;
+        while (temp) {
+            int shift = find_lsb(temp);
+            int rank = shift / 8;
+            int file = shift % 8;
+
+            uint64_t mask = 0;
+            uint64_t file_mask = files[file];
+            if (file > 0) file_mask |= files[file - 1];
+            if (file < 7) file_mask |= files[file + 1];
+            for (int r = rank - 1; r >= 0; r--) {
+                mask |= (ranks[r] & file_mask);
+            }
+            if (count_set_bits(mask & white_pawns) == 0) {
+                passed--;
+            }
+            temp &= (temp - 1);
+        }
+        return passed;
+    }
+
+    /**
      * The side with both bishops has a tactical advantage over the side with
      * only one. This is because a bishop only covers EITHER a white or black
      * square ONLY.
