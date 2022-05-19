@@ -21,7 +21,6 @@ To build the engine executable, run
 - Dynamic thinking time for live games
 - Optimize datastructures
 - Mate distance pruning
-- Killer heuristic (move ordering)
 - Passed pawns (evaluation)
 - King safety (evaluation)
 

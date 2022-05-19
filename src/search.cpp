@@ -149,11 +149,14 @@ namespace brainiac {
                     alpha = value;
                 }
                 if (alpha >= beta) {
-                    // Update history heuristic
+                    // Update history heuristic and killer move
                     if (move.flags & MoveFlag::Quiet) {
                         int from = move.from.shift;
                         int to = move.to.shift;
                         _history_heuristic[from][to] += (1 << depth);
+                    }
+                    if (depth >= 0) {
+                        _killer_moves[depth] = move;
                     }
                     break;
                 }
@@ -212,6 +215,11 @@ namespace brainiac {
         // Hashed move
         TableEntry &entry = _transpositions.get(board);
         if (entry.best_move == move) {
+            score += 100000.0f;
+        }
+
+        // Killer move
+        if (depth >= 0 && _killer_moves[depth] == move) {
             score += 1000.0f;
         }
 
@@ -222,21 +230,21 @@ namespace brainiac {
 
         // Evaluate captures based on SEE heuristic
         if (move.flags & MoveFlag::Capture) {
-            score += see_heuristic(board, move) * 10;
+            score += see_heuristic(board, move) * 100;
         }
 
         // Prioritize promotions
         if (move.flags & MoveFlag::QueenPromo) {
-            score += piece_weights[PieceType::Queen];
+            score += piece_weights[PieceType::Queen] * 10;
         }
         if (move.flags & MoveFlag::BishopPromo) {
-            score += piece_weights[PieceType::Bishop];
+            score += piece_weights[PieceType::Bishop] * 10;
         }
         if (move.flags & MoveFlag::RookPromo) {
-            score += piece_weights[PieceType::Rook];
+            score += piece_weights[PieceType::Rook] * 10;
         }
         if (move.flags & MoveFlag::KnightPromo) {
-            score += piece_weights[PieceType::Knight];
+            score += piece_weights[PieceType::Knight] * 10;
         }
 
         return score;
