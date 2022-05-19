@@ -98,53 +98,49 @@ namespace brainiac {
 
             // Prune only after a PV move has been found
             if (value != -INFINITY) {
-                // Futility pruning - static evaluation is so poor, it's not
-                // worth looking into
-                if ((depth == 1 || depth == 2) &&
-                    !(move.flags & LMR_MOVE_FILTER) && !board.is_check()) {
-                    // Make sure that this move does not give check
+                if (depth < 0 && move_scores[i].score < 0) {
+                    // Prune bad captures during quiescence search
+                    continue;
+                } else {
                     board.execute_move(move);
                     bool check_move = board.is_check();
                     board.undo_move();
-                    if (!check_move) {
+
+                    if ((depth == 1 || depth == 2) &&
+                        !(move.flags & LMR_MOVE_FILTER) && !check_move &&
+                        !board.is_check()) {
+                        // Futility pruning - static evaluation is so poor, it's
+                        // not worth looking into
                         float score = evaluate(board);
                         float value = turn == Color::White ? score : -score;
                         if (value + FUTILITY_MARGIN <= alpha) {
                             continue;
                         }
-                    }
-                }
-
-                // Prune bad captures during quiescence search
-                if (depth < 0 && move_scores[i].score < 0) {
-                    continue;
-                }
-
-                // PV search with late move reduction
-                // Tactical moves should not be reduced
-                if (i > 1 && depth > 3 && !board.is_check()) {
-                    // Adjust reduction value
-                    int R = 0;
-                    if (!(move.flags & LMR_MOVE_FILTER)) {
-                        R++;
-                        if (i > 6) {
+                    } else if (depth > 3 && !check_move && !board.is_check()) {
+                        // PV search with late move reduction
+                        // Tactical moves or check moves should not be reduced
+                        int R = 0;
+                        if (!(move.flags & LMR_MOVE_FILTER) && !check_move) {
                             R++;
+                            if (i > 6) {
+                                R++;
+                            }
                         }
-                    }
 
-                    // Search with reduced depth and null-window
-                    board.execute_move(move);
-                    float reduction = -negamax(board,
-                                               -alpha - 1,
-                                               -alpha,
-                                               depth - R - 1,
-                                               opp,
-                                               move);
-                    board.undo_move();
+                        // Search with reduced depth and null-window
+                        board.execute_move(move);
+                        float reduction = -negamax(board,
+                                                   -alpha - 1,
+                                                   -alpha,
+                                                   depth - R - 1,
+                                                   opp,
+                                                   move);
+                        board.undo_move();
 
-                    // This move is proven to be not good, skip it
-                    if (reduction <= alpha || reduction >= beta) {
-                        continue;
+                        // This move is proven to be not good, skip it
+                        if (reduction <= alpha || reduction >= beta) {
+                            continue;
+                        }
                     }
                 }
             }
