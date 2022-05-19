@@ -247,7 +247,7 @@ namespace brainiac {
         /**
          * Get a bitboard
          */
-        uint64_t get_bitboard(Piece &piece);
+        uint64_t get_bitboard(Piece piece);
 
         /**
          * Print the board on the console

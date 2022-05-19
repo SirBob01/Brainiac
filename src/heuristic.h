@@ -117,8 +117,8 @@ namespace brainiac {
      * side (from white's perspective)
      */
     inline float connected_pawn_score(Board &board) {
-        Piece white_pawn = {PieceType::Pawn, Color::White};
-        Piece black_pawn = {PieceType::Pawn, Color::Black};
+        constexpr Piece white_pawn = {PieceType::Pawn, Color::White};
+        constexpr Piece black_pawn = {PieceType::Pawn, Color::Black};
 
         uint64_t white_pawns = board.get_bitboard(white_pawn);
         uint64_t black_pawns = board.get_bitboard(black_pawn);
@@ -153,8 +153,8 @@ namespace brainiac {
      * Losing a bishop means losing control of half the board
      */
     inline float bishop_pair_score(Board &board) {
-        Piece white_bishop = {PieceType::Bishop, Color::White};
-        Piece black_bishop = {PieceType::Bishop, Color::Black};
+        constexpr Piece white_bishop = {PieceType::Bishop, Color::White};
+        constexpr Piece black_bishop = {PieceType::Bishop, Color::Black};
 
         uint64_t white_bishops =
             count_set_bits(board.get_bitboard(white_bishop));

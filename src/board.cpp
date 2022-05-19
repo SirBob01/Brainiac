@@ -782,7 +782,7 @@ namespace brainiac {
 
     Color Board::get_turn() { return _turn; }
 
-    uint64_t Board::get_bitboard(Piece &piece) {
+    uint64_t Board::get_bitboard(Piece piece) {
         return _states[_current_state]._bitboards[piece.get_piece_index()];
     }
 

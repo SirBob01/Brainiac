@@ -59,14 +59,14 @@ namespace brainiac {
         Move best_move;
 
         // Null move reduction
-        if (depth > 4 && !board.is_check()) {
+        if (depth >= 5 && !board.is_check()) {
             int R = depth > 6 ? 4 : 3;
             board.skip_turn();
             float reduction =
                 -negamax(board, -beta, -beta + 1, depth - R - 1, opp, move);
             board.undo_move();
             if (reduction >= beta) {
-                depth -= 3;
+                depth -= 4;
             }
         }
 
