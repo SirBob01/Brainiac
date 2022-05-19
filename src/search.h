@@ -32,6 +32,7 @@ namespace brainiac {
     inline void init() {
         init_rook_tables();
         init_bishop_tables();
+        init_king_tables();
     }
 
     /**
