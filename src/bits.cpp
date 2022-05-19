@@ -3,6 +3,7 @@
 namespace brainiac {
     SlidingMoveTable rook_attack_tables[64] = {};
     SlidingMoveTable bishop_attack_tables[64] = {};
+    uint64_t king_move_mask[64] = {};
 
     void print_bitboard(uint64_t bitboard) {
         std::bitset<64> bitarray(bitboard);

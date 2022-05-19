@@ -124,6 +124,7 @@ namespace brainiac {
      */
     extern SlidingMoveTable rook_attack_tables[64];
     extern SlidingMoveTable bishop_attack_tables[64];
+    extern uint64_t king_move_mask[64];
 
     /**
      * Pre-calculated magic number constants
@@ -319,15 +320,8 @@ namespace brainiac {
      * Get the all possible directions the king can move to from its current
      * position
      */
-    constexpr inline uint64_t get_king_mask(uint64_t bitboard) {
-        return get_adjacent(bitboard, Direction::Left) |
-               get_adjacent(bitboard, Direction::Right) |
-               get_adjacent(bitboard, Direction::Up) |
-               get_adjacent(bitboard, Direction::Down) |
-               get_adjacent(bitboard, Direction::UpLeft) |
-               get_adjacent(bitboard, Direction::UpRight) |
-               get_adjacent(bitboard, Direction::DownLeft) |
-               get_adjacent(bitboard, Direction::DownRight);
+    inline uint64_t get_king_mask(uint64_t bitboard) {
+        return king_move_mask[find_lsb(bitboard)];
     }
 
     /**
@@ -536,6 +530,23 @@ namespace brainiac {
                 table.move_masks[index] =
                     get_bishop_mask_otf(bitboard, blockers);
             }
+        }
+    }
+
+    /**
+     * Initialize the movement masks for the king
+     */
+    constexpr inline void init_king_tables() {
+        for (int i = 0; i < 64; i++) {
+            uint64_t bitboard = 1ULL << i;
+            king_move_mask[i] = get_adjacent(bitboard, Direction::Left) |
+                                get_adjacent(bitboard, Direction::Right) |
+                                get_adjacent(bitboard, Direction::Up) |
+                                get_adjacent(bitboard, Direction::Down) |
+                                get_adjacent(bitboard, Direction::UpLeft) |
+                                get_adjacent(bitboard, Direction::UpRight) |
+                                get_adjacent(bitboard, Direction::DownLeft) |
+                                get_adjacent(bitboard, Direction::DownRight);
         }
     }
 } // namespace brainiac
