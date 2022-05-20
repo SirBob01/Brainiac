@@ -26,13 +26,4 @@ namespace brainiac {
         }
         std::cout << "\n";
     }
-
-    int count_set_bits(uint64_t bitboard) {
-        int count = 0;
-        while (bitboard) {
-            count++;
-            bitboard &= (bitboard - 1);
-        }
-        return count;
-    }
 } // namespace brainiac

@@ -25,9 +25,9 @@ namespace brainiac {
             return std::string({field, rank});
         };
 
-        inline uint64_t get_mask() const { return (1ULL << shift); };
+        constexpr inline uint64_t get_mask() const { return (1ULL << shift); };
 
-        inline bool is_invalid() const { return shift == -1; }
+        constexpr inline bool is_invalid() const { return shift == -1; }
 
         inline bool operator==(Square other) const {
             return shift == other.shift;
@@ -83,7 +83,9 @@ namespace brainiac {
         Square to;
         unsigned flags = MoveFlag::Invalid;
 
-        inline bool is_invalid() const { return flags & MoveFlag::Invalid; };
+        constexpr inline bool is_invalid() const {
+            return flags & MoveFlag::Invalid;
+        };
 
         inline bool operator==(const Move &other) {
             return from == other.from && to == other.to && flags == other.flags;
