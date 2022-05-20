@@ -38,17 +38,16 @@ namespace brainiac {
      * Flags that describe a chess move
      */
     enum MoveFlag {
-        Quiet = 1,
-        Capture = 1 << 1,
-        EnPassant = 1 << 2,
-        PawnAdvance = 1 << 3,
-        PawnDouble = 1 << 4,
-        Castling = 1 << 5,
-        KnightPromo = 1 << 6,
-        QueenPromo = 1 << 7,
-        BishopPromo = 1 << 8,
-        RookPromo = 1 << 9,
-        Invalid = 1 << 10
+        Capture = 1,
+        EnPassant = 1 << 1,
+        PawnAdvance = 1 << 2,
+        PawnDouble = 1 << 3,
+        Castling = 1 << 4,
+        KnightPromo = 1 << 5,
+        QueenPromo = 1 << 6,
+        BishopPromo = 1 << 7,
+        RookPromo = 1 << 8,
+        Invalid = 1 << 9
     };
 
     /**
@@ -64,7 +63,7 @@ namespace brainiac {
     /**
      * Flags for promotions
      */
-    constexpr MoveFlag promotions[4] = {MoveFlag::KnightPromo,
+    constexpr uint64_t promotions[4] = {MoveFlag::KnightPromo,
                                         MoveFlag::QueenPromo,
                                         MoveFlag::BishopPromo,
                                         MoveFlag::RookPromo};
@@ -76,12 +75,22 @@ namespace brainiac {
                                                    Castle::BK | Castle::BQ};
 
     /**
+     * Pawn movement flags
+     */
+    constexpr uint64_t pawn_single_flags = MoveFlag::PawnAdvance;
+    constexpr uint64_t pawn_double_flags =
+        MoveFlag::PawnAdvance | MoveFlag::PawnDouble;
+    constexpr uint64_t pawn_capture_flags = MoveFlag::Capture;
+    constexpr uint64_t en_passant_flags =
+        MoveFlag::Capture | MoveFlag::EnPassant;
+
+    /**
      * Container of a chess move
      */
     struct Move {
         Square from;
         Square to;
-        unsigned flags = MoveFlag::Invalid;
+        uint64_t flags = MoveFlag::Invalid;
 
         constexpr inline bool is_invalid() const {
             return flags & MoveFlag::Invalid;

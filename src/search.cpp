@@ -49,7 +49,7 @@ namespace brainiac {
         } else if (board.is_draw()) {
             return 0;
         } else if ((depth == -MAX_QUIESCENCE_DEPTH) ||
-                   (depth <= 0 && (move.flags & MoveFlag::Quiet))) {
+                   (depth <= 0 && !(move.flags & VOLATILE_MOVE_FLAGS))) {
             float score = evaluate(board);
             return turn == Color::White ? score : -score;
         }
@@ -107,7 +107,7 @@ namespace brainiac {
                     board.undo_move();
 
                     if ((depth == 1 || depth == 2) &&
-                        !(move.flags & LMR_MOVE_FILTER) && !check_move &&
+                        !(move.flags & VOLATILE_MOVE_FLAGS) && !check_move &&
                         !board.is_check()) {
                         // Futility pruning - static evaluation is so poor, it's
                         // not worth looking into
@@ -120,7 +120,8 @@ namespace brainiac {
                         // PV search with late move reduction
                         // Tactical moves or check moves should not be reduced
                         int R = 0;
-                        if (!(move.flags & LMR_MOVE_FILTER) && !check_move) {
+                        if (!(move.flags & VOLATILE_MOVE_FLAGS) &&
+                            !check_move) {
                             R++;
                             if (i > 6) {
                                 R++;
@@ -163,7 +164,7 @@ namespace brainiac {
                 }
                 if (alpha >= beta) {
                     // Update history heuristic and killer move
-                    if (move.flags & MoveFlag::Quiet) {
+                    if (!(move.flags & VOLATILE_MOVE_FLAGS)) {
                         int from = move.from.shift;
                         int to = move.to.shift;
                         _history_heuristic[from][to] += (1 << depth);
@@ -237,7 +238,7 @@ namespace brainiac {
         }
 
         // History heuristic
-        if (move.flags & MoveFlag::Quiet) {
+        if (!(move.flags & VOLATILE_MOVE_FLAGS)) {
             score += _history_heuristic[move.from.shift][move.to.shift];
         }
 
