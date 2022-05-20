@@ -108,86 +108,70 @@ namespace brainiac {
         uint64_t allies = state._bitboards[PieceType::NPieces * 2 + _turn];
         uint64_t enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
         uint64_t all_pieces = allies | enemies;
+        int piece_shift = find_lsb(bitboard);
 
+        // Pre-compute advance, capture, and en-passant masks
+        uint64_t advance_board =
+            get_pawn_advance_mask(bitboard, all_pieces, _turn);
+        uint64_t double_board =
+            get_pawn_double_mask(bitboard, all_pieces, _turn);
+        uint64_t capture_mask = get_pawn_capture_mask(bitboard, _turn);
         uint64_t en_passant_mask = 0;
         if (!state._en_passant_target.is_invalid()) {
             en_passant_mask = state._en_passant_target.get_mask();
         }
 
-        uint64_t advance_board =
-            get_pawn_advance_mask(bitboard, all_pieces, _turn);
+        // Single pawn advance
         while (advance_board) {
             uint64_t move = advance_board & (-advance_board);
-            unsigned flags = MoveFlag::Quiet | MoveFlag::PawnAdvance;
             if (move & end_ranks) {
                 for (int i = 0; i < 4; i++) {
-                    Move moveobj = {find_lsb(bitboard),
+                    Move moveobj = {piece_shift,
                                     find_lsb(move),
-                                    flags | promotions[i]};
+                                    pawn_single_flags | promotions[i]};
                     register_move(moveobj);
                 }
             } else {
-                Move moveobj = {find_lsb(bitboard), find_lsb(move), flags};
+                Move moveobj = {piece_shift, find_lsb(move), pawn_single_flags};
                 register_move(moveobj);
             }
             advance_board &= (advance_board - 1);
         }
 
-        uint64_t double_board =
-            get_pawn_double_mask(bitboard, all_pieces, _turn);
+        // Double pawn advance
         while (double_board) {
             uint64_t move = double_board & (-double_board);
-            unsigned flags =
-                MoveFlag::Quiet | MoveFlag::PawnAdvance | MoveFlag::PawnDouble;
-            if (move & end_ranks) {
-                for (int i = 0; i < 4; i++) {
-                    Move moveobj = {find_lsb(bitboard),
-                                    find_lsb(move),
-                                    flags | promotions[i]};
-                    register_move(moveobj);
-                }
-            } else {
-                Move moveobj = {find_lsb(bitboard), find_lsb(move), flags};
-                register_move(moveobj);
-            }
+            Move moveobj = {piece_shift, find_lsb(move), pawn_double_flags};
+            register_move(moveobj);
             double_board &= (double_board - 1);
         }
 
-        uint64_t capture_board =
-            get_pawn_capture_mask(bitboard, _turn) & enemies;
+        // Regular captures
+        uint64_t capture_board = capture_mask & enemies;
         while (capture_board) {
             uint64_t move = capture_board & (-capture_board);
-            unsigned flags = MoveFlag::Capture;
             if (move & end_ranks) {
                 for (int i = 0; i < 4; i++) {
-                    Move moveobj = {find_lsb(bitboard),
+                    Move moveobj = {piece_shift,
                                     find_lsb(move),
-                                    flags | promotions[i]};
+                                    pawn_capture_flags | promotions[i]};
                     register_move(moveobj);
                 }
             } else {
-                Move moveobj = {find_lsb(bitboard), find_lsb(move), flags};
+                Move moveobj = {piece_shift,
+                                find_lsb(move),
+                                pawn_capture_flags};
                 register_move(moveobj);
             }
             capture_board &= (capture_board - 1);
         }
 
-        uint64_t ep_board =
-            get_pawn_capture_mask(bitboard, _turn) & en_passant_mask;
+        // En-passant captures
+        uint64_t ep_board = capture_mask & en_passant_mask;
         while (ep_board) {
             uint64_t move = ep_board & (-ep_board);
-            unsigned flags = MoveFlag::Capture | MoveFlag::EnPassant;
-            if (move & end_ranks) {
-                for (int i = 0; i < 4; i++) {
-                    Move moveobj = {find_lsb(bitboard),
-                                    find_lsb(move),
-                                    flags | promotions[i]};
-                    register_move(moveobj);
-                }
-            } else {
-                Move moveobj = {find_lsb(bitboard), find_lsb(move), flags};
-                register_move(moveobj);
-            }
+            Move moveobj = {piece_shift, find_lsb(move), en_passant_flags};
+            register_move(moveobj);
             ep_board &= (ep_board - 1);
         }
     }
@@ -195,10 +179,10 @@ namespace brainiac {
     void Board::generate_step_moves(uint64_t bitboard,
                                     bool is_king,
                                     uint64_t (*mask_func)(uint64_t)) {
-        // Generate single step moves (knight, king)
         BoardState &state = _states[_current_state];
         uint64_t allies = state._bitboards[PieceType::NPieces * 2 + _turn];
         uint64_t enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
+        int piece_shift = find_lsb(bitboard);
 
         // King cannot move in range of his attackers
         uint64_t moves = mask_func(bitboard) & ~allies;
@@ -210,17 +194,13 @@ namespace brainiac {
         uint64_t quiet_board = moves & ~enemies;
         while (quiet_board) {
             uint64_t move = quiet_board & (-quiet_board);
-            Move moveobj = {find_lsb(bitboard),
-                            find_lsb(move),
-                            MoveFlag::Quiet};
+            Move moveobj = {piece_shift, find_lsb(move), 0};
             register_move(moveobj);
             quiet_board &= (quiet_board - 1);
         }
         while (capture_board) {
             uint64_t move = capture_board & (-capture_board);
-            Move moveobj = {find_lsb(bitboard),
-                            find_lsb(move),
-                            MoveFlag::Capture};
+            Move moveobj = {piece_shift, find_lsb(move), MoveFlag::Capture};
             register_move(moveobj);
             capture_board &= (capture_board - 1);
         }
@@ -233,6 +213,7 @@ namespace brainiac {
         BoardState &state = _states[_current_state];
         uint64_t allies = state._bitboards[PieceType::NPieces * 2 + _turn];
         uint64_t enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
+        int piece_shift = find_lsb(bitboard);
 
         uint64_t moves = mask_func(bitboard, allies, enemies);
 
@@ -240,17 +221,13 @@ namespace brainiac {
         uint64_t quiet_board = moves & ~enemies;
         while (quiet_board) {
             uint64_t move = quiet_board & (-quiet_board);
-            Move moveobj = {find_lsb(bitboard),
-                            find_lsb(move),
-                            MoveFlag::Quiet};
+            Move moveobj = {piece_shift, find_lsb(move), 0};
             register_move(moveobj);
             quiet_board &= (quiet_board - 1);
         }
         while (capture_board) {
             uint64_t move = capture_board & (-capture_board);
-            Move moveobj = {find_lsb(bitboard),
-                            find_lsb(move),
-                            MoveFlag::Capture};
+            Move moveobj = {piece_shift, find_lsb(move), MoveFlag::Capture};
             register_move(moveobj);
             capture_board &= (capture_board - 1);
         }
@@ -272,7 +249,7 @@ namespace brainiac {
                 get_castling_mask(all_pieces, side) & ~state._attackers;
             if (mask) {
                 Square to(find_lsb(mask));
-                Move move = {from, to, MoveFlag::Quiet | MoveFlag::Castling};
+                Move move = {from, to, MoveFlag::Castling};
                 register_move(move);
             }
             rights &= (rights - 1);

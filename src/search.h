@@ -21,7 +21,10 @@
 namespace brainiac {
     using Time = std::chrono::time_point<std::chrono::steady_clock>;
 
-    const uint64_t LMR_MOVE_FILTER =
+    /**
+     * These types of moves will likely change the evaluation dramatically
+     */
+    constexpr uint64_t VOLATILE_MOVE_FLAGS =
         MoveFlag::Capture | MoveFlag::BishopPromo | MoveFlag::KnightPromo |
         MoveFlag::QueenPromo | MoveFlag::RookPromo | MoveFlag::EnPassant |
         MoveFlag::Castling;
