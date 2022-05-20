@@ -187,7 +187,14 @@ namespace brainiac {
     /**
      * Count the number of set bits on a bitboard
      */
-    int count_set_bits(uint64_t bitboard);
+    constexpr inline int count_set_bits(uint64_t bitboard) {
+        int count = 0;
+        while (bitboard) {
+            count++;
+            bitboard &= (bitboard - 1);
+        }
+        return count;
+    }
 
     /**
      * Vertically flip the bitboard

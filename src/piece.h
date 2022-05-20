@@ -56,11 +56,11 @@ namespace brainiac {
         PieceType type = PieceType::NPieces;
         Color color = Color::Empty;
 
-        inline int get_piece_index() const {
+        constexpr inline int get_piece_index() const {
             return PieceType::NPieces * color + type;
         };
 
-        inline int get_color_index() const {
+        constexpr inline int get_color_index() const {
             return PieceType::NPieces * 2 + color;
         };
 
