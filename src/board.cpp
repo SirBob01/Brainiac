@@ -434,16 +434,6 @@ namespace brainiac {
         return fen;
     }
 
-    int Board::get_material() {
-        BoardState &state = _states[_current_state];
-        return state._material;
-    }
-
-    int Board::get_mobility() {
-        BoardState &state = _states[_current_state];
-        return state._legal_moves.size();
-    }
-
     Piece Board::get_at(const Square &sq) {
         BoardState &state = _states[_current_state];
         uint64_t mask = sq.get_mask();
@@ -671,43 +661,11 @@ namespace brainiac {
         generate_moves();
     }
 
-    void Board::undo_move() {
-        _current_state--;
-
-        _turn = static_cast<Color>(!_turn);
-        if (_turn == Color::Black) {
-            _fullmoves--;
-        }
-    }
-
-    void Board::redo_move() {
-        _current_state++;
-
-        if (_turn == Color::Black) {
-            _fullmoves++;
-        }
-        _turn = static_cast<Color>(!_turn);
-    }
-
-    bool Board::is_initial() { return _current_state == 0; }
-
-    bool Board::is_latest() { return _current_state == _states.size() - 1; }
-
     bool Board::is_check() {
         Piece king = {PieceType::King, _turn};
         BoardState &state = _states[_current_state];
         uint64_t kingbit = state._bitboards[king.get_piece_index()];
         return state._attackers & kingbit;
-    }
-
-    bool Board::is_checkmate() {
-        BoardState &state = _states[_current_state];
-        return state._legal_moves.size() == 0 && is_check();
-    }
-
-    bool Board::is_stalemate() {
-        BoardState &state = _states[_current_state];
-        return state._legal_moves.size() == 0 && !is_check();
     }
 
     bool Board::is_draw() {
@@ -763,32 +721,6 @@ namespace brainiac {
             }
         }
         return {};
-    }
-
-    const std::vector<Move> &Board::get_moves() {
-        BoardState &state = _states[_current_state];
-        return state._legal_moves;
-    }
-
-    int Board::get_halfmoves() {
-        BoardState &state = _states[_current_state];
-        return state._halfmoves;
-    }
-
-    uint8_t Board::get_castling_rights() {
-        BoardState &state = _states[_current_state];
-        return state._castling_rights;
-    }
-
-    Color Board::get_turn() { return _turn; }
-
-    uint64_t Board::get_bitboard(Piece piece) {
-        return _states[_current_state]._bitboards[piece.get_piece_index()];
-    }
-
-    uint64_t Board::get_hash() {
-        BoardState &state = _states[_current_state];
-        return state._hash;
     }
 
     void Board::print() {

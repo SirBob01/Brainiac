@@ -121,13 +121,13 @@ namespace brainiac {
          * Get the material score for the current board state
          * Positive values mean white has more material than black
          */
-        int get_material();
+        inline int get_material() { return _states[_current_state]._material; }
 
         /**
          * Get the mobility score, which is the number of pseudo-legal moves
          * calculated for this turn
          */
-        int get_mobility();
+        inline int get_mobility() { return get_moves().size(); }
 
         /**
          * Get a piece on the board
@@ -169,23 +169,35 @@ namespace brainiac {
          * Return board to the previous state
          * Only perform if board is not in the initial state
          */
-        void undo_move();
+        inline void undo_move() {
+            _current_state--;
+            _turn = static_cast<Color>(!_turn);
+            if (_turn == Color::Black) {
+                _fullmoves--;
+            }
+        }
 
         /**
          * Move board state forward in time
          * Only perform if board is not in the latest state
          */
-        void redo_move();
+        inline void redo_move() {
+            _current_state++;
+            if (_turn == Color::Black) {
+                _fullmoves++;
+            }
+            _turn = static_cast<Color>(!_turn);
+        }
 
         /**
          * Checks if the board is already at the initial state (cannot undo)
          */
-        bool is_initial();
+        inline bool is_initial() { return _current_state == 0; }
 
         /**
          * Checks if the board is already at the latest state (cannot redo)
          */
-        bool is_latest();
+        inline bool is_latest() { return _current_state == _states.size() - 1; }
 
         /**
          * Checks if the current turn's king is in check
@@ -195,12 +207,16 @@ namespace brainiac {
         /**
          * Checks if the current player is in checkmate
          */
-        bool is_checkmate();
+        inline bool is_checkmate() {
+            return get_moves().size() == 0 && is_check();
+        }
 
         /**
          * Checks if the board is in a stalemate
          */
-        bool is_stalemate();
+        inline bool is_stalemate() {
+            return get_moves().size() == 0 && !is_check();
+        }
 
         /**
          * Checks if the game is a draw
@@ -222,32 +238,40 @@ namespace brainiac {
         /**
          * Get all legal moves available to the current player
          */
-        const std::vector<Move> &get_moves();
+        inline const std::vector<Move> &get_moves() {
+            return _states[_current_state]._legal_moves;
+        }
 
         /**
          * Get the current number of halfmoves to enforce the 50-move rule
          */
-        int get_halfmoves();
+        inline int get_halfmoves() {
+            return _states[_current_state]._halfmoves;
+        }
 
         /**
          * Return the bitfield corresponding to castling rights
          */
-        uint8_t get_castling_rights();
+        inline uint8_t get_castling_rights() {
+            return _states[_current_state]._castling_rights;
+        }
 
         /**
          * Get the current turn (either White or Black)
          */
-        Color get_turn();
+        inline Color get_turn() { return _turn; }
 
         /**
          * Get the Zobrist hash of the board
          */
-        uint64_t get_hash();
+        inline uint64_t get_hash() { return _states[_current_state]._hash; }
 
         /**
          * Get a bitboard
          */
-        uint64_t get_bitboard(Piece piece);
+        inline uint64_t get_bitboard(Piece piece) {
+            return _states[_current_state]._bitboards[piece.get_piece_index()];
+        }
 
         /**
          * Print the board on the console
