@@ -298,8 +298,9 @@ namespace brainiac {
         // DEBUGGING - Calculate search time and nodes visited
         Time stop = std::chrono::steady_clock::now();
         auto duration = (stop - start) / SECONDS_TO_NANO;
-        std::cout << _visited << " nodes searched"
-                  << " (" << duration.count() << " s)\n";
+        double nps = _visited / duration.count();
+        std::cout << _visited << " nodes in " << duration.count() << "s ("
+                  << nps << " nodes/s)\n";
         std::cout << best_move.standard_notation() << " | " << best_value
                   << "\n";
         return best_move;
