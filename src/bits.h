@@ -30,14 +30,14 @@ namespace brainiac {
      * Cardinal and ordinal directions on the board
      */
     enum Direction {
-        DownRight = 0,
-        Right = 1,
-        UpRight = 2,
-        Up = 3,
-        UpLeft = 4,
-        Left = 5,
-        DownLeft = 6,
-        Down = 7
+        DownRight,
+        Right,
+        UpRight,
+        Up,
+        UpLeft,
+        Left,
+        DownLeft,
+        Down
     };
 
     /**
@@ -49,25 +49,6 @@ namespace brainiac {
         uint64_t block_mask;
         uint64_t magic;
         uint64_t move_masks[1ULL << 12];
-    };
-
-    /**
-     * Values for calculating adjacent positions using bitwise operations
-     */
-    constexpr int direction_shift[8] = {9, 1, -7, -8, -9, -1, 7, 8};
-
-    /**
-     * Constant bitmasks to eliminate overflowing bits during shift operations
-     */
-    constexpr uint64_t wrap_bitmasks[8] = {
-        0xfefefefefefefe00,
-        0xfefefefefefefefe,
-        0x00fefefefefefefe,
-        0x00ffffffffffffff,
-        0x007f7f7f7f7f7f7f,
-        0x7f7f7f7f7f7f7f7f,
-        0x7f7f7f7f7f7f7f00,
-        0xffffffffffffff00,
     };
 
     /**
@@ -245,19 +226,33 @@ namespace brainiac {
     }
 
     /**
-     * Shift a binary string by an arbitrary amount, negative shifts are right
-     * shifts
-     */
-    constexpr inline uint64_t shift(uint64_t binary, int shift) {
-        return shift < 0 ? binary >> -shift : binary << shift;
-    }
-
-    /**
      * Return a new bitboard with a point adjacent to the binary string in a
      * specific direction
      */
-    constexpr inline uint64_t get_adjacent(uint64_t bitboard, Direction dir) {
-        return shift(bitboard, direction_shift[dir]) & wrap_bitmasks[dir];
+    template <Direction dir>
+    constexpr inline uint64_t get_adjacent(uint64_t bitboard) {
+        if constexpr (dir == Direction::DownRight) {
+            return (bitboard << 9) & 0xfefefefefefefe00;
+        }
+        if constexpr (dir == Direction::Right) {
+            return (bitboard << 1) & 0xfefefefefefefefe;
+        }
+        if constexpr (dir == Direction::UpRight) {
+            return (bitboard >> 7) & 0x00fefefefefefefe;
+        }
+        if constexpr (dir == Direction::Up) {
+            return (bitboard >> 8) & 0x00ffffffffffffff;
+        }
+        if constexpr (dir == Direction::UpLeft) {
+            return (bitboard >> 9) & 0x007f7f7f7f7f7f7f;
+        }
+        if constexpr (dir == Direction::Left) {
+            return (bitboard >> 1) & 0x7f7f7f7f7f7f7f7f;
+        }
+        if constexpr (dir == Direction::DownLeft) {
+            return (bitboard << 7) & 0x7f7f7f7f7f7f7f00;
+        }
+        return (bitboard << 8) & 0xffffffffffffff00;
     }
 
     /**
@@ -351,8 +346,8 @@ namespace brainiac {
     constexpr inline uint64_t
     get_pawn_advance_mask(uint64_t bitboard, uint64_t all_pieces, Color color) {
         return (color == Color::White)
-                   ? get_adjacent(bitboard, Direction::Down) & ~all_pieces
-                   : get_adjacent(bitboard, Direction::Up) & ~all_pieces;
+                   ? get_adjacent<Direction::Down>(bitboard) & ~all_pieces
+                   : get_adjacent<Direction::Up>(bitboard) & ~all_pieces;
     }
 
     /**
@@ -376,10 +371,10 @@ namespace brainiac {
     constexpr inline uint64_t get_pawn_capture_mask(uint64_t bitboard,
                                                     Color color) {
         return (color == Color::White)
-                   ? get_adjacent(bitboard, Direction::DownLeft) |
-                         get_adjacent(bitboard, Direction::DownRight)
-                   : get_adjacent(bitboard, Direction::UpLeft) |
-                         get_adjacent(bitboard, Direction::UpRight);
+                   ? get_adjacent<Direction::DownLeft>(bitboard) |
+                         get_adjacent<Direction::DownRight>(bitboard)
+                   : get_adjacent<Direction::UpLeft>(bitboard) |
+                         get_adjacent<Direction::UpRight>(bitboard);
     }
 
     /**
@@ -537,14 +532,14 @@ namespace brainiac {
     constexpr inline void init_king_tables() {
         for (int i = 0; i < 64; i++) {
             uint64_t bitboard = 1ULL << i;
-            king_move_masks[i] = get_adjacent(bitboard, Direction::Left) |
-                                 get_adjacent(bitboard, Direction::Right) |
-                                 get_adjacent(bitboard, Direction::Up) |
-                                 get_adjacent(bitboard, Direction::Down) |
-                                 get_adjacent(bitboard, Direction::UpLeft) |
-                                 get_adjacent(bitboard, Direction::UpRight) |
-                                 get_adjacent(bitboard, Direction::DownLeft) |
-                                 get_adjacent(bitboard, Direction::DownRight);
+            king_move_masks[i] = get_adjacent<Direction::Left>(bitboard) |
+                                 get_adjacent<Direction::Right>(bitboard) |
+                                 get_adjacent<Direction::Up>(bitboard) |
+                                 get_adjacent<Direction::Down>(bitboard) |
+                                 get_adjacent<Direction::UpLeft>(bitboard) |
+                                 get_adjacent<Direction::UpRight>(bitboard) |
+                                 get_adjacent<Direction::DownLeft>(bitboard) |
+                                 get_adjacent<Direction::DownRight>(bitboard);
         }
     }
 
@@ -555,22 +550,22 @@ namespace brainiac {
         for (int i = 0; i < 64; i++) {
             uint64_t bitboard = 1ULL << i;
             knight_move_masks[i] =
-                get_adjacent(get_adjacent(bitboard, Direction::UpLeft),
-                             Direction::Left) |
-                get_adjacent(get_adjacent(bitboard, Direction::DownLeft),
-                             Direction::Left) |
-                get_adjacent(get_adjacent(bitboard, Direction::UpRight),
-                             Direction::Right) |
-                get_adjacent(get_adjacent(bitboard, Direction::DownRight),
-                             Direction::Right) |
-                get_adjacent(get_adjacent(bitboard, Direction::UpLeft),
-                             Direction::Up) |
-                get_adjacent(get_adjacent(bitboard, Direction::UpRight),
-                             Direction::Up) |
-                get_adjacent(get_adjacent(bitboard, Direction::DownLeft),
-                             Direction::Down) |
-                get_adjacent(get_adjacent(bitboard, Direction::DownRight),
-                             Direction::Down);
+                get_adjacent<Direction::Left>(
+                    get_adjacent<Direction::UpLeft>(bitboard)) |
+                get_adjacent<Direction::Left>(
+                    get_adjacent<Direction::DownLeft>(bitboard)) |
+                get_adjacent<Direction::Right>(
+                    get_adjacent<Direction::UpRight>(bitboard)) |
+                get_adjacent<Direction::Right>(
+                    get_adjacent<Direction::DownRight>(bitboard)) |
+                get_adjacent<Direction::Up>(
+                    get_adjacent<Direction::UpLeft>(bitboard)) |
+                get_adjacent<Direction::Up>(
+                    get_adjacent<Direction::UpRight>(bitboard)) |
+                get_adjacent<Direction::Down>(
+                    get_adjacent<Direction::DownLeft>(bitboard)) |
+                get_adjacent<Direction::Down>(
+                    get_adjacent<Direction::DownRight>(bitboard));
         }
     }
 } // namespace brainiac
