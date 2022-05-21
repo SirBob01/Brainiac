@@ -20,8 +20,8 @@ namespace brainiac {
 
     uint64_t zobrist_hash(Color turn,
                           uint64_t *bitboards,
-                          uint8_t castling_rights,
-                          const Square &en_passant) {
+                          CastlingFlagSet castling_rights,
+                          const Square en_passant) {
         // Silently perform initialization
         if (piece_bitstrings.empty()) {
             zobrist_init();
@@ -34,7 +34,7 @@ namespace brainiac {
             for (int type = 0; type < PieceType::NPieces; type++) {
                 Piece piece = {static_cast<PieceType>(type),
                                static_cast<Color>(color)};
-                int index = piece.get_piece_index();
+                int index = piece.get_index();
                 uint64_t bitboard = bitboards[index];
                 for (int i = 0; i < 64; i++) {
                     if (bitboard & 1) {
@@ -62,8 +62,8 @@ namespace brainiac {
         }
 
         // En passant information
-        if (!en_passant.is_invalid()) {
-            r ^= en_passant_bitstrings[en_passant.shift % 8];
+        if (!is_square_invalid(en_passant)) {
+            r ^= en_passant_bitstrings[en_passant % 8];
         }
         return r;
     }

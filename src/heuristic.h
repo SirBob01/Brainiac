@@ -234,8 +234,8 @@ namespace brainiac {
      * Calculate the MVV-LVA heuristic of the board
      */
     inline float mvv_lva_heuristic(Board &board, const Move &move) {
-        Piece attacker = board.get_at(move.from);
-        Piece victim = board.get_at(move.to);
+        Piece attacker = board.get_at(move.get_from());
+        Piece victim = board.get_at(move.get_to());
 
         float mvv = piece_weights[victim.type];
         float lva = piece_weights[attacker.type];
@@ -245,20 +245,20 @@ namespace brainiac {
     /**
      * Calculate the static exchange evaluation for a square
      */
-    inline int static_exchange_evaluation(Board &board, const Square &square) {
+    inline int static_exchange_evaluation(Board &board, const Square square) {
         int value = 0;
         const std::vector<Move> &moves = board.get_moves();
 
         Piece victim = board.get_at(square);
-        int victim_value = std::fabs(piece_weights[victim.get_piece_index()]);
+        int victim_value = std::fabs(piece_weights[victim.get_index()]);
 
         Move best_move;
         float min_value = INFINITY;
         for (const Move &move : moves) {
-            if (move.flags & MoveFlag::Capture) {
-                Piece attacker = board.get_at(move.from);
+            if (move.get_flags() & MoveFlag::Capture) {
+                Piece attacker = board.get_at(move.get_from());
                 float attacker_value =
-                    std::fabs(piece_weights[attacker.get_piece_index()]);
+                    std::fabs(piece_weights[attacker.get_index()]);
                 if (attacker_value < min_value) {
                     min_value = attacker_value;
                 }
@@ -267,7 +267,7 @@ namespace brainiac {
         }
 
         if (!best_move.is_invalid()) {
-            board.execute_move(best_move);
+            board.make_move(best_move);
             int see = static_exchange_evaluation(board, square);
             value = std::max(0, victim_value - see);
             board.undo_move();
@@ -279,10 +279,10 @@ namespace brainiac {
      * Calculate the resulting SEE heuristic after performing a capture move
      */
     inline float see_heuristic(Board &board, const Move &move) {
-        Piece victim = board.get_at(move.to);
-        float value = piece_weights[victim.get_piece_index()];
-        board.execute_move(move);
-        value -= static_exchange_evaluation(board, move.to);
+        Piece victim = board.get_at(move.get_to());
+        float value = piece_weights[victim.get_index()];
+        board.make_move(move);
+        value -= static_exchange_evaluation(board, move.get_to());
         board.undo_move();
         return value;
     }

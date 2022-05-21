@@ -6,7 +6,11 @@
 
 namespace brainiac::util {
     /**
-     * Tokenize a string by splitting on a delimiter.
+     * @brief Tokenize a string by splitting on a delimiter
+     *
+     * @param base String to be split
+     * @param delimiter Delimiter character
+     * @return std::vector<std::string> List of tokens
      */
     std::vector<std::string> tokenize(std::string base, char delimiter);
 } // namespace brainiac::util

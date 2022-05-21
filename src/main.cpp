@@ -11,7 +11,7 @@ uint64_t perft(brainiac::Board &b, int depth, int max_depth, bool verbose) {
         return moves.size();
     }
     for (auto &move : moves) {
-        b.execute_move(move);
+        b.make_move(move);
         uint64_t children = perft(b, depth - 1, max_depth, verbose);
         b.undo_move();
         if (depth == max_depth && verbose) {
@@ -79,11 +79,11 @@ void debug_command(
             if (move_input.length() == 5) {
                 promotion = move_input[4];
             }
-            move = b.create_move(brainiac::Square(from),
-                                 brainiac::Square(to),
+            move = b.create_move(brainiac::string_to_square(from),
+                                 brainiac::string_to_square(to),
                                  promotion);
         }
-        b.execute_move(move);
+        b.make_move(move);
         b.print();
         std::cout << b.generate_fen() << "\n";
         move = {};
@@ -119,7 +119,7 @@ void play_bot(brainiac::Color player_color) {
             std::cout << "Check!\n";
         }
         if (b.get_turn() != player_color) {
-            b.execute_move(bot.move(b));
+            b.make_move(bot.move(b));
         } else {
             while (move.is_invalid()) {
                 std::cout << "Enter a move> ";
@@ -148,13 +148,13 @@ void play_bot(brainiac::Color player_color) {
                     if (move_input.length() == 5) {
                         promotion = move_input[4];
                     }
-                    move = b.create_move(brainiac::Square(from),
-                                         brainiac::Square(to),
+                    move = b.create_move(brainiac::string_to_square(from),
+                                         brainiac::string_to_square(to),
                                          promotion);
                 }
             }
             if (!move.is_invalid()) {
-                b.execute_move(move);
+                b.make_move(move);
                 move = {};
             }
         }
@@ -202,13 +202,13 @@ void play_command() {
                 if (move_input.length() == 5) {
                     promotion = move_input[4];
                 }
-                move = b.create_move(brainiac::Square(from),
-                                     brainiac::Square(to),
+                move = b.create_move(brainiac::string_to_square(from),
+                                     brainiac::string_to_square(to),
                                      promotion);
             }
         }
         if (!move.is_invalid()) {
-            b.execute_move(move);
+            b.make_move(move);
             move = {};
         }
     }
