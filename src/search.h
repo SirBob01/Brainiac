@@ -24,7 +24,7 @@ namespace brainiac {
     /**
      * These types of moves will likely change the evaluation dramatically
      */
-    constexpr uint64_t VOLATILE_MOVE_FLAGS =
+    constexpr MoveFlagSet VOLATILE_MOVE_FLAGS =
         MoveFlag::Capture | MoveFlag::BishopPromo | MoveFlag::KnightPromo |
         MoveFlag::QueenPromo | MoveFlag::RookPromo | MoveFlag::EnPassant |
         MoveFlag::Castling;
@@ -63,7 +63,7 @@ namespace brainiac {
             Move move;
             float score;
 
-            MoveScore() : move({}), score(-INFINITY){};
+            MoveScore() : move(), score(-INFINITY){};
 
             MoveScore(const Move &move, float score) :
                 move(move), score(score){};

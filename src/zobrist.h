@@ -11,7 +11,8 @@
 
 namespace brainiac {
     /**
-     * Bitstrings
+     * @brief Zobrist bitstrings
+     *
      */
     inline std::vector<uint64_t> piece_bitstrings;
     inline std::vector<uint64_t> castling_bitstrings;
@@ -19,26 +20,35 @@ namespace brainiac {
     inline uint64_t turn_bitstring;
 
     /**
-     * Inialize the Zobrist bitstrings
+     * @brief Inialize the Zobrist bitstrings
+     *
      */
     void zobrist_init();
 
     /**
-     * Generate a Zobrist hash for a given board
+     * @brief Generate a zobrist hash for a board
+     *
+     * @param turn Current turn
+     * @param bitboards Array of bitboards
+     * @param castling_rights Castling rights
+     * @param en_passant En passant square
+     * @return uint64_t Hash
      */
     uint64_t zobrist_hash(Color turn,
                           uint64_t *bitboards,
-                          uint8_t castling_rights,
-                          const Square &en_passant);
+                          CastlingFlagSet castling_rights,
+                          const Square en_passant);
 
     /**
-     * Get the bitstring associated with a piece at a square
+     * @brief Get the zobrist bitstring associated with a piece at a square
+     *
+     * @param piece
+     * @param square
+     * @return uint64_t
      */
-    inline uint64_t zobrist_bitstring(const Piece &piece,
-                                      const Square &square) {
-        int piece_index = piece.get_piece_index();
-        return piece_bitstrings[(square.shift * PieceType::NPieces * 2) +
-                                piece_index];
+    inline uint64_t zobrist_bitstring(const Piece &piece, const Square square) {
+        return piece_bitstrings[(square * PieceType::NPieces * 2) +
+                                piece.get_index()];
     }
 } // namespace brainiac
 

@@ -23,7 +23,7 @@ namespace brainiac {
         uint64_t _bitboards[14] = {0};
 
         // qkQK (from most to least significant bit)
-        uint8_t _castling_rights;
+        CastlingFlagSet _castling_rights = 0;
         Square _en_passant_target;
 
         // Unlike fullmoves, halfmoves depends on state of the board (pawn
@@ -132,12 +132,12 @@ namespace brainiac {
         /**
          * Get a piece on the board
          */
-        Piece get_at(const Square &sq);
+        Piece get_at(const Square sq);
 
         /**
          * Set a piece on the board
          */
-        void set_at(const Square &sq, const Piece &piece);
+        void set_at(const Square sq, const Piece &piece);
 
         /**
          * Get a piece on the board by coordinates
@@ -152,7 +152,7 @@ namespace brainiac {
         /**
          * Clear a square on the board
          */
-        void clear_at(const Square &sq);
+        void clear_at(const Square sq);
 
         /**
          * Perform a null move, skipping the current turn
@@ -163,7 +163,7 @@ namespace brainiac {
          * Execute a move and update internal state
          * Assumes move is legal
          */
-        void execute_move(const Move &move);
+        void make_move(const Move &move);
 
         /**
          * Return board to the previous state
@@ -228,7 +228,7 @@ namespace brainiac {
          * Used to validate move positions from user input
          */
         Move
-        create_move(const Square &from, const Square &to, char promotion = 0);
+        create_move(const Square from, const Square to, char promotion = 0);
 
         /**
          * Generate a valid chess move given a standard notation string
@@ -270,7 +270,7 @@ namespace brainiac {
          * Get a bitboard
          */
         inline uint64_t get_bitboard(Piece piece) {
-            return _states[_current_state]._bitboards[piece.get_piece_index()];
+            return _states[_current_state]._bitboards[piece.get_index()];
         }
 
         /**

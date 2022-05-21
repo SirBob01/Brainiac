@@ -4,6 +4,39 @@
 #include <cassert>
 
 namespace brainiac {
+    /**
+     * @brief ASCII characters for each piece (white - black)
+     *
+     */
+    static const char *piece_chars = "KPRNBQkprnbq";
+
+    /**
+     * @brief Unicode to visualize a piece on the terminal (white - black)
+     *
+     */
+    static const char *piece_icons[] = {"\u2654",
+                                        "\u2659",
+                                        "\u2656",
+                                        "\u2658",
+                                        "\u2657",
+                                        "\u2655",
+                                        "\u265A",
+                                        "\u265F",
+                                        "\u265C",
+                                        "\u265E",
+                                        "\u265D",
+                                        "\u265B"};
+
+    /**
+     * @brief Material weight of each piece type
+     *
+     */
+    constexpr int piece_weights[] = {4, 1, 5, 3, 3, 9, -4, -1, -5, -3, -3, -9};
+
+    /**
+     * @brief Enumerates the types of a piece
+     *
+     */
     enum PieceType {
         King = 0,
         Pawn = 1,
@@ -14,65 +47,57 @@ namespace brainiac {
         NPieces = 6
     };
 
+    /**
+     * @brief Enumerates the colors (and empty)
+     *
+     */
     enum Color { White = 0, Black = 1, Empty = 2 };
 
-    static const char *PieceChars = "KPRNBQkprnbq";
-    static const char *PieceDisplay[] = {"\u2654",
-                                         "\u2659",
-                                         "\u2656",
-                                         "\u2658",
-                                         "\u2657",
-                                         "\u2655",
-                                         "\u265A",
-                                         "\u265F",
-                                         "\u265C",
-                                         "\u265E",
-                                         "\u265D",
-                                         "\u265B"};
-
     /**
-     * Calculate the material score of the board state
-     */
-    constexpr int piece_weights[] = {
-        4,
-        1,
-        5,
-        3,
-        3,
-        9, // White pieces
-        -4,
-        -1,
-        -5,
-        -3,
-        -3,
-        -9 // Black pieces
-    };
-
-    /**
-     * Each piece uniquely indexes a bitboard
+     * @brief A piece on the board
+     *
      */
     struct Piece {
-        // Default empty square
         PieceType type = PieceType::NPieces;
         Color color = Color::Empty;
 
-        constexpr inline int get_piece_index() const {
-            return PieceType::NPieces * color + type;
+        /**
+         * @brief Get the index of this piece
+         *
+         * @return constexpr int
+         */
+        constexpr inline int get_index() const {
+            return color * PieceType::NPieces + type;
         };
 
-        constexpr inline int get_color_index() const {
-            return PieceType::NPieces * 2 + color;
-        };
+        /**
+         * @brief Get the material weight of this piece
+         *
+         * @return constexpr int Material weight
+         */
+        constexpr inline int get_weight() { return piece_weights[get_index()]; }
 
-        inline const char *get_display() const {
-            return PieceDisplay[get_piece_index()];
-        }
+        /**
+         * @brief Get the icon of this piece
+         *
+         * @return const char* Icon unicode character
+         */
+        inline const char *get_icon() const { return piece_icons[get_index()]; }
 
-        inline const char get_char() const {
-            return PieceChars[get_piece_index()];
-        }
+        /**
+         * @brief Get the ASCII character of this piece
+         *
+         * @return const char ASCII code
+         */
+        inline const char get_char() const { return piece_chars[get_index()]; }
 
-        inline bool is_empty() const { return color == Color::Empty; }
+        /**
+         * @brief Test if this piece is empty (invalid)
+         *
+         * @return true
+         * @return false
+         */
+        constexpr inline bool is_empty() const { return color == Color::Empty; }
     };
 } // namespace brainiac
 

@@ -19,16 +19,16 @@ namespace brainiac {
                 col += c - '0';
             } else {
                 int char_idx = 0;
-                while (PieceChars[char_idx] != c) {
+                while (piece_chars[char_idx] != c) {
                     char_idx++;
                 }
                 Square sq = Square(row * 8 + col);
                 PieceType type =
                     static_cast<PieceType>(char_idx % PieceType::NPieces);
                 Color color = static_cast<Color>(char_idx / PieceType::NPieces);
-                set_at(sq, {type, color});
-                state._material +=
-                    piece_weights[(color * PieceType::NPieces) + type];
+                Piece piece = {type, color};
+                set_at(sq, piece);
+                state._material += piece.get_weight();
                 col++;
             }
         }
@@ -43,7 +43,7 @@ namespace brainiac {
         }
 
         if (fields[3].length() == 2) {
-            state._en_passant_target = Square(fields[3]);
+            state._en_passant_target = string_to_square(fields[3]);
         }
         state._halfmoves = stoi(fields[4]);
         _fullmoves = stoi(fields[5]);
@@ -61,37 +61,44 @@ namespace brainiac {
     bool Board::is_legal(Move &move) {
         Piece king = {PieceType::King, _turn};
         BoardState &state = _states[_current_state];
-        uint64_t kingbit = state._bitboards[king.get_piece_index()];
-        uint64_t from = move.from.get_mask();
-        uint64_t to = move.to.get_mask();
+        uint64_t kingbit = state._bitboards[king.get_index()];
+
+        Square from = move.get_from();
+        Square to = move.get_to();
+        MoveFlagSet flags = move.get_flags();
+
+        uint64_t from_mask = get_square_mask(from);
+        uint64_t to_mask = get_square_mask(to);
 
         // Handle en passant
-        if (move.flags & MoveFlag::EnPassant) {
-            int rankd = move.to.shift - move.from.shift;
+        if (flags & MoveFlag::EnPassant) {
+            int rankd = to - from;
             int dir = (rankd > 0) - (rankd < 0);
-            Square target_pawn(state._en_passant_target.shift - (dir * 8));
+            Square target_pawn(state._en_passant_target - (dir * 8));
 
-            return (get_attackers(to, from, target_pawn.get_mask()) &
+            return (get_attackers(to_mask,
+                                  from_mask,
+                                  get_square_mask(target_pawn)) &
                     kingbit) == 0;
         }
 
         // Handle castling
-        if (move.flags & MoveFlag::Castling) {
-            int rankd = move.to.shift - move.from.shift;
+        if (flags & MoveFlag::Castling) {
+            int rankd = to - from;
             int dir = (rankd > 0) - (rankd < 0);
-            Square pass_through(move.to.shift - dir);
-            if ((from & state._attackers) ||
-                (state._attackers & pass_through.get_mask()) ||
-                (to & state._attackers)) {
+            Square pass_through(to - dir);
+            if ((from_mask & state._attackers) ||
+                (state._attackers & get_square_mask(pass_through)) ||
+                (to_mask & state._attackers)) {
                 return false;
             }
             return true;
         }
 
         // Attacked squares after move has been made
-        uint64_t new_attackers = get_attackers(to, from);
-        if (from & kingbit) {
-            return (new_attackers & to) == 0;
+        uint64_t new_attackers = get_attackers(to_mask, from_mask);
+        if (from_mask & kingbit) {
+            return (new_attackers & to_mask) == 0;
         }
         return (new_attackers & kingbit) == 0;
     }
@@ -108,7 +115,7 @@ namespace brainiac {
         uint64_t allies = state._bitboards[PieceType::NPieces * 2 + _turn];
         uint64_t enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
         uint64_t all_pieces = allies | enemies;
-        int piece_shift = find_lsb(bitboard);
+        uint32_t piece_shift = find_lsb(bitboard);
 
         // Pre-compute advance, capture, and en-passant masks
         uint64_t advance_board =
@@ -117,8 +124,8 @@ namespace brainiac {
             get_pawn_double_mask(bitboard, all_pieces, _turn);
         uint64_t capture_mask = get_pawn_capture_mask(bitboard, _turn);
         uint64_t en_passant_mask = 0;
-        if (!state._en_passant_target.is_invalid()) {
-            en_passant_mask = state._en_passant_target.get_mask();
+        if (!is_square_invalid(state._en_passant_target)) {
+            en_passant_mask = get_square_mask(state._en_passant_target);
         }
 
         // Single pawn advance
@@ -182,7 +189,7 @@ namespace brainiac {
         BoardState &state = _states[_current_state];
         uint64_t allies = state._bitboards[PieceType::NPieces * 2 + _turn];
         uint64_t enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
-        int piece_shift = find_lsb(bitboard);
+        uint32_t piece_shift = find_lsb(bitboard);
 
         // King cannot move in range of his attackers
         uint64_t moves = mask_func(bitboard) & ~allies;
@@ -213,7 +220,7 @@ namespace brainiac {
         BoardState &state = _states[_current_state];
         uint64_t allies = state._bitboards[PieceType::NPieces * 2 + _turn];
         uint64_t enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
-        int piece_shift = find_lsb(bitboard);
+        uint32_t piece_shift = find_lsb(bitboard);
 
         uint64_t moves = mask_func(bitboard, allies, enemies);
 
@@ -271,13 +278,13 @@ namespace brainiac {
         uint64_t target_squares =
             (state._bitboards[PieceType::NPieces * 2 + _turn] |
              allies_include) &
-            ~state._bitboards[king.get_piece_index()] & ~allies_exclude;
+            ~state._bitboards[king.get_index()] & ~allies_exclude;
 
         uint64_t attacked = 0;
         for (int type = 0; type < PieceType::NPieces; type++) {
             Piece piece = {static_cast<PieceType>(type), opponent};
             uint64_t bitboard =
-                state._bitboards[piece.get_piece_index()] & source_mask;
+                state._bitboards[piece.get_index()] & source_mask;
 
             switch (piece.type) {
             case PieceType::Pawn:
@@ -323,7 +330,7 @@ namespace brainiac {
         state._legal_moves.clear();
         for (int type = 0; type < PieceType::NPieces; type++) {
             Piece piece = {static_cast<PieceType>(type), _turn};
-            uint64_t bitboard = state._bitboards[piece.get_piece_index()];
+            uint64_t bitboard = state._bitboards[piece.get_index()];
             while (bitboard) {
                 uint64_t unit = bitboard & (-bitboard);
                 switch (type) {
@@ -397,11 +404,11 @@ namespace brainiac {
         if (castling_rights.length() == 0) castling_rights = "-";
         fen += " " + castling_rights;
 
-        if (state._en_passant_target.is_invalid()) {
+        if (is_square_invalid(state._en_passant_target)) {
             fen += " -";
         } else {
             fen += " ";
-            fen += state._en_passant_target.standard_notation();
+            fen += square_to_string(state._en_passant_target);
         }
 
         fen += " ";
@@ -411,9 +418,9 @@ namespace brainiac {
         return fen;
     }
 
-    Piece Board::get_at(const Square &sq) {
+    Piece Board::get_at(const Square sq) {
         BoardState &state = _states[_current_state];
-        uint64_t mask = sq.get_mask();
+        uint64_t mask = get_square_mask(sq);
         for (int idx = 0; idx < 12; idx++) {
             if (state._bitboards[idx] & mask) {
                 PieceType type =
@@ -425,13 +432,13 @@ namespace brainiac {
         return {};
     }
 
-    void Board::set_at(const Square &sq, const Piece &piece) {
+    void Board::set_at(const Square sq, const Piece &piece) {
         clear_at(sq);
-        uint64_t mask = sq.get_mask();
+        uint64_t mask = get_square_mask(sq);
 
         BoardState &state = _states[_current_state];
-        state._bitboards[piece.get_color_index()] |= mask;
-        state._bitboards[piece.get_piece_index()] |= mask;
+        state._bitboards[2 * PieceType::NPieces + piece.color] |= mask;
+        state._bitboards[piece.get_index()] |= mask;
     }
 
     Piece Board::get_at_coords(int row, int col) {
@@ -442,15 +449,15 @@ namespace brainiac {
         set_at(Square(row * 8 + col), piece);
     }
 
-    void Board::clear_at(const Square &sq) {
+    void Board::clear_at(const Square sq) {
         // Clear all bitboards at this Square
         BoardState &state = _states[_current_state];
-        uint64_t mask = ~(sq.get_mask());
+        uint64_t mask = ~(get_square_mask(sq));
         state._bitboards[12] &= mask;
         state._bitboards[13] &= mask;
 
         for (uint8_t piece = 0; piece < 14; piece++) {
-            if ((state._bitboards[piece] >> sq.shift) & 1ULL) {
+            if (state._bitboards[piece] & get_square_mask(sq)) {
                 state._bitboards[piece] &= mask;
                 break;
             }
@@ -471,15 +478,19 @@ namespace brainiac {
         generate_moves();
     }
 
-    void Board::execute_move(const Move &move) {
+    void Board::make_move(const Move &move) {
         BoardState &state = push_state();
 
-        Piece piece = get_at(move.from);
-        Piece target = get_at(move.to);
+        Square from = move.get_from();
+        Square to = move.get_to();
+        MoveFlagSet flags = move.get_flags();
+
+        Piece piece = get_at(from);
+        Piece target = get_at(to);
 
         // Update material if move was a capture
         if (!target.is_empty()) {
-            state._material -= piece_weights[target.get_piece_index()];
+            state._material -= piece_weights[target.get_index()];
         }
 
         // Unset castling flags if relevant pieces were moved
@@ -503,7 +514,7 @@ namespace brainiac {
                 }
                 state._castling_rights &= ~(king_side | queen_side);
             } else if (piece.type == PieceType::Rook) {
-                uint64_t mask = move.from.get_mask();
+                uint64_t mask = get_square_mask(from);
                 if (mask & fileA) {
                     if (state._castling_rights & queen_side) {
                         state._hash ^=
@@ -521,7 +532,7 @@ namespace brainiac {
 
         // Unset castling opponent flags if pieces were captured
         if (target.type == PieceType::Rook) {
-            uint64_t mask = move.to.get_mask();
+            uint64_t mask = get_square_mask(to);
             uint64_t rank = (_turn == Color::White) ? rank8 : rank1;
             if (mask & fileA & rank) {
                 if (state._castling_rights & opp_queen_side) {
@@ -538,42 +549,42 @@ namespace brainiac {
         }
 
         // Move to target square and handle promotions
-        clear_at(move.from);
-        state._hash ^= zobrist_bitstring(piece, move.from);
+        clear_at(from);
+        state._hash ^= zobrist_bitstring(piece, from);
         if (!target.is_empty()) {
-            state._hash ^= zobrist_bitstring(target, move.to);
+            state._hash ^= zobrist_bitstring(target, to);
         }
         Piece promotion;
-        if (move.flags & MoveFlag::BishopPromo) {
+        if (flags & MoveFlag::BishopPromo) {
             promotion = {PieceType::Bishop, _turn};
-            set_at(move.to, promotion);
-            state._hash ^= zobrist_bitstring(promotion, move.to);
-        } else if (move.flags & MoveFlag::RookPromo) {
+            set_at(to, promotion);
+            state._hash ^= zobrist_bitstring(promotion, to);
+        } else if (flags & MoveFlag::RookPromo) {
             promotion = {PieceType::Rook, _turn};
-            set_at(move.to, promotion);
-            state._hash ^= zobrist_bitstring(promotion, move.to);
-        } else if (move.flags & MoveFlag::KnightPromo) {
+            set_at(to, promotion);
+            state._hash ^= zobrist_bitstring(promotion, to);
+        } else if (flags & MoveFlag::KnightPromo) {
             promotion = {PieceType::Knight, _turn};
-            set_at(move.to, promotion);
-            state._hash ^= zobrist_bitstring(promotion, move.to);
-        } else if (move.flags & MoveFlag::QueenPromo) {
+            set_at(to, promotion);
+            state._hash ^= zobrist_bitstring(promotion, to);
+        } else if (flags & MoveFlag::QueenPromo) {
             promotion = {PieceType::Queen, _turn};
-            set_at(move.to, promotion);
-            state._hash ^= zobrist_bitstring(promotion, move.to);
+            set_at(to, promotion);
+            state._hash ^= zobrist_bitstring(promotion, to);
         } else {
-            set_at(move.to, piece);
-            state._hash ^= zobrist_bitstring(piece, move.to);
+            set_at(to, piece);
+            state._hash ^= zobrist_bitstring(piece, to);
         }
 
         // Move rook if castling
-        if (move.flags & MoveFlag::Castling) {
-            int rankd = move.to.shift - move.from.shift;
+        if (flags & MoveFlag::Castling) {
+            int rankd = to - from;
             int dir = (rankd > 0) - (rankd < 0);
             Piece rook = {PieceType::Rook, _turn};
             uint64_t rook_rank = (_turn == Color::Black) ? rank8 : rank1;
             uint64_t rook_board =
-                state._bitboards[rook.get_piece_index()] & rook_rank;
-            Square target(move.to.shift - dir);
+                state._bitboards[rook.get_index()] & rook_rank;
+            Square target(to - dir);
             if (rankd < 0) {
                 rook_board &= fileA;
             } else {
@@ -588,42 +599,38 @@ namespace brainiac {
         }
 
         // Check for en passant capture
-        if (move.flags & MoveFlag::EnPassant) {
+        if (flags & MoveFlag::EnPassant) {
             // Clear the square of the captured pawn
-            int rankd = move.to.shift - move.from.shift;
+            int rankd = to - from;
 
             // One rank up or one rank down depending on current player
             int dir = (rankd > 0) - (rankd < 0);
             Square en_passant_square =
-                Square(state._en_passant_target.shift - (dir * 8));
+                Square(state._en_passant_target - (dir * 8));
             Piece en_passant_piece = get_at(en_passant_square);
             clear_at(en_passant_square);
 
             state._hash ^=
                 zobrist_bitstring(en_passant_piece, en_passant_square);
-            state._hash ^=
-                en_passant_bitstrings[state._en_passant_target.shift % 8];
+            state._hash ^= en_passant_bitstrings[state._en_passant_target % 8];
             state._en_passant_target = Square();
         }
 
         // Update en passant position if pawn advanced two ranks
-        if (!state._en_passant_target.is_invalid()) {
-            state._hash ^=
-                en_passant_bitstrings[state._en_passant_target.shift % 8];
+        if (!is_square_invalid(state._en_passant_target)) {
+            state._hash ^= en_passant_bitstrings[state._en_passant_target % 8];
         }
-        if (move.flags & MoveFlag::PawnDouble) {
-            state._en_passant_target =
-                Square(move.from.shift + (move.to.shift - move.from.shift) / 2);
-            state._hash ^=
-                en_passant_bitstrings[state._en_passant_target.shift % 8];
+        if (flags & MoveFlag::PawnDouble) {
+            state._en_passant_target = Square(from + (to - from) / 2);
+            state._hash ^= en_passant_bitstrings[state._en_passant_target % 8];
         } else {
             state._en_passant_target = Square();
         }
 
         // Reset halfmove counter if piece was pawn advance or move was a
         // capture
-        if (move.flags & (MoveFlag::PawnAdvance | MoveFlag::PawnDouble |
-                          MoveFlag::EnPassant | MoveFlag::Capture)) {
+        if (flags & (MoveFlag::PawnAdvance | MoveFlag::PawnDouble |
+                     MoveFlag::EnPassant | MoveFlag::Capture)) {
             state._halfmoves = 0;
         }
 
@@ -641,7 +648,7 @@ namespace brainiac {
     bool Board::is_check() {
         Piece king = {PieceType::King, _turn};
         BoardState &state = _states[_current_state];
-        uint64_t kingbit = state._bitboards[king.get_piece_index()];
+        uint64_t kingbit = state._bitboards[king.get_index()];
         return state._attackers & kingbit;
     }
 
@@ -658,25 +665,28 @@ namespace brainiac {
     }
 
     Move
-    Board::create_move(const Square &from, const Square &to, char promotion) {
+    Board::create_move(const Square from, const Square to, char promotion) {
         BoardState &state = _states[_current_state];
         for (auto &move : state._legal_moves) {
-            if (move.from == from && move.to == to) {
-                if (move.flags &
-                    (MoveFlag::RookPromo | MoveFlag::KnightPromo |
-                     MoveFlag::BishopPromo | MoveFlag::QueenPromo)) {
+            Square move_from = move.get_from();
+            Square move_to = move.get_to();
+            MoveFlagSet flags = move.get_flags();
+
+            if (move_from == from && move_to == to) {
+                if (flags & (MoveFlag::RookPromo | MoveFlag::KnightPromo |
+                             MoveFlag::BishopPromo | MoveFlag::QueenPromo)) {
                     switch (promotion) {
                     case 'r':
-                        if (move.flags & MoveFlag::RookPromo) return move;
+                        if (flags & MoveFlag::RookPromo) return move;
                         break;
                     case 'n':
-                        if (move.flags & MoveFlag::KnightPromo) return move;
+                        if (flags & MoveFlag::KnightPromo) return move;
                         break;
                     case 'b':
-                        if (move.flags & MoveFlag::BishopPromo) return move;
+                        if (flags & MoveFlag::BishopPromo) return move;
                         break;
                     case 'q':
-                        if (move.flags & MoveFlag::QueenPromo) return move;
+                        if (flags & MoveFlag::QueenPromo) return move;
                         break;
                     default:
                         return {};
@@ -711,7 +721,7 @@ namespace brainiac {
             for (int file = 0; file < 8; file++) {
                 Piece piece = get_at_coords(rank, file);
                 if (!piece.is_empty()) {
-                    std::cout << piece.get_display() << " ";
+                    std::cout << piece.get_icon() << " ";
                 } else {
                     std::cout << "- ";
                 }

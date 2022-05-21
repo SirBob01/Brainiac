@@ -11,12 +11,14 @@
 
 namespace brainiac {
     /**
-     * Types of nodes depending on their value
+     * @brief Types of nodes depending on their value
+     *
      */
     enum NodeType { Exact = 0, Lower = 1, Upper = 2 };
 
     /**
-     * An entry in the table
+     * @brief An entry in the table
+     *
      */
     struct TableEntry {
         uint64_t key;
@@ -27,7 +29,8 @@ namespace brainiac {
     };
 
     /**
-     * A hash table of visited nodes
+     * @brief A hash table of visited search nodes
+     *
      */
     class Transpositions {
         std::vector<TableEntry> _table;
@@ -36,9 +39,12 @@ namespace brainiac {
         Transpositions() : _table(TRANSPOSITION_TABLE_SIZE){};
 
         /**
-         * Set the entry of a board position
+         * @brief Set the entry of a board position
          *
          * If an entry already exists, only overwrite if the depth is higher
+         *
+         * @param board Board state
+         * @param entry Table entry
          */
         inline void set(Board &board, TableEntry &entry) {
             uint64_t index = board.get_hash() & TRANSPOSITION_HASH_MASK;
@@ -49,7 +55,10 @@ namespace brainiac {
         }
 
         /**
-         * Get the entry of a board position
+         * @brief Get the entry associated with a board position
+         *
+         * @param board Board state
+         * @return TableEntry& Table entry
          */
         inline TableEntry &get(Board &board) {
             return _table[board.get_hash() & TRANSPOSITION_HASH_MASK];

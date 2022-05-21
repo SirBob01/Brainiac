@@ -49,7 +49,7 @@ namespace brainiac {
         } else if (board.is_draw()) {
             return 0;
         } else if ((depth == -MAX_QUIESCENCE_DEPTH) ||
-                   (depth <= 0 && !(move.flags & VOLATILE_MOVE_FLAGS))) {
+                   (depth <= 0 && !(move.get_flags() & VOLATILE_MOVE_FLAGS))) {
             float score = evaluate(board);
             return turn == Color::White ? score : -score;
         }
@@ -95,6 +95,7 @@ namespace brainiac {
                 std::swap(move_scores[i], move_scores[best_index]);
             }
             Move &move = move_scores[i].move;
+            MoveFlagSet flags = move.get_flags();
 
             // Prune only after a PV move has been found
             if (value != -INFINITY) {
@@ -102,12 +103,12 @@ namespace brainiac {
                     // Prune bad captures during quiescence search
                     continue;
                 } else {
-                    board.execute_move(move);
+                    board.make_move(move);
                     bool check_move = board.is_check();
                     board.undo_move();
 
                     if ((depth == 1 || depth == 2) &&
-                        !(move.flags & VOLATILE_MOVE_FLAGS) && !check_move &&
+                        !(flags & VOLATILE_MOVE_FLAGS) && !check_move &&
                         !board.is_check()) {
                         // Futility pruning - static evaluation is so poor, it's
                         // not worth looking into
@@ -120,8 +121,7 @@ namespace brainiac {
                         // PV search with late move reduction
                         // Tactical moves or check moves should not be reduced
                         int R = 0;
-                        if (!(move.flags & VOLATILE_MOVE_FLAGS) &&
-                            !check_move) {
+                        if (!(flags & VOLATILE_MOVE_FLAGS) && !check_move) {
                             R++;
                             if (i > 6) {
                                 R++;
@@ -129,7 +129,7 @@ namespace brainiac {
                         }
 
                         // Search with reduced depth and null-window
-                        board.execute_move(move);
+                        board.make_move(move);
                         float reduction = -negamax(board,
                                                    -alpha - 1,
                                                    -alpha,
@@ -147,7 +147,7 @@ namespace brainiac {
             }
 
             // Full search negamax
-            board.execute_move(move);
+            board.make_move(move);
             float search = -negamax(board, -beta, -alpha, depth - 1, opp, move);
             board.undo_move();
 
@@ -164,9 +164,9 @@ namespace brainiac {
                 }
                 if (alpha >= beta) {
                     // Update history heuristic and killer move
-                    if (!(move.flags & VOLATILE_MOVE_FLAGS)) {
-                        int from = move.from.shift;
-                        int to = move.to.shift;
+                    if (!(flags & VOLATILE_MOVE_FLAGS)) {
+                        Square from = move.get_from();
+                        Square to = move.get_to();
                         _history_heuristic[from][to] += (1 << depth);
                     }
                     if (depth >= 0) {
@@ -202,7 +202,7 @@ namespace brainiac {
         Color opp = static_cast<Color>(!board.get_turn());
 
         // Iterative deepening from an initial depth until it runs out of time
-        board.execute_move(move);
+        board.make_move(move);
         int depth = 1;
         while (depth <= MAX_DEPTH) {
             float search = -negamax(board, alpha, beta, depth, opp, move);
@@ -225,6 +225,9 @@ namespace brainiac {
     float
     Search::ordering_heuristic(Board &board, const Move &move, int depth) {
         float score = 0;
+        Square from = move.get_from();
+        Square to = move.get_to();
+        MoveFlagSet flags = move.get_flags();
 
         // Hashed move
         TableEntry &entry = _transpositions.get(board);
@@ -238,26 +241,26 @@ namespace brainiac {
         }
 
         // History heuristic
-        if (!(move.flags & VOLATILE_MOVE_FLAGS)) {
-            score += _history_heuristic[move.from.shift][move.to.shift];
+        if (!(flags & VOLATILE_MOVE_FLAGS)) {
+            score += _history_heuristic[from][to];
         }
 
         // Evaluate captures based on SEE heuristic
-        if (move.flags & MoveFlag::Capture) {
+        if (flags & MoveFlag::Capture) {
             score += see_heuristic(board, move) * 100;
         }
 
         // Prioritize promotions
-        if (move.flags & MoveFlag::QueenPromo) {
+        if (flags & MoveFlag::QueenPromo) {
             score += piece_weights[PieceType::Queen] * 10;
         }
-        if (move.flags & MoveFlag::BishopPromo) {
+        if (flags & MoveFlag::BishopPromo) {
             score += piece_weights[PieceType::Bishop] * 10;
         }
-        if (move.flags & MoveFlag::RookPromo) {
+        if (flags & MoveFlag::RookPromo) {
             score += piece_weights[PieceType::Rook] * 10;
         }
-        if (move.flags & MoveFlag::KnightPromo) {
+        if (flags & MoveFlag::KnightPromo) {
             score += piece_weights[PieceType::Knight] * 10;
         }
 
@@ -317,7 +320,7 @@ namespace brainiac {
             if (!entry.best_move.is_invalid()) {
                 count++;
                 pv.push_back(entry.best_move);
-                board.execute_move(entry.best_move);
+                board.make_move(entry.best_move);
             } else {
                 break;
             }
