@@ -297,27 +297,35 @@ namespace brainiac {
                 attacked |= get_king_mask(bitboard) & ~source_squares;
                 break;
             default:
-                while (bitboard) {
-                    uint64_t unit = bitboard & (-bitboard);
-                    switch (piece.type) {
-                    case PieceType::Bishop:
+                switch (piece.type) {
+                case PieceType::Bishop:
+                    while (bitboard) {
+                        uint64_t unit = bitboard & (-bitboard);
                         attacked |= get_bishop_mask(unit,
                                                     source_squares,
                                                     target_squares);
-                        break;
-                    case PieceType::Rook:
+                        bitboard &= (bitboard - 1);
+                    }
+                    break;
+                case PieceType::Rook:
+                    while (bitboard) {
+                        uint64_t unit = bitboard & (-bitboard);
                         attacked |=
                             get_rook_mask(unit, source_squares, target_squares);
-                        break;
-                    case PieceType::Queen:
+                        bitboard &= (bitboard - 1);
+                    }
+                    break;
+                case PieceType::Queen:
+                    while (bitboard) {
+                        uint64_t unit = bitboard & (-bitboard);
                         attacked |= get_queen_mask(unit,
                                                    source_squares,
                                                    target_squares);
-                        break;
-                    default:
-                        break;
+                        bitboard &= (bitboard - 1);
                     }
-                    bitboard &= (bitboard - 1);
+                    break;
+                default:
+                    break;
                 }
                 break;
             }
@@ -331,32 +339,52 @@ namespace brainiac {
         for (int type = 0; type < PieceType::NPieces; type++) {
             Piece piece = {static_cast<PieceType>(type), _turn};
             uint64_t bitboard = state._bitboards[piece.get_index()];
-            while (bitboard) {
-                uint64_t unit = bitboard & (-bitboard);
-                switch (type) {
-                case PieceType::Pawn:
-                    generate_pawn_moves(unit);
-                    break;
-                case PieceType::King:
+            switch (type) {
+            case PieceType::Pawn:
+                while (bitboard) {
+                    generate_pawn_moves(bitboard & (-bitboard));
+                    bitboard &= (bitboard - 1);
+                }
+                break;
+            case PieceType::King:
+                while (bitboard) {
+                    uint64_t unit = bitboard & (-bitboard);
                     generate_step_moves(unit, true, get_king_mask);
                     generate_castling_moves(unit);
-                    break;
-                case PieceType::Knight:
-                    generate_step_moves(unit, false, get_knight_mask);
-                    break;
-                case PieceType::Bishop:
-                    generate_slider_moves(unit, get_bishop_mask);
-                    break;
-                case PieceType::Rook:
-                    generate_slider_moves(unit, get_rook_mask);
-                    break;
-                case PieceType::Queen:
-                    generate_slider_moves(unit, get_queen_mask);
-                    break;
-                default:
-                    break;
+                    bitboard &= (bitboard - 1);
                 }
-                bitboard &= (bitboard - 1);
+                break;
+            case PieceType::Knight:
+                while (bitboard) {
+                    generate_step_moves(bitboard & (-bitboard),
+                                        false,
+                                        get_knight_mask);
+                    bitboard &= (bitboard - 1);
+                }
+                break;
+            case PieceType::Bishop:
+                while (bitboard) {
+                    generate_slider_moves(bitboard & (-bitboard),
+                                          get_bishop_mask);
+                    bitboard &= (bitboard - 1);
+                }
+                break;
+            case PieceType::Rook:
+                while (bitboard) {
+                    generate_slider_moves(bitboard & (-bitboard),
+                                          get_rook_mask);
+                    bitboard &= (bitboard - 1);
+                }
+                break;
+            case PieceType::Queen:
+                while (bitboard) {
+                    generate_slider_moves(bitboard & (-bitboard),
+                                          get_queen_mask);
+                    bitboard &= (bitboard - 1);
+                }
+                break;
+            default:
+                break;
             }
         }
     }
