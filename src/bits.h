@@ -27,7 +27,7 @@
 
 namespace brainiac {
     /**
-     * Cardinal and ordinal directions on the board
+     * @brief Cardinal and ordinal directions on the board
      */
     enum Direction {
         DownRight,
@@ -41,8 +41,9 @@ namespace brainiac {
     };
 
     /**
-     * Stores necessary information for fetching the moveset
+     * @brief Stores necessary information for fetching the moveset
      * of a sliding piece using magic bitboards
+     *
      */
     struct SlidingMoveTable {
         int shift;
@@ -52,7 +53,8 @@ namespace brainiac {
     };
 
     /**
-     * Bit scan table for fetching the index of the least significant bit
+     * @brief Bit scan table for fetching the index of the least significant bit
+     *
      */
     constexpr uint64_t debruijn64 = 0x07EDD5E59A4E28C2;
     constexpr int bitscan_table[64] = {
@@ -62,14 +64,16 @@ namespace brainiac {
         56, 45, 25, 31, 35, 16, 9,  12, 44, 24, 15, 8,  23, 7,  6,  5};
 
     /**
-     * Horizontal bitboard flip constants
+     * @brief Horizontal bitboard flip constants
+     *
      */
     constexpr uint64_t horflip_k[3] = {0x5555555555555555,
                                        0x3333333333333333,
                                        0x0f0f0f0f0f0f0f0f};
 
     /**
-     * Bitmask constants
+     * @brief Common bitmask constants
+     *
      */
     constexpr uint64_t rank1 = 0x00000000000000FF;
     constexpr uint64_t rank2 = 0x000000000000FF00;
@@ -101,7 +105,8 @@ namespace brainiac {
     constexpr uint64_t end_files = fileA | fileH;
 
     /**
-     * Move mapping for sliding pieces
+     * @brief Move mapping for sliding pieces
+     *
      */
     extern SlidingMoveTable rook_attack_tables[64];
     extern SlidingMoveTable bishop_attack_tables[64];
@@ -109,7 +114,8 @@ namespace brainiac {
     extern uint64_t knight_move_masks[64];
 
     /**
-     * Pre-calculated magic number constants
+     * @brief Pre-calculated magic number constants
+     *
      */
     constexpr uint64_t rook_magics[64] = {
         0xa8002c000108020ULL,  0x6c00049b0002001ULL,  0x100200010090040ULL,
@@ -161,12 +167,19 @@ namespace brainiac {
     };
 
     /**
-     * Print a bitboard (8 bits per row)
+     * @brief Print a bitboard (8 bits per row)
+     *
+     * Useful for debugging
+     *
+     * @param bitboard
      */
     void print_bitboard(uint64_t bitboard);
 
     /**
-     * Count the number of set bits on a bitboard
+     * @brief Count the number of set bits on a bitboard
+     *
+     * @param bitboard
+     * @return constexpr int
      */
     constexpr inline int count_set_bits(uint64_t bitboard) {
         int count = 0;
@@ -178,14 +191,20 @@ namespace brainiac {
     }
 
     /**
-     * Vertically flip the bitboard
+     * @brief Vertically flip a bitboard
+     *
+     * @param bitboard
+     * @return uint64_t
      */
     inline uint64_t flip_vertical(uint64_t bitboard) {
         return bswap_64(bitboard);
     }
 
     /**
-     * Horizontally flip the bitboard
+     * @brief Horizontally flip the bitboard
+     *
+     * @param bitboard
+     * @return constexpr uint64_t
      */
     constexpr inline uint64_t flip_horizontal(uint64_t bitboard) {
         bitboard =
@@ -198,15 +217,22 @@ namespace brainiac {
     }
 
     /**
-     * Calculates the index of the least significant bit in the binary string
-     * Use this to iterate through all set bits on a bitboard (active pieces)
+     * @brief Calculates the index of the least significant bit in the binary
+     * string Use this to iterate through all set bits on a bitboard (active
+     * pieces)
+     *
+     * @param binary
+     * @return constexpr int
      */
     constexpr inline int find_lsb(uint64_t binary) {
         return bitscan_table[((binary & -binary) * debruijn64) >> 58];
     }
 
     /**
-     * Get the diagonal from the current bit position
+     * @brief Get the diagonal from the current bit position
+     *
+     * @param shift
+     * @return constexpr uint64_t
      */
     constexpr inline uint64_t get_diagonal_mask(int shift) {
         int diag = 8 * (shift & 7) - (shift & 56);
@@ -216,7 +242,10 @@ namespace brainiac {
     }
 
     /**
-     * Get the antidiagonal from the current bit position
+     * @brief Get the antidiagonal from the current bit position
+     *
+     * @param shift
+     * @return constexpr uint64_t
      */
     constexpr inline uint64_t get_antidiag_mask(int shift) {
         int diag = 56 - 8 * (shift & 7) - (shift & 56);
@@ -226,8 +255,12 @@ namespace brainiac {
     }
 
     /**
-     * Return a new bitboard with a point adjacent to the binary string in a
-     * specific direction
+     * @brief Return a new bitboard with a point adjacent to the binary string
+     * in a specific direction
+     *
+     * @tparam dir
+     * @param bitboard
+     * @return constexpr uint64_t
      */
     template <Direction dir>
     constexpr inline uint64_t get_adjacent(uint64_t bitboard) {
@@ -256,9 +289,13 @@ namespace brainiac {
     }
 
     /**
-     * For sliding pieces and a set of blockers, find the valid movement bits
-     * Only works for positive rays, must reverse the bits to work with negative
-     * rays
+     * @brief For sliding pieces and a set of blockers, find the valid movement
+     * bits Only works for positive rays, must reverse the bits to work with
+     * negative rays
+     *
+     * @param bitboard
+     * @param occupied
+     * @return constexpr uint64_t
      */
     constexpr inline uint64_t get_ray_attack(uint64_t bitboard,
                                              uint64_t occupied) {
@@ -266,9 +303,13 @@ namespace brainiac {
     }
 
     /**
-     * Generate a rook move set on-the-fly
+     * @brief Generate a rook move set on-the-fly
      *
      * This is slow, so it is used for generating the rook attack tables
+     *
+     * @param bitboard
+     * @param occupied
+     * @return uint64_t
      */
     inline uint64_t get_rook_mask_otf(uint64_t bitboard, uint64_t occupied) {
         const int shift = find_lsb(bitboard);
@@ -293,9 +334,13 @@ namespace brainiac {
     }
 
     /**
-     * Generate a bishop move set on-the-fly
+     * @brief Generate a bishop move set on-the-fly
      *
      * This is slow, so it is used for generating the bishop attack tables
+     *
+     * @param bitboard
+     * @param occupied
+     * @return uint64_t
      */
     inline uint64_t get_bishop_mask_otf(uint64_t bitboard, uint64_t occupied) {
         int shift = find_lsb(bitboard);
@@ -320,16 +365,22 @@ namespace brainiac {
     }
 
     /**
-     * Get the all possible directions the king can move to from its current
-     * position
+     * @brief Get the all possible directions the king can move to from its
+     * current position
+     *
+     * @param bitboard
+     * @return uint64_t
      */
     inline uint64_t get_king_mask(uint64_t bitboard) {
         return king_move_masks[find_lsb(bitboard)];
     }
 
     /**
-     * Get the all possible directions the knight can move to from its current
-     * position
+     * @brief Get the all possible directions the knight can move to from its
+     * current position
+     *
+     * @param bitboard
+     * @return uint64_t
      */
     inline uint64_t get_knight_mask(uint64_t bitboard) {
         uint64_t mask = 0;
@@ -341,7 +392,12 @@ namespace brainiac {
     }
 
     /**
-     * Get the position of the pawn after advancing a single rank
+     * @brief Get the position of the pawn after advancing a single rank
+     *
+     * @param bitboard
+     * @param all_pieces
+     * @param color
+     * @return constexpr uint64_t
      */
     constexpr inline uint64_t
     get_pawn_advance_mask(uint64_t bitboard, uint64_t all_pieces, Color color) {
@@ -351,7 +407,12 @@ namespace brainiac {
     }
 
     /**
-     * Get the position of the pawn after advancing 2 ranks
+     * @brief Get the position of the pawn after advancing 2 ranks
+     *
+     * @param bitboard
+     * @param all_pieces
+     * @param color
+     * @return constexpr uint64_t
      */
     constexpr inline uint64_t
     get_pawn_double_mask(uint64_t bitboard, uint64_t all_pieces, Color color) {
@@ -365,8 +426,12 @@ namespace brainiac {
     }
 
     /**
-     * Get the all possible positions of the pawn if capturing (either en
+     * @brief Get the all possible positions of the pawn if capturing (either en
      * passant or regular)
+     *
+     * @param bitboard
+     * @param color
+     * @return constexpr uint64_t
      */
     constexpr inline uint64_t get_pawn_capture_mask(uint64_t bitboard,
                                                     Color color) {
@@ -378,7 +443,12 @@ namespace brainiac {
     }
 
     /**
-     * Get all possible moves for the rook
+     * @brief Get all possible moves for the rook
+     *
+     * @param bitboard
+     * @param allies
+     * @param enemies
+     * @return constexpr uint64_t
      */
     constexpr inline uint64_t
     get_rook_mask(uint64_t bitboard, uint64_t allies, uint64_t enemies) {
@@ -390,7 +460,12 @@ namespace brainiac {
     }
 
     /**
-     * Get all possible moves for the bishop
+     * @brief Get all possible moves for the bishop
+     *
+     * @param bitboard
+     * @param allies
+     * @param enemies
+     * @return constexpr uint64_t
      */
     constexpr inline uint64_t
     get_bishop_mask(uint64_t bitboard, uint64_t allies, uint64_t enemies) {
@@ -402,8 +477,13 @@ namespace brainiac {
     }
 
     /**
-     * Get all possible moves for the queen
+     * @brief Get all possible moves for the queen
      * Simply perform bitwise OR on the rook and bishop masks
+     *
+     * @param bitboard
+     * @param allies
+     * @param enemies
+     * @return constexpr uint64_t
      */
     constexpr inline uint64_t
     get_queen_mask(uint64_t bitboard, uint64_t allies, uint64_t enemies) {
@@ -427,7 +507,11 @@ namespace brainiac {
     }
 
     /**
-     * Get the final positions for the king when castling
+     * @brief Get the final positions for the king when castling
+     *
+     * @param all_pieces Bitboard of all pieces
+     * @param side Castling side
+     * @return constexpr uint64_t
      */
     constexpr inline uint64_t get_castling_mask(uint64_t all_pieces,
                                                 Castle side) {
@@ -454,7 +538,12 @@ namespace brainiac {
     }
 
     /**
-     * Generate an occupancy bitboard from a given index
+     * @brief Generate an occupancy bitboard from a given index
+     *
+     * @param index
+     * @param bit_count
+     * @param mask
+     * @return constexpr uint64_t
      */
     constexpr inline uint64_t
     generate_occupancy(int index, int bit_count, uint64_t mask) {
@@ -470,7 +559,8 @@ namespace brainiac {
     }
 
     /**
-     * Initialize the rook attack tables
+     * @brief Initialize the rook attack tables
+     *
      */
     constexpr inline void init_rook_tables() {
         for (int i = 0; i < 64; i++) {
@@ -499,7 +589,8 @@ namespace brainiac {
     }
 
     /**
-     * Initialize the bishop attack tables
+     * @brief Initialize the bishop attack tables
+     *
      */
     constexpr inline void init_bishop_tables() {
         for (int i = 0; i < 64; i++) {
@@ -527,7 +618,8 @@ namespace brainiac {
     }
 
     /**
-     * Initialize the movement masks for the king
+     * @brief Initialize the movement masks for the king
+     *
      */
     constexpr inline void init_king_tables() {
         for (int i = 0; i < 64; i++) {
@@ -544,7 +636,8 @@ namespace brainiac {
     }
 
     /**
-     * Initialize the movement masks for the knight
+     * @brief Initialize the movement masks for the knight
+     *
      */
     constexpr inline void init_knight_tables() {
         for (int i = 0; i < 64; i++) {
