@@ -443,7 +443,7 @@ namespace brainiac {
     }
 
     /**
-     * @brief Get all possible moves for the rook
+     * @brief Get all possible moves for the rooks
      *
      * @param bitboard
      * @param allies
@@ -452,15 +452,25 @@ namespace brainiac {
      */
     constexpr inline uint64_t
     get_rook_mask(uint64_t bitboard, uint64_t allies, uint64_t enemies) {
-        const int square = find_lsb(bitboard);
-        const SlidingMoveTable &table = rook_attack_tables[square];
-        const uint64_t blockers = table.block_mask & (allies | enemies);
-        const uint64_t index = (blockers * table.magic) >> (64 - table.shift);
-        return table.move_masks[index] & ~allies;
+        uint64_t mask = 0;
+
+        while (bitboard) {
+            const uint64_t unit = bitboard & -bitboard;
+            const int square = find_lsb(unit);
+
+            const SlidingMoveTable &table = rook_attack_tables[square];
+            const uint64_t blockers = table.block_mask & (allies | enemies);
+            const uint64_t index =
+                (blockers * table.magic) >> (64 - table.shift);
+            mask |= table.move_masks[index];
+
+            bitboard &= (bitboard - 1);
+        }
+        return mask & ~allies;
     }
 
     /**
-     * @brief Get all possible moves for the bishop
+     * @brief Get all possible moves for the bishops
      *
      * @param bitboard
      * @param allies
@@ -469,15 +479,25 @@ namespace brainiac {
      */
     constexpr inline uint64_t
     get_bishop_mask(uint64_t bitboard, uint64_t allies, uint64_t enemies) {
-        const int square = find_lsb(bitboard);
-        const SlidingMoveTable &table = bishop_attack_tables[square];
-        const uint64_t blockers = table.block_mask & (allies | enemies);
-        const uint64_t index = (blockers * table.magic) >> (64 - table.shift);
-        return table.move_masks[index] & ~allies;
+        uint64_t mask = 0;
+
+        while (bitboard) {
+            const uint64_t unit = bitboard & -bitboard;
+            const int square = find_lsb(unit);
+
+            const SlidingMoveTable &table = bishop_attack_tables[square];
+            const uint64_t blockers = table.block_mask & (allies | enemies);
+            const uint64_t index =
+                (blockers * table.magic) >> (64 - table.shift);
+            mask |= table.move_masks[index];
+
+            bitboard &= (bitboard - 1);
+        }
+        return mask & ~allies;
     }
 
     /**
-     * @brief Get all possible moves for the queen
+     * @brief Get all possible moves for the queens
      * Simply perform bitwise OR on the rook and bishop masks
      *
      * @param bitboard
@@ -487,23 +507,31 @@ namespace brainiac {
      */
     constexpr inline uint64_t
     get_queen_mask(uint64_t bitboard, uint64_t allies, uint64_t enemies) {
-        const int square = find_lsb(bitboard);
+        uint64_t mask = 0;
 
-        const SlidingMoveTable &rook_table = rook_attack_tables[square];
-        const uint64_t rook_blockers =
-            rook_table.block_mask & (allies | enemies);
-        const uint64_t rook_index =
-            (rook_blockers * rook_table.magic) >> (64 - rook_table.shift);
-        const uint64_t rook_mask = rook_table.move_masks[rook_index];
+        while (bitboard) {
+            const uint64_t unit = bitboard & -bitboard;
+            const int square = find_lsb(unit);
 
-        const SlidingMoveTable &bishop_table = bishop_attack_tables[square];
-        const uint64_t bishop_blockers =
-            bishop_table.block_mask & (allies | enemies);
-        const uint64_t bishop_index =
-            (bishop_blockers * bishop_table.magic) >> (64 - bishop_table.shift);
-        const uint64_t bishop_mask = bishop_table.move_masks[bishop_index];
+            const SlidingMoveTable &rook_table = rook_attack_tables[square];
+            const uint64_t rook_blockers =
+                rook_table.block_mask & (allies | enemies);
+            const uint64_t rook_index =
+                (rook_blockers * rook_table.magic) >> (64 - rook_table.shift);
+            const uint64_t rook_mask = rook_table.move_masks[rook_index];
 
-        return (rook_mask | bishop_mask) & ~allies;
+            const SlidingMoveTable &bishop_table = bishop_attack_tables[square];
+            const uint64_t bishop_blockers =
+                bishop_table.block_mask & (allies | enemies);
+            const uint64_t bishop_index =
+                (bishop_blockers * bishop_table.magic) >>
+                (64 - bishop_table.shift);
+            const uint64_t bishop_mask = bishop_table.move_masks[bishop_index];
+            mask |= rook_mask | bishop_mask;
+
+            bitboard &= (bitboard - 1);
+        }
+        return mask & ~allies;
     }
 
     /**

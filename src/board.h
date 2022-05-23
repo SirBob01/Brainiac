@@ -113,6 +113,21 @@ namespace brainiac {
         bool is_legal(Move &move);
 
         /**
+         * @brief Get the bitboard corresponding to the attackers
+         *
+         * @return Bitboard
+         */
+        Bitboard get_attack_mask();
+
+        /**
+         * @brief Get the checkmask to filter moves that will result in
+         * check
+         *
+         * @return Bitboard
+         */
+        Bitboard get_checkmask();
+
+        /**
          * @brief Register a move to the main move list, if it is legal
          *
          * @param move
@@ -364,6 +379,17 @@ namespace brainiac {
          */
         inline Bitboard get_piece_bitboard(Piece piece) {
             return _states[_current_state]._bitboards[piece.get_index()];
+        }
+
+        /**
+         * @brief Get the bitboard associated with a color
+         *
+         * @param color
+         * @return Bitboard
+         */
+        inline Bitboard get_color_bitboard(Color color) {
+            return _states[_current_state]
+                ._bitboards[2 * PieceType::NPieces + color];
         }
 
         /**
