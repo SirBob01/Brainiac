@@ -177,8 +177,8 @@ namespace brainiac {
      * @return float
      */
     inline float connected_pawn_score(Board &board) {
-        constexpr Piece WP(PieceType::Pawn, Color::White);
-        constexpr Piece BP(PieceType::Pawn, Color::Black);
+        static constexpr Piece WP(PieceType::Pawn, Color::White);
+        static constexpr Piece BP(PieceType::Pawn, Color::Black);
 
         uint64_t white_pawns = board.get_piece_bitboard(WP);
         uint64_t black_pawns = board.get_piece_bitboard(BP);
@@ -216,8 +216,8 @@ namespace brainiac {
      * @return float
      */
     inline float passed_pawn_score(Board &board) {
-        constexpr Piece WP(PieceType::Pawn, Color::White);
-        constexpr Piece BP(PieceType::Pawn, Color::Black);
+        static constexpr Piece WP(PieceType::Pawn, Color::White);
+        static constexpr Piece BP(PieceType::Pawn, Color::Black);
 
         uint64_t temp;
         uint64_t white_pawns = board.get_piece_bitboard(WP);
@@ -278,8 +278,8 @@ namespace brainiac {
      * @return float
      */
     inline float bishop_pair_score(Board &board) {
-        constexpr Piece WB(PieceType::Bishop, Color::White);
-        constexpr Piece BB(PieceType::Bishop, Color::Black);
+        static constexpr Piece WB(PieceType::Bishop, Color::White);
+        static constexpr Piece BB(PieceType::Bishop, Color::Black);
 
         uint64_t white_bishops = board.get_piece_bitboard(WB);
         uint64_t black_bishops = board.get_piece_bitboard(BB);
