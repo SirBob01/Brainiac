@@ -36,7 +36,6 @@ namespace brainiac {
         uint64_t _attackers = 0;
         std::vector<Move> _legal_moves;
 
-        int _material = 0;
         uint64_t _hash;
     };
 
@@ -119,18 +118,6 @@ namespace brainiac {
          * Generate a FEN string of the current state for serialization
          */
         std::string generate_fen();
-
-        /**
-         * Get the material score for the current board state
-         * Positive values mean white has more material than black
-         */
-        inline int get_material() { return _states[_current_state]._material; }
-
-        /**
-         * Get the mobility score, which is the number of pseudo-legal moves
-         * calculated for this turn
-         */
-        inline int get_mobility() { return get_moves().size(); }
 
         /**
          * Get a piece on the board
@@ -270,10 +257,23 @@ namespace brainiac {
         inline uint64_t get_hash() { return _states[_current_state]._hash; }
 
         /**
-         * Get a bitboard
+         * @brief Get the bitboard associated with a piece
+         *
+         * @param piece
+         * @return uint64_t
          */
-        inline uint64_t get_bitboard(Piece piece) {
+        inline uint64_t get_piece_bitboard(Piece piece) {
             return _states[_current_state]._bitboards[piece.get_index()];
+        }
+
+        /**
+         * @brief Get a bitboard by idex
+         *
+         * @param index
+         * @return uint64_t
+         */
+        inline uint64_t get_bitboard(int index) {
+            return _states[_current_state]._bitboards[index];
         }
 
         /**

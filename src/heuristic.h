@@ -6,7 +6,13 @@
 
 namespace brainiac {
     /**
-     * The matrices below determine the placement scores of each piece
+     * @brief Material weight of each piece type
+     *
+     */
+    constexpr int piece_weights[] = {4, 1, 5, 3, 3, 9, -4, -1, -5, -3, -3, -9};
+
+    /**
+     * @brief The matrices below determine the placement scores of each piece
      * on the board
      *
      * The higher the score at a particular index, the more favorable
@@ -76,15 +82,31 @@ namespace brainiac {
     // clang-format on
 
     /**
+     * @brief Calculate the material score of the current board state
+     *
+     *
+     *
+     * @param board
+     * @return float
+     */
+    inline float material_score(Board &board) {
+        float score = 0;
+        for (int i = 0; i < 12; i++) {
+            score += count_set_bits(board.get_bitboard(i)) * piece_weights[i];
+        }
+        return score;
+    }
+
+    /**
      * Calculate the mobility heuristic of the board state
      *
      * This performs a null move to get the mobility score of the opposing
      * player
      */
     inline float mobility_score(Board &board) {
-        float mobility = board.get_mobility();
+        float mobility = board.get_moves().size();
         board.skip_turn();
-        mobility -= board.get_mobility();
+        mobility -= board.get_moves().size();
         board.undo_move();
 
         if (board.get_turn() == Color::Black) {
@@ -150,8 +172,8 @@ namespace brainiac {
         constexpr Piece white_pawn(PieceType::Pawn, Color::White);
         constexpr Piece black_pawn(PieceType::Pawn, Color::Black);
 
-        uint64_t white_pawns = board.get_bitboard(white_pawn);
-        uint64_t black_pawns = board.get_bitboard(black_pawn);
+        uint64_t white_pawns = board.get_piece_bitboard(white_pawn);
+        uint64_t black_pawns = board.get_piece_bitboard(black_pawn);
 
         float connected = 0;
         for (int i = 0; i < 8; i++) {
@@ -187,8 +209,8 @@ namespace brainiac {
         constexpr Piece black_pawn(PieceType::Pawn, Color::Black);
 
         uint64_t temp;
-        uint64_t white_pawns = board.get_bitboard(white_pawn);
-        uint64_t black_pawns = board.get_bitboard(black_pawn);
+        uint64_t white_pawns = board.get_piece_bitboard(white_pawn);
+        uint64_t black_pawns = board.get_piece_bitboard(black_pawn);
 
         float passed = 0;
 
@@ -246,9 +268,9 @@ namespace brainiac {
         constexpr Piece black_bishop(PieceType::Bishop, Color::Black);
 
         uint64_t white_bishops =
-            count_set_bits(board.get_bitboard(white_bishop));
+            count_set_bits(board.get_piece_bitboard(white_bishop));
         uint64_t black_bishops =
-            count_set_bits(board.get_bitboard(black_bishop));
+            count_set_bits(board.get_piece_bitboard(black_bishop));
 
         float score = 0;
         if (white_bishops == 2) {

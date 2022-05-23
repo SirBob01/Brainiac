@@ -22,12 +22,10 @@ namespace brainiac {
                 while (piece_chars[char_idx] != c) {
                     char_idx++;
                 }
-                Square sq = row * 8 + col;
                 Piece piece(
                     static_cast<PieceType>(char_idx % PieceType::NPieces),
                     static_cast<Color>(char_idx / PieceType::NPieces));
-                set_at(sq, piece);
-                state._material += piece.get_weight();
+                set_at(row * 8 + col, piece);
                 col++;
             }
         }
@@ -512,11 +510,6 @@ namespace brainiac {
 
         Piece piece = get_at(from);
         Piece target = get_at(to);
-
-        // Update material if move was a capture
-        if (!target.is_empty()) {
-            state._material -= piece_weights[target.get_index()];
-        }
 
         // Unset castling flags if relevant pieces were moved
         Castle queen_side =

@@ -268,7 +268,7 @@ namespace brainiac {
     }
 
     float Search::evaluate(Board &board) {
-        float material = board.get_material();
+        float material = material_score(board);
         float placement = placement_score(board);
         float mobility = mobility_score(board);
         float pawns_connected = connected_pawn_score(board);
