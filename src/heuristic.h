@@ -84,8 +84,6 @@ namespace brainiac {
     /**
      * @brief Calculate the material score of the current board state
      *
-     *
-     *
      * @param board
      * @return float
      */
@@ -98,10 +96,13 @@ namespace brainiac {
     }
 
     /**
-     * Calculate the mobility heuristic of the board state
+     * @brief Calculate the mobility heuristic of the board state
      *
      * This performs a null move to get the mobility score of the opposing
      * player
+     *
+     * @param board
+     * @return float
      */
     inline float mobility_score(Board &board) {
         float mobility = board.get_moves().size();
@@ -116,7 +117,11 @@ namespace brainiac {
     }
 
     /**
-     * Calculate the placement score of the board
+     * @brief Calculate the placement score of the board using the piece-square
+     * matrices
+     *
+     * @param board
+     * @return float
      */
     inline float placement_score(Board &board) {
         float score = 0;
@@ -165,8 +170,11 @@ namespace brainiac {
     }
 
     /**
-     * Calculate the heuristic based on the number of connected pawns for each
-     * side (from white's perspective)
+     * @brief Calculate the heuristic based on the number of connected pawns for
+     * each side (from white's perspective)
+     *
+     * @param board
+     * @return float
      */
     inline float connected_pawn_score(Board &board) {
         constexpr Piece white_pawn(PieceType::Pawn, Color::White);
@@ -198,11 +206,14 @@ namespace brainiac {
     }
 
     /**
-     * Calculate the heuristic based on the number of passed pawns from each
-     * side (from white's perspective)
+     * @brief Calculate the heuristic based on the number of passed pawns from
+     * each side (from white's perspective)
      *
      * Passed pawns have no opposing pawns ahead of it on its left, current, and
      * right files
+     *
+     * @param board
+     * @return float
      */
     inline float passed_pawn_score(Board &board) {
         constexpr Piece white_pawn(PieceType::Pawn, Color::White);
@@ -257,11 +268,14 @@ namespace brainiac {
     }
 
     /**
-     * The side with both bishops has a tactical advantage over the side with
-     * only one. This is because a bishop only covers EITHER a white or black
-     * square ONLY.
+     * @brief The side with both bishops has a tactical advantage over the side
+     * with only one. This is because a bishop only covers EITHER a white or
+     * black square ONLY.
      *
      * Losing a bishop means losing control of half the board
+     *
+     * @param board
+     * @return float
      */
     inline float bishop_pair_score(Board &board) {
         constexpr Piece white_bishop(PieceType::Bishop, Color::White);
@@ -283,7 +297,11 @@ namespace brainiac {
     }
 
     /**
-     * Calculate the MVV-LVA heuristic of the board
+     * @brief Calculate the MVV-LVA heuristic of a move on the board
+     *
+     * @param board
+     * @param move
+     * @return float
      */
     inline float mvv_lva_heuristic(Board &board, const Move &move) {
         Piece attacker = board.get_at(move.get_from());
@@ -295,7 +313,11 @@ namespace brainiac {
     }
 
     /**
-     * Calculate the static exchange evaluation for a square
+     * @brief Calculate the static exchange evaluation for a square
+     *
+     * @param board
+     * @param square
+     * @return int
      */
     inline int static_exchange_evaluation(Board &board, const Square square) {
         int value = 0;
@@ -328,7 +350,11 @@ namespace brainiac {
     }
 
     /**
-     * Calculate the resulting SEE heuristic after performing a capture move
+     * @brief Calculate the resulting SEE heuristic after making a capture move
+     *
+     * @param board
+     * @param move
+     * @return float
      */
     inline float see_heuristic(Board &board, const Move &move) {
         Piece victim = board.get_at(move.get_to());
