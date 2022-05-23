@@ -12,10 +12,12 @@
 
 namespace brainiac {
     /**
-     * Linked list representing chronological board state
-     * Allows forward and backward movement in time (undo/redo moves)
-     * Stores information that can be difficult to undo when changed (e.g.,
-     * castling rights)
+     * @brief Represents chronological board state. This allows forward and
+     * backward movement in time (undo/redo moves).
+     *
+     * Stores information that can be difficult to retrive during the undo
+     * operation (e.g., castling rights)
+     *
      */
     struct BoardState {
         // Represent the positions of each of the 12 pieces on the board
@@ -24,7 +26,7 @@ namespace brainiac {
 
         // qkQK (from most to least significant bit)
         CastlingFlagSet _castling_rights = 0;
-        Square _en_passant_target;
+        Square _en_passant_target = Squares::InvalidSquare;
 
         // Unlike fullmoves, halfmoves depends on state of the board (pawn
         // advance or capture reset)
@@ -39,7 +41,8 @@ namespace brainiac {
     };
 
     /**
-     * Represents a chess board's state
+     * @brief Chess board simulation
+     *
      */
     class Board {
         std::vector<BoardState> _states;
