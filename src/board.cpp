@@ -23,10 +23,9 @@ namespace brainiac {
                     char_idx++;
                 }
                 Square sq = row * 8 + col;
-                PieceType type =
-                    static_cast<PieceType>(char_idx % PieceType::NPieces);
-                Color color = static_cast<Color>(char_idx / PieceType::NPieces);
-                Piece piece = {type, color};
+                Piece piece(
+                    static_cast<PieceType>(char_idx % PieceType::NPieces),
+                    static_cast<Color>(char_idx / PieceType::NPieces));
                 set_at(sq, piece);
                 state._material += piece.get_weight();
                 col++;
@@ -59,7 +58,7 @@ namespace brainiac {
     }
 
     bool Board::is_legal(Move &move) {
-        Piece king = {PieceType::King, _turn};
+        Piece king(PieceType::King, _turn);
         BoardState &state = _states[_current_state];
         uint64_t kingbit = state._bitboards[king.get_index()];
 
@@ -115,7 +114,7 @@ namespace brainiac {
         uint64_t allies = state._bitboards[PieceType::NPieces * 2 + _turn];
         uint64_t enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
         uint64_t all_pieces = allies | enemies;
-        uint32_t piece_shift = find_lsb(bitboard);
+        int piece_shift = find_lsb(bitboard);
 
         // Pre-compute advance, capture, and en-passant masks
         uint64_t advance_board =
@@ -133,13 +132,13 @@ namespace brainiac {
             uint64_t move = advance_board & (-advance_board);
             if (move & end_ranks) {
                 for (int i = 0; i < 4; i++) {
-                    Move moveobj = {piece_shift,
-                                    find_lsb(move),
-                                    pawn_single_flags | promotions[i]};
+                    Move moveobj(piece_shift,
+                                 find_lsb(move),
+                                 pawn_single_flags | promotions[i]);
                     register_move(moveobj);
                 }
             } else {
-                Move moveobj = {piece_shift, find_lsb(move), pawn_single_flags};
+                Move moveobj(piece_shift, find_lsb(move), pawn_single_flags);
                 register_move(moveobj);
             }
             advance_board &= (advance_board - 1);
@@ -148,7 +147,7 @@ namespace brainiac {
         // Double pawn advance
         while (double_board) {
             uint64_t move = double_board & (-double_board);
-            Move moveobj = {piece_shift, find_lsb(move), pawn_double_flags};
+            Move moveobj(piece_shift, find_lsb(move), pawn_double_flags);
             register_move(moveobj);
             double_board &= (double_board - 1);
         }
@@ -159,15 +158,13 @@ namespace brainiac {
             uint64_t move = capture_board & (-capture_board);
             if (move & end_ranks) {
                 for (int i = 0; i < 4; i++) {
-                    Move moveobj = {piece_shift,
-                                    find_lsb(move),
-                                    pawn_capture_flags | promotions[i]};
+                    Move moveobj(piece_shift,
+                                 find_lsb(move),
+                                 pawn_capture_flags | promotions[i]);
                     register_move(moveobj);
                 }
             } else {
-                Move moveobj = {piece_shift,
-                                find_lsb(move),
-                                pawn_capture_flags};
+                Move moveobj(piece_shift, find_lsb(move), pawn_capture_flags);
                 register_move(moveobj);
             }
             capture_board &= (capture_board - 1);
@@ -177,7 +174,7 @@ namespace brainiac {
         uint64_t ep_board = capture_mask & en_passant_mask;
         while (ep_board) {
             uint64_t move = ep_board & (-ep_board);
-            Move moveobj = {piece_shift, find_lsb(move), en_passant_flags};
+            Move moveobj(piece_shift, find_lsb(move), en_passant_flags);
             register_move(moveobj);
             ep_board &= (ep_board - 1);
         }
@@ -189,7 +186,7 @@ namespace brainiac {
         BoardState &state = _states[_current_state];
         uint64_t allies = state._bitboards[PieceType::NPieces * 2 + _turn];
         uint64_t enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
-        uint32_t piece_shift = find_lsb(bitboard);
+        int piece_shift = find_lsb(bitboard);
 
         // King cannot move in range of his attackers
         uint64_t moves = mask_func(bitboard) & ~allies;
@@ -201,13 +198,13 @@ namespace brainiac {
         uint64_t quiet_board = moves & ~enemies;
         while (quiet_board) {
             uint64_t move = quiet_board & (-quiet_board);
-            Move moveobj = {piece_shift, find_lsb(move), 0};
+            Move moveobj(piece_shift, find_lsb(move), 0);
             register_move(moveobj);
             quiet_board &= (quiet_board - 1);
         }
         while (capture_board) {
             uint64_t move = capture_board & (-capture_board);
-            Move moveobj = {piece_shift, find_lsb(move), MoveFlag::Capture};
+            Move moveobj(piece_shift, find_lsb(move), MoveFlag::Capture);
             register_move(moveobj);
             capture_board &= (capture_board - 1);
         }
@@ -220,7 +217,7 @@ namespace brainiac {
         BoardState &state = _states[_current_state];
         uint64_t allies = state._bitboards[PieceType::NPieces * 2 + _turn];
         uint64_t enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
-        uint32_t piece_shift = find_lsb(bitboard);
+        int piece_shift = find_lsb(bitboard);
 
         uint64_t moves = mask_func(bitboard, allies, enemies);
 
@@ -228,13 +225,13 @@ namespace brainiac {
         uint64_t quiet_board = moves & ~enemies;
         while (quiet_board) {
             uint64_t move = quiet_board & (-quiet_board);
-            Move moveobj = {piece_shift, find_lsb(move), 0};
+            Move moveobj(piece_shift, find_lsb(move), 0);
             register_move(moveobj);
             quiet_board &= (quiet_board - 1);
         }
         while (capture_board) {
             uint64_t move = capture_board & (-capture_board);
-            Move moveobj = {piece_shift, find_lsb(move), MoveFlag::Capture};
+            Move moveobj(piece_shift, find_lsb(move), MoveFlag::Capture);
             register_move(moveobj);
             capture_board &= (capture_board - 1);
         }
@@ -256,7 +253,7 @@ namespace brainiac {
                 get_castling_mask(all_pieces, side) & ~state._attackers;
             if (mask) {
                 Square to(find_lsb(mask));
-                Move move = {from, to, MoveFlag::Castling};
+                Move move(from, to, MoveFlag::Castling);
                 register_move(move);
             }
             rights &= (rights - 1);
@@ -271,7 +268,7 @@ namespace brainiac {
         BoardState &state = _states[_current_state];
         Color opponent = static_cast<Color>(!_turn);
 
-        Piece king = {PieceType::King, _turn};
+        Piece king(PieceType::King, _turn);
         uint64_t source_mask = ~enemies_exclude & ~allies_include;
         uint64_t source_squares =
             state._bitboards[PieceType::NPieces * 2 + opponent] & source_mask;
@@ -282,7 +279,7 @@ namespace brainiac {
 
         uint64_t attacked = 0;
         for (int type = 0; type < PieceType::NPieces; type++) {
-            Piece piece = {static_cast<PieceType>(type), opponent};
+            Piece piece(static_cast<PieceType>(type), opponent);
             uint64_t bitboard =
                 state._bitboards[piece.get_index()] & source_mask;
 
@@ -337,7 +334,7 @@ namespace brainiac {
         BoardState &state = _states[_current_state];
         state._legal_moves.clear();
         for (int type = 0; type < PieceType::NPieces; type++) {
-            Piece piece = {static_cast<PieceType>(type), _turn};
+            Piece piece(static_cast<PieceType>(type), _turn);
             uint64_t bitboard = state._bitboards[piece.get_index()];
             switch (type) {
             case PieceType::Pawn:
@@ -608,7 +605,7 @@ namespace brainiac {
         if (flags & MoveFlag::Castling) {
             int rankd = to - from;
             int dir = (rankd > 0) - (rankd < 0);
-            Piece rook = {PieceType::Rook, _turn};
+            Piece rook(PieceType::Rook, _turn);
             uint64_t rook_rank = (_turn == Color::Black) ? rank8 : rank1;
             uint64_t rook_board =
                 state._bitboards[rook.get_index()] & rook_rank;
@@ -673,7 +670,7 @@ namespace brainiac {
     }
 
     bool Board::is_check() {
-        Piece king = {PieceType::King, _turn};
+        Piece king(PieceType::King, _turn);
         BoardState &state = _states[_current_state];
         uint64_t kingbit = state._bitboards[king.get_index()];
         return state._attackers & kingbit;

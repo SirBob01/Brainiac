@@ -61,6 +61,10 @@ namespace brainiac {
         PieceType type = PieceType::NPieces;
         Color color = Color::Empty;
 
+        constexpr Piece() : type(PieceType::NPieces), color(Color::Empty){};
+        constexpr Piece(PieceType _type, Color _color) :
+            type(_type), color(_color){};
+
         /**
          * @brief Get the index of this piece
          *
