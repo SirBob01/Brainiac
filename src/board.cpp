@@ -101,49 +101,42 @@ namespace brainiac {
     }
 
     Bitboard Board::get_attack_mask() {
-        BoardState &state = _states[_current_state];
         Color opp = static_cast<Color>(!_turn);
-        Bitboard friends = state._bitboards[PieceType::NPieces * 2 + _turn];
-        Bitboard enemies = state._bitboards[PieceType::NPieces * 2 + opp];
+        Bitboard friends = get_bitboard(_turn);
+        Bitboard enemies = get_bitboard(opp);
 
         // All opponent pieces
-        Piece P(PieceType::Pawn, opp);
-        Piece N(PieceType::Knight, opp);
-        Piece B(PieceType::Bishop, opp);
-        Piece R(PieceType::Rook, opp);
-        Piece Q(PieceType::Queen, opp);
-        Piece K(PieceType::King, opp);
+        Bitboard pawns = get_bitboard(PieceType::Pawn, opp);
+        Bitboard knights = get_bitboard(PieceType::Knight, opp);
+        Bitboard bishops = get_bitboard(PieceType::Bishop, opp);
+        Bitboard rooks = get_bitboard(PieceType::Rook, opp);
+        Bitboard queens = get_bitboard(PieceType::Queen, opp);
 
         Bitboard attackers =
             ~enemies &
-            (get_pawn_capture_mask(get_piece_bitboard(P), opp) |
-             get_knight_mask(get_piece_bitboard(N)) |
-             get_bishop_mask(get_piece_bitboard(B), enemies, friends) |
-             get_rook_mask(get_piece_bitboard(R), enemies, friends) |
-             get_queen_mask(get_piece_bitboard(Q), enemies, friends) |
-             get_king_mask(get_piece_bitboard(K)));
+            (get_pawn_capture_mask(pawns, opp) | get_knight_mask(knights) |
+             get_bishop_mask(bishops, enemies, friends) |
+             get_rook_mask(rooks, enemies, friends) |
+             get_queen_mask(queens, enemies, friends));
 
         return attackers;
     }
 
     Bitboard Board::get_checkmask() {
-        Piece K(PieceType::King, _turn);
-        Bitboard king = get_piece_bitboard(K);
+        Bitboard king = get_bitboard(PieceType::King, _turn);
         Bitboard attackers = get_attack_mask();
 
         if (attackers & king) {
             BoardState &state = _states[_current_state];
             Color opp = static_cast<Color>(!_turn);
-            Bitboard friends = state._bitboards[PieceType::NPieces * 2 + _turn];
-            Bitboard enemies = state._bitboards[PieceType::NPieces * 2 + opp];
+            Bitboard friends = get_bitboard(_turn);
+            Bitboard enemies = get_bitboard(opp);
 
-            Bitboard pawns = get_piece_bitboard(Piece(PieceType::Pawn, opp));
-            Bitboard knights =
-                get_piece_bitboard(Piece(PieceType::Knight, opp));
-            Bitboard bishops =
-                get_piece_bitboard(Piece(PieceType::Bishop, opp));
-            Bitboard rooks = get_piece_bitboard(Piece(PieceType::Rook, opp));
-            Bitboard queens = get_piece_bitboard(Piece(PieceType::Queen, opp));
+            Bitboard pawns = get_bitboard(PieceType::Pawn, opp);
+            Bitboard knights = get_bitboard(PieceType::Knight, opp);
+            Bitboard bishops = get_bitboard(PieceType::Bishop, opp);
+            Bitboard rooks = get_bitboard(PieceType::Rook, opp);
+            Bitboard queens = get_bitboard(PieceType::Queen, opp);
 
             return
                 // Knight checkmask
