@@ -28,12 +28,6 @@ namespace brainiac {
                                         "\u265B"};
 
     /**
-     * @brief Material weight of each piece type
-     *
-     */
-    constexpr int piece_weights[] = {4, 1, 5, 3, 3, 9, -4, -1, -5, -3, -3, -9};
-
-    /**
      * @brief Enumerates the types of a piece
      *
      */
@@ -73,13 +67,6 @@ namespace brainiac {
         constexpr inline int get_index() const {
             return color * PieceType::NPieces + type;
         };
-
-        /**
-         * @brief Get the material weight of this piece
-         *
-         * @return constexpr int Material weight
-         */
-        constexpr inline int get_weight() { return piece_weights[get_index()]; }
 
         /**
          * @brief Get the icon of this piece
