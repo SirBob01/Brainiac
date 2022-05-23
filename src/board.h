@@ -377,8 +377,20 @@ namespace brainiac {
          * @param piece
          * @return Bitboard
          */
-        inline Bitboard get_piece_bitboard(Piece piece) {
+        inline Bitboard get_bitboard(Piece piece) {
             return _states[_current_state]._bitboards[piece.get_index()];
+        }
+
+        /**
+         * @brief Get the bitboard associated with a piece
+         *
+         * @param type
+         * @param color
+         * @return Bitboard
+         */
+        inline Bitboard get_bitboard(PieceType type, Color color) {
+            return _states[_current_state]
+                ._bitboards[color * PieceType::NPieces + type];
         }
 
         /**
@@ -387,7 +399,7 @@ namespace brainiac {
          * @param color
          * @return Bitboard
          */
-        inline Bitboard get_color_bitboard(Color color) {
+        inline Bitboard get_bitboard(Color color) {
             return _states[_current_state]
                 ._bitboards[2 * PieceType::NPieces + color];
         }
