@@ -12,6 +12,15 @@
 
 namespace brainiac {
     /**
+     * @brief A bitboard is an occupancy array for each of the 64
+     * squares on the chess board. This is conveniently represented as a 64-bit
+     * integer to allow fast calculation of positional algorithms, such as move
+     * generation and attack vectors.
+     *
+     */
+    using Bitboard = uint64_t;
+
+    /**
      * @brief Represents chronological board state. This allows forward and
      * backward movement in time (undo/redo moves).
      *
@@ -22,7 +31,7 @@ namespace brainiac {
     struct BoardState {
         // Represent the positions of each of the 12 pieces on the board
         // Extra 2 bitboards represent white/black pieces in general
-        uint64_t _bitboards[14] = {0};
+        Bitboard _bitboards[14] = {0};
 
         // qkQK (from most to least significant bit)
         CastlingFlagSet _castling_rights = 0;
@@ -33,7 +42,7 @@ namespace brainiac {
         int _halfmoves;
 
         // Bitboard representing the attackers on each square (excluding king)
-        uint64_t _attackers = 0;
+        Bitboard _attackers = 0;
         std::vector<Move> _legal_moves;
 
         uint64_t _hash;
@@ -51,61 +60,93 @@ namespace brainiac {
         int _fullmoves;
 
         /**
-         * Generate all pseudo-legal moves for single step moves
+         * @brief Generate single-step moves
+         *
+         * @param bitboard
+         * @param is_king
+         * @param mask_func
          */
-        void generate_step_moves(uint64_t bitboard,
+        void generate_step_moves(Bitboard bitboard,
                                  bool is_king,
-                                 uint64_t (*mask_func)(uint64_t));
+                                 Bitboard (*mask_func)(Bitboard));
 
         /**
-         * Slider moves need more information about the board
+         * @brief Generate slider moves
+         *
+         * @param bitboard
+         * @param mask_func
          */
-        void generate_slider_moves(uint64_t bitboard,
-                                   uint64_t (*mask_func)(uint64_t,
-                                                         uint64_t,
-                                                         uint64_t));
+        void generate_slider_moves(Bitboard bitboard,
+                                   Bitboard (*mask_func)(Bitboard,
+                                                         Bitboard,
+                                                         Bitboard));
 
         /**
-         * Pawn function has special cases (ugh.)
+         * @brief Generate pawn moves
+         *
+         * Pawns have special cases (ugh.)
+         *
+         * @param bitboard
          */
-        void generate_pawn_moves(uint64_t bitboard);
+        void generate_pawn_moves(Bitboard bitboard);
 
         /**
-         * Create castling moves
+         * @brief Generate castling moves
+         *
+         * @param bitboard
          */
-        void generate_castling_moves(uint64_t bitboard);
+        void generate_castling_moves(Bitboard bitboard);
 
         /**
-         * Test if a pseudo-legal move is legal
-         * Algorithm for generating legal moves from pseudo legal?
+         * @brief Test if a move is legal
+         *
          * - If king is the moving piece, make sure destination square is not an
          * attack target
          * - If move is an en passant, king must not currently be in check
          * - If non-king piece, it must not be pinned, or if it is, to and from
          * pieces must be aligned with king
+         *
+         * @param move
+         * @return true
+         * @return false
          */
         bool is_legal(Move &move);
 
         /**
-         * If a pseudo-legal move is legal, register it to the move list
+         * @brief Register a move to the main move list, if it is legal
+         *
+         * @param move
          */
         void register_move(Move &move);
 
         /**
-         * Get the pieces attacking the king
+         * @brief Get the pieces attacking the king
+         *
+         * @param allies_include
+         * @param allies_exclude
+         * @param enemies_exclude
+         * @return Bitboard
          */
-        uint64_t get_attackers(uint64_t allies_include = 0,
-                               uint64_t allies_exclude = 0,
-                               uint64_t enemies_exclude = 0);
+        Bitboard get_attackers(Bitboard allies_include = 0,
+                               Bitboard allies_exclude = 0,
+                               Bitboard enemies_exclude = 0);
 
         /**
          * Generate all legal moves
          * If move list is empty, then player is in checkmate
          */
+
+        /**
+         * @brief Generate all legal moves
+         * If move list is empty, then player is in checkmate
+         *
+         */
         void generate_moves();
 
         /**
-         * Clone the current board state for the next turn
+         * @brief Clone and push the current board state for the next turn
+         *
+         * @return BoardState&
          */
         BoardState &push_state();
 
@@ -115,49 +156,71 @@ namespace brainiac {
         Board(Board &other) : Board(other.generate_fen()){};
 
         /**
-         * Generate a FEN string of the current state for serialization
+         * @brief Generate a FEN string of the current state for serialization
+         *
+         * @return std::string
          */
         std::string generate_fen();
 
         /**
-         * Get a piece on the board
+         * @brief Get a piece on a square
+         *
+         * @param sq
+         * @return Piece
          */
         Piece get_at(const Square sq);
 
         /**
-         * Set a piece on the board
+         * @brief Set a piece on a square
+         *
+         * @param sq
+         * @param piece
          */
         void set_at(const Square sq, const Piece &piece);
 
         /**
-         * Get a piece on the board by coordinates
+         * @brief Get a piece on the board by coordinates
+         *
+         * @param row
+         * @param col
+         * @return Piece
          */
         Piece get_at_coords(int row, int col);
 
         /**
-         * Set a piece on the board by coordinates
+         * @brief Set a piece on the board by coordinates
+         *
+         * @param row
+         * @param col
+         * @param piece
          */
         void set_at_coords(int row, int col, const Piece &piece);
 
         /**
-         * Clear a square on the board
+         * @brief Clear a square on the board
+         *
+         * @param sq
          */
         void clear_at(const Square sq);
 
         /**
-         * Perform a null move, skipping the current turn
+         * @brief Perform a null move, skipping the current turn
+         *
          */
         void skip_turn();
 
         /**
-         * Execute a move and update internal state
-         * Assumes move is legal
+         * @brief Make a move and update internal state
+         * This assumes the move is legal
+         *
+         * @param move
          */
         void make_move(const Move &move);
 
         /**
-         * Return board to the previous state
+         * @brief Return the board to the previous state
          * Only perform if board is not in the initial state
+         *
          */
         inline void undo_move() {
             _current_state--;
@@ -168,8 +231,9 @@ namespace brainiac {
         }
 
         /**
-         * Move board state forward in time
+         * @brief Move the board state forward in time
          * Only perform if board is not in the latest state
+         *
          */
         inline void redo_move() {
             _current_state++;
@@ -180,79 +244,115 @@ namespace brainiac {
         }
 
         /**
-         * Checks if the board is already at the initial state (cannot undo)
+         * @brief Tests if the board is already in the initial state (cannot
+         * undo)
+         *
+         * @return true
+         * @return false
          */
         inline bool is_initial() { return _current_state == 0; }
 
         /**
-         * Checks if the board is already at the latest state (cannot redo)
+         * @brief Tests if the board is already in the latest state (cannot
+         * redo)
+         *
+         * @return true
+         * @return false
          */
         inline bool is_latest() { return _current_state == _states.size() - 1; }
 
         /**
-         * Checks if the current turn's king is in check
+         * @brief Tests if the current player's king is in check
+         *
+         * @return true
+         * @return false
          */
         bool is_check();
 
         /**
-         * Checks if the current player is in checkmate
+         * @brief Tests if the current player is in checkmate (lost)
+         *
+         * @return true
+         * @return false
          */
         inline bool is_checkmate() {
             return get_moves().size() == 0 && is_check();
         }
 
         /**
-         * Checks if the board is in a stalemate
+         * @brief Tests if the game is a stalemate
+         *
+         * @return true
+         * @return false
          */
         inline bool is_stalemate() {
             return get_moves().size() == 0 && !is_check();
         }
 
         /**
-         * Checks if the game is a draw
+         * @brief Tests if the game is a draw
+         *
+         * @return true
+         * @return false
          */
         bool is_draw();
 
         /**
-         * Generate a valid chess move given shift positions
-         * Used to validate move positions from user input
+         * @brief Generate a valid chess move from the given from-to square
+         * pairings
+         *
+         * Used primarily to validate user-submitted moves
+         *
+         * @param from
+         * @param to
+         * @param promotion
+         * @return Move
          */
         Move
         create_move(const Square from, const Square to, char promotion = 0);
 
         /**
-         * Generate a valid chess move given a standard notation string
+         * @brief Generate a valid chess move given a standard notation string
+         *
+         * @param standard_notation Valid standard notation string
+         * @return Move
          */
         Move create_move(std::string standard_notation);
 
         /**
-         * Get all legal moves available to the current player
+         * @brief Get all legal moves available to the current player
+         *
          */
         inline const std::vector<Move> &get_moves() {
             return _states[_current_state]._legal_moves;
         }
 
         /**
-         * Get the current number of halfmoves to enforce the 50-move rule
+         * @brief Get the current number of halfmoves to enforce the 50-move
+         * rule
+         *
          */
         inline int get_halfmoves() {
             return _states[_current_state]._halfmoves;
         }
 
         /**
-         * Return the bitfield corresponding to castling rights
+         * @brief Return the bitfield corresponding to castling rights
+         *
          */
         inline uint8_t get_castling_rights() {
             return _states[_current_state]._castling_rights;
         }
 
         /**
-         * Get the current turn (either White or Black)
+         * @brief Get the current turn (either White or Black)
+         *
          */
         inline Color get_turn() { return _turn; }
 
         /**
-         * Get the Zobrist hash of the board
+         * @brief Get the Zobrist hash of the board
+         *
          */
         inline uint64_t get_hash() { return _states[_current_state]._hash; }
 
@@ -260,9 +360,9 @@ namespace brainiac {
          * @brief Get the bitboard associated with a piece
          *
          * @param piece
-         * @return uint64_t
+         * @return Bitboard
          */
-        inline uint64_t get_piece_bitboard(Piece piece) {
+        inline Bitboard get_piece_bitboard(Piece piece) {
             return _states[_current_state]._bitboards[piece.get_index()];
         }
 
@@ -270,14 +370,15 @@ namespace brainiac {
          * @brief Get a bitboard by idex
          *
          * @param index
-         * @return uint64_t
+         * @return Bitboard
          */
-        inline uint64_t get_bitboard(int index) {
+        inline Bitboard get_bitboard(int index) {
             return _states[_current_state]._bitboards[index];
         }
 
         /**
-         * Print the board on the console
+         * @brief Print the board on the console
+         *
          */
         void print();
     };
