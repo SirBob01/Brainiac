@@ -71,7 +71,25 @@ namespace brainiac {
     /**
      * The square is a cell index on the board (0-63)
      */
-    using Square = uint32_t;
+    using Square = int;
+
+    /**
+     * @brief Enum of all squares
+     *
+     */
+    // clang-format off
+    enum Squares : Square {
+        A1, B1, C1, D1, E1, F1, G1, H1,
+        A2, B2, C2, D2, E2, F2, G2, H2,
+        A3, B3, C3, D3, E3, F3, G3, H3,
+        A4, B4, C4, D4, E4, F4, G4, H4,
+        A5, B5, C5, D5, E5, F5, G5, H5,
+        A6, B6, C6, D6, E6, F6, G6, H6,
+        A7, B7, C7, D7, E7, F7, G7, H7,
+        A8, B8, C8, D8, E8, F8, G8, H8,
+        InvalidSquare
+    };
+    // clang-format on
 
     /**
      * @brief Test if a square is invalid
@@ -79,7 +97,9 @@ namespace brainiac {
      * @return true
      * @return false
      */
-    constexpr inline bool is_square_invalid(Square sq) { return sq == 64; };
+    constexpr inline bool is_square_invalid(Square sq) {
+        return sq == Squares::InvalidSquare;
+    };
 
     /**
      * @brief Get the bitboard mask of a square
@@ -111,10 +131,12 @@ namespace brainiac {
         uint32_t _bitfield;
 
       public:
-        Move() : _bitfield(8256){}; // 0b10000001000000
-        Move(Square from, Square to, MoveFlagSet flags) {
-            _bitfield = to | (from << 7) | (flags << 14);
-        };
+        constexpr Move() :
+            Move(Squares::InvalidSquare,
+                 Squares::InvalidSquare,
+                 0){}; // 0b10000001000000
+        constexpr Move(Square from, Square to, MoveFlagSet flags) :
+            _bitfield(to | (from << 7ULL) | (flags << 14ULL)){};
 
         /**
          * @brief Get the starting square of this move
@@ -122,7 +144,7 @@ namespace brainiac {
          * @return Square From square
          */
         constexpr inline Square get_from() const {
-            return (_bitfield >> 7) & 63;
+            return (_bitfield >> 7ULL) & 127ULL;
         };
 
         /**
@@ -130,7 +152,7 @@ namespace brainiac {
          *
          * @return Square To square
          */
-        constexpr inline Square get_to() const { return _bitfield & 63; };
+        constexpr inline Square get_to() const { return _bitfield & 127ULL; };
 
         /**
          * @brief Get the flags of this move
@@ -138,7 +160,7 @@ namespace brainiac {
          * @return constexpr MoveFlagSet All move flags
          */
         constexpr inline MoveFlagSet get_flags() const {
-            return _bitfield >> 14;
+            return _bitfield >> 14ULL;
         };
 
         /**
@@ -147,7 +169,9 @@ namespace brainiac {
          * @return true
          * @return false
          */
-        constexpr inline bool is_invalid() const { return _bitfield == 8256; };
+        constexpr inline bool is_invalid() const {
+            return _bitfield == 8256ULL;
+        };
 
         /**
          * @brief Test equality with another move

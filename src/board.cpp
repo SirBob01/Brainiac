@@ -22,7 +22,7 @@ namespace brainiac {
                 while (piece_chars[char_idx] != c) {
                     char_idx++;
                 }
-                Square sq = Square(row * 8 + col);
+                Square sq = row * 8 + col;
                 PieceType type =
                     static_cast<PieceType>(char_idx % PieceType::NPieces);
                 Color color = static_cast<Color>(char_idx / PieceType::NPieces);
@@ -470,11 +470,11 @@ namespace brainiac {
     }
 
     Piece Board::get_at_coords(int row, int col) {
-        return get_at(Square(row * 8 + col));
+        return get_at(row * 8 + col);
     }
 
     void Board::set_at_coords(int row, int col, const Piece &piece) {
-        set_at(Square(row * 8 + col), piece);
+        set_at(row * 8 + col, piece);
     }
 
     void Board::clear_at(const Square sq) {
@@ -618,7 +618,7 @@ namespace brainiac {
             } else {
                 rook_board &= fileH;
             }
-            Square initial_position = Square(find_lsb(rook_board));
+            Square initial_position = find_lsb(rook_board);
             clear_at(initial_position);
             set_at(target, rook);
 
@@ -633,15 +633,14 @@ namespace brainiac {
 
             // One rank up or one rank down depending on current player
             int dir = (rankd > 0) - (rankd < 0);
-            Square en_passant_square =
-                Square(state._en_passant_target - (dir * 8));
+            Square en_passant_square = state._en_passant_target - (dir * 8);
             Piece en_passant_piece = get_at(en_passant_square);
             clear_at(en_passant_square);
 
             state._hash ^=
                 zobrist_bitstring(en_passant_piece, en_passant_square);
             state._hash ^= en_passant_bitstrings[state._en_passant_target % 8];
-            state._en_passant_target = Square();
+            state._en_passant_target = Squares::InvalidSquare;
         }
 
         // Update en passant position if pawn advanced two ranks
@@ -649,10 +648,10 @@ namespace brainiac {
             state._hash ^= en_passant_bitstrings[state._en_passant_target % 8];
         }
         if (flags & MoveFlag::PawnDouble) {
-            state._en_passant_target = Square(from + (to - from) / 2);
+            state._en_passant_target = from + (to - from) / 2;
             state._hash ^= en_passant_bitstrings[state._en_passant_target % 8];
         } else {
-            state._en_passant_target = Square();
+            state._en_passant_target = Squares::InvalidSquare;
         }
 
         // Reset halfmove counter if piece was pawn advance or move was a

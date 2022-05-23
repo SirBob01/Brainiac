@@ -19,6 +19,7 @@ To build the engine executable, run
 
 - Dynamic thinking time for live games
 - Optimize datastructures
+  - Optimize move generation by not generating moves that put king in check (e.g., create a checkmask)
 - Mate distance pruning
 - King safety (evaluation)
 
