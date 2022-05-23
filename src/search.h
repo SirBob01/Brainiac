@@ -22,7 +22,8 @@ namespace brainiac {
     using Time = std::chrono::time_point<std::chrono::steady_clock>;
 
     /**
-     * These types of moves will likely change the evaluation dramatically
+     * @brief Types of moves that will likely change the evaluation dramatically
+     *
      */
     constexpr MoveFlagSet VOLATILE_MOVE_FLAGS =
         MoveFlag::Capture | MoveFlag::BishopPromo | MoveFlag::KnightPromo |
@@ -30,7 +31,8 @@ namespace brainiac {
         MoveFlag::Castling;
 
     /**
-     * Initialize engine
+     * @brief Initialize engine submodules
+     *
      */
     inline void init() {
         init_rook_tables();
@@ -40,8 +42,8 @@ namespace brainiac {
     }
 
     /**
-     * Core algorithm for strategically finding the best
-     * next move
+     * @brief Core algorithm for strategically finding the best move
+     *
      */
     class Search {
         double _iterative_timeout_ns;
@@ -58,7 +60,10 @@ namespace brainiac {
         // Statistic for measuring search pruning performance
         int _visited;
 
-        // Pairing of move with its heuristic score for ordering
+        /**
+         * @brief Pairing of a move with its heuristic score for ordering
+         *
+         */
         struct MoveScore {
             Move move;
             float score;
@@ -70,7 +75,16 @@ namespace brainiac {
         };
 
         /**
-         * Alpha-beta pruning algorithm with quiescence search
+         * @brief Alpha-beta pruning algorithm with quiescence search, PVS, LMR,
+         * and null-move pruning
+         *
+         * @param board Board state
+         * @param alpha Lower bound
+         * @param beta Upper bound
+         * @param depth Current search depth
+         * @param turn Current turn
+         * @param move Previously executed move
+         * @return float
          */
         float negamax(Board &board,
                       float alpha,
@@ -80,13 +94,22 @@ namespace brainiac {
                       Move &move);
 
         /**
-         * Root of the negamax routine with iterative deepening
+         * @brief Root of the negamax routine with iterative deepening
+         *
+         * @param board
+         * @param move
+         * @return float
          */
         float negamax_root(Board &board, Move &move);
 
         /**
-         * Estimate the value of a move to optimize search in
+         * @brief Estimate the value of a move to optimize search in
          * alpha-beta pruning
+         *
+         * @param board
+         * @param move
+         * @param depth
+         * @return float
          */
         float ordering_heuristic(Board &board, const Move &move, int depth);
 
@@ -94,17 +117,26 @@ namespace brainiac {
         Search();
 
         /**
-         * Evaluate the board position relative to White
+         * @brief Evaluate the board position relative to white
+         *
+         * @param board
+         * @return float
          */
         float evaluate(Board &board);
 
         /**
-         * Selects the best possible move for the current position
+         * @brief Select the best possible move for the current position
+         *
+         * @param board
+         * @return Move
          */
         Move move(Board &board);
 
         /**
-         * Get the current principal variation
+         * @brief Get the current principal variation
+         *
+         * @param board
+         * @return std::vector<Move>
          */
         std::vector<Move> get_principal_variation(Board &board);
     };
