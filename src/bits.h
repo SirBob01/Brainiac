@@ -201,7 +201,7 @@ namespace brainiac {
      * Calculates the index of the least significant bit in the binary string
      * Use this to iterate through all set bits on a bitboard (active pieces)
      */
-    constexpr inline uint32_t find_lsb(uint64_t binary) {
+    constexpr inline int find_lsb(uint64_t binary) {
         return bitscan_table[((binary & -binary) * debruijn64) >> 58];
     }
 

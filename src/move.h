@@ -125,7 +125,10 @@ namespace brainiac {
     Square string_to_square(std::string notation);
 
     /**
-     * Representation of a chess move
+     * @brief Chess move representation for the `from` and `to` squares, as well
+     * as associated move flags. This is stored efficiently in a single 32-bit
+     * integer.
+     *
      */
     class Move {
         uint32_t _bitfield;
