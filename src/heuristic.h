@@ -177,11 +177,11 @@ namespace brainiac {
      * @return float
      */
     inline float connected_pawn_score(Board &board) {
-        constexpr Piece white_pawn(PieceType::Pawn, Color::White);
-        constexpr Piece black_pawn(PieceType::Pawn, Color::Black);
+        constexpr Piece WP(PieceType::Pawn, Color::White);
+        constexpr Piece BP(PieceType::Pawn, Color::Black);
 
-        uint64_t white_pawns = board.get_piece_bitboard(white_pawn);
-        uint64_t black_pawns = board.get_piece_bitboard(black_pawn);
+        uint64_t white_pawns = board.get_piece_bitboard(WP);
+        uint64_t black_pawns = board.get_piece_bitboard(BP);
 
         float connected = 0;
         for (int i = 0; i < 8; i++) {
@@ -216,12 +216,12 @@ namespace brainiac {
      * @return float
      */
     inline float passed_pawn_score(Board &board) {
-        constexpr Piece white_pawn(PieceType::Pawn, Color::White);
-        constexpr Piece black_pawn(PieceType::Pawn, Color::Black);
+        constexpr Piece WP(PieceType::Pawn, Color::White);
+        constexpr Piece BP(PieceType::Pawn, Color::Black);
 
         uint64_t temp;
-        uint64_t white_pawns = board.get_piece_bitboard(white_pawn);
-        uint64_t black_pawns = board.get_piece_bitboard(black_pawn);
+        uint64_t white_pawns = board.get_piece_bitboard(WP);
+        uint64_t black_pawns = board.get_piece_bitboard(BP);
 
         float passed = 0;
 
@@ -278,19 +278,17 @@ namespace brainiac {
      * @return float
      */
     inline float bishop_pair_score(Board &board) {
-        constexpr Piece white_bishop(PieceType::Bishop, Color::White);
-        constexpr Piece black_bishop(PieceType::Bishop, Color::Black);
+        constexpr Piece WB(PieceType::Bishop, Color::White);
+        constexpr Piece BB(PieceType::Bishop, Color::Black);
 
-        uint64_t white_bishops =
-            count_set_bits(board.get_piece_bitboard(white_bishop));
-        uint64_t black_bishops =
-            count_set_bits(board.get_piece_bitboard(black_bishop));
+        uint64_t white_bishops = board.get_piece_bitboard(WB);
+        uint64_t black_bishops = board.get_piece_bitboard(BB);
 
         float score = 0;
-        if (white_bishops == 2) {
+        if (count_set_bits(white_bishops) == 2) {
             score++;
         }
-        if (black_bishops == 2) {
+        if (count_set_bits(black_bishops) == 2) {
             score--;
         }
         return score;
