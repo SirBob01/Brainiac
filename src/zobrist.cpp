@@ -6,7 +6,7 @@ namespace brainiac {
         std::uniform_real_distribution<double> uniform(0, UINT64_MAX);
 
         rng.seed(1118943);
-        for (int i = 0; i < PieceType::NPieces * 2 * 64; i++) {
+        for (int i = 0; i < PieceType::NPieces2 * 64; i++) {
             piece_bitstrings.push_back(uniform(rng));
         }
         for (int i = 0; i < 4; i++) {
@@ -38,8 +38,8 @@ namespace brainiac {
                 uint64_t bitboard = bitboards[index];
                 for (int i = 0; i < 64; i++) {
                     if (bitboard & 1) {
-                        r ^= piece_bitstrings[(i * PieceType::NPieces * 2) +
-                                              index];
+                        r ^=
+                            piece_bitstrings[(i * PieceType::NPieces2) + index];
                     }
                     bitboard >>= 1;
                 }

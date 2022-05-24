@@ -47,7 +47,7 @@ namespace brainiac {
      * @return uint64_t
      */
     inline uint64_t zobrist_bitstring(const Piece &piece, const Square square) {
-        return piece_bitstrings[(square * PieceType::NPieces * 2) +
+        return piece_bitstrings[(square * PieceType::NPieces2) +
                                 piece.get_index()];
     }
 } // namespace brainiac
