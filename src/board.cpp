@@ -44,8 +44,6 @@ namespace brainiac {
         }
         state._halfmoves = stoi(fields[4]);
         _fullmoves = stoi(fields[5]);
-
-        state._attackers = get_attackers();
         generate_moves();
 
         // Calculate the Zobrist hash
@@ -53,51 +51,6 @@ namespace brainiac {
                                    state._bitboards,
                                    state._castling_rights,
                                    state._en_passant_target);
-    }
-
-    bool Board::is_legal(Move &move) {
-        Piece king(PieceType::King, _turn);
-        BoardState &state = _states[_current_state];
-        Bitboard kingbit = state._bitboards[king.get_index()];
-
-        Square from = move.get_from();
-        Square to = move.get_to();
-        MoveFlagSet flags = move.get_flags();
-
-        Bitboard from_mask = get_square_mask(from);
-        Bitboard to_mask = get_square_mask(to);
-
-        // Handle en passant
-        if (flags & MoveFlag::EnPassant) {
-            int rankd = to - from;
-            int dir = (rankd > 0) - (rankd < 0);
-            Square target_pawn(state._en_passant_target - (dir * 8));
-
-            return (get_attackers(to_mask,
-                                  from_mask,
-                                  get_square_mask(target_pawn)) &
-                    kingbit) == 0;
-        }
-
-        // Handle castling
-        if (flags & MoveFlag::Castling) {
-            int rankd = to - from;
-            int dir = (rankd > 0) - (rankd < 0);
-            Square pass_through(to - dir);
-            if ((from_mask & state._attackers) ||
-                (state._attackers & get_square_mask(pass_through)) ||
-                (to_mask & state._attackers)) {
-                return false;
-            }
-            return true;
-        }
-
-        // Attacked squares after move has been made
-        Bitboard new_attackers = get_attackers(to_mask, from_mask);
-        if (from_mask & kingbit) {
-            return (new_attackers & to_mask) == 0;
-        }
-        return (new_attackers & kingbit) == 0;
     }
 
     // TODO: (mostly) legal move generation!
@@ -143,6 +96,7 @@ namespace brainiac {
         // Calculate the check mask to filter out illegal moves
         Bitboard checkmask = 0xFFFFFFFFFFFFFFFF;
         if (attackmask & king) {
+            state.check = true;
             Bitboard checkmask =
                 // Knight checkmask
                 (get_knight_mask(king) & o_knights) |
@@ -164,6 +118,7 @@ namespace brainiac {
         }
 
         // Filters
+        // TODO: Calculate pinned pieces
         Bitboard check_filter = ~friends & checkmask;
         Bitboard attack_filter = ~friends & ~attackmask;
 
@@ -294,6 +249,21 @@ namespace brainiac {
                 register_move(move);
                 captures &= (captures - 1);
             }
+
+            // TODO: Optimize?
+            CastlingFlagSet rights =
+                state._castling_rights & color_castling_rights[_turn];
+            while (rights) {
+                Castle side = static_cast<Castle>(rights & (-rights));
+
+                // King cannot move in range of his attackers
+                Bitboard mask = get_castling_mask(all, side) & ~attackmask;
+                if (mask) {
+                    Move move(square, find_lsb(mask), MoveFlag::Castling);
+                    register_move(move);
+                }
+                rights &= (rights - 1);
+            }
         }
 
         // Bishop moves
@@ -379,98 +349,6 @@ namespace brainiac {
                 bits &= (bits - 1);
             }
         }
-    }
-
-    // void Board::generate_castling_moves(Bitboard bitboard) {
-    //     BoardState &state = _states[_current_state];
-    //     Bitboard friends = state._bitboards[PieceType::NPieces2 + _turn];
-    //     Bitboard enemies = state._bitboards[PieceType::NPieces2 + !_turn];
-    //     Bitboard all_pieces = friends | enemies;
-
-    //     uint8_t rights = state._castling_rights &
-    //     color_castling_rights[_turn]; Square from(find_lsb(bitboard)); while
-    //     (rights) {
-    //         Castle side = static_cast<Castle>(rights & (-rights));
-
-    //         // King cannot move in range of his attackers
-    //         Bitboard mask =
-    //             get_castling_mask(all_pieces, side) & ~state._attackers;
-    //         if (mask) {
-    //             Square to(find_lsb(mask));
-    //             Move move(from, to, MoveFlag::Castling);
-    //             register_move(move);
-    //         }
-    //         rights &= (rights - 1);
-    //     }
-    // }
-
-    Bitboard Board::get_attackers(Bitboard friends_include,
-                                  Bitboard friends_exclude,
-                                  Bitboard enemies_exclude) {
-        // Generate attack vectors for sliding pieces to test if king is in
-        // check
-        BoardState &state = _states[_current_state];
-        Color opponent = static_cast<Color>(!_turn);
-
-        Piece king(PieceType::King, _turn);
-        Bitboard source_mask = ~enemies_exclude & ~friends_include;
-        Bitboard source_squares =
-            state._bitboards[PieceType::NPieces2 + opponent] & source_mask;
-        Bitboard target_squares =
-            (state._bitboards[PieceType::NPieces2 + _turn] | friends_include) &
-            ~state._bitboards[king.get_index()] & ~friends_exclude;
-
-        Bitboard attacked = 0;
-        for (int type = 0; type < PieceType::NPieces; type++) {
-            Piece piece(static_cast<PieceType>(type), opponent);
-            Bitboard bitboard =
-                state._bitboards[piece.get_index()] & source_mask;
-
-            switch (piece.type) {
-            case PieceType::Pawn:
-                attacked |= get_pawn_capture_mask(bitboard, opponent);
-                break;
-            case PieceType::Knight:
-                attacked |= get_knight_mask(bitboard) & ~source_squares;
-                break;
-            case PieceType::King:
-                attacked |= get_king_mask(bitboard) & ~source_squares;
-                break;
-            default:
-                switch (piece.type) {
-                case PieceType::Bishop:
-                    while (bitboard) {
-                        Bitboard unit = bitboard & (-bitboard);
-                        attacked |= get_bishop_mask(unit,
-                                                    source_squares,
-                                                    target_squares);
-                        bitboard &= (bitboard - 1);
-                    }
-                    break;
-                case PieceType::Rook:
-                    while (bitboard) {
-                        Bitboard unit = bitboard & (-bitboard);
-                        attacked |=
-                            get_rook_mask(unit, source_squares, target_squares);
-                        bitboard &= (bitboard - 1);
-                    }
-                    break;
-                case PieceType::Queen:
-                    while (bitboard) {
-                        Bitboard unit = bitboard & (-bitboard);
-                        attacked |= get_queen_mask(unit,
-                                                   source_squares,
-                                                   target_squares);
-                        bitboard &= (bitboard - 1);
-                    }
-                    break;
-                default:
-                    break;
-                }
-                break;
-            }
-        }
-        return attacked;
     }
 
     BoardState &Board::push_state() {
@@ -585,8 +463,6 @@ namespace brainiac {
         }
         _turn = static_cast<Color>(!_turn);
         state._hash ^= turn_bitstring;
-
-        state._attackers = get_attackers();
         generate_moves();
     }
 
@@ -746,16 +622,7 @@ namespace brainiac {
         }
         _turn = static_cast<Color>(!_turn);
         state._hash ^= turn_bitstring;
-
-        state._attackers = get_attackers();
         generate_moves();
-    }
-
-    bool Board::is_check() {
-        Piece king(PieceType::King, _turn);
-        BoardState &state = _states[_current_state];
-        Bitboard kingbit = state._bitboards[king.get_index()];
-        return state._attackers & kingbit;
     }
 
     bool Board::is_draw() {
