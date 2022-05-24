@@ -82,15 +82,6 @@ namespace brainiac {
                                                          Bitboard));
 
         /**
-         * @brief Generate pawn moves
-         *
-         * Pawns have special cases (ugh.)
-         *
-         * @param bitboard
-         */
-        void generate_pawn_moves(Bitboard bitboard);
-
-        /**
          * @brief Generate castling moves
          *
          * @param bitboard
@@ -111,28 +102,6 @@ namespace brainiac {
          * @return false
          */
         bool is_legal(Move &move);
-
-        /**
-         * @brief Get the bitboard corresponding to the attackers
-         *
-         * @return Bitboard
-         */
-        Bitboard get_attack_mask();
-
-        /**
-         * @brief Get the checkmask to filter moves that will result in
-         * check
-         *
-         * @return Bitboard
-         */
-        Bitboard get_checkmask();
-
-        /**
-         * @brief Get the pinmask
-         *
-         * @return Bitboard
-         */
-        Bitboard get_pinmask();
 
         /**
          * @brief Register a move to the main move list, if it is legal
