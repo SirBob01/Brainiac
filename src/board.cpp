@@ -132,31 +132,31 @@ namespace brainiac {
             Bitboard friends = get_bitboard(_turn);
             Bitboard enemies = get_bitboard(opp);
 
-            Bitboard pawns = get_bitboard(PieceType::Pawn, opp);
-            Bitboard knights = get_bitboard(PieceType::Knight, opp);
-            Bitboard bishops = get_bitboard(PieceType::Bishop, opp);
-            Bitboard rooks = get_bitboard(PieceType::Rook, opp);
-            Bitboard queens = get_bitboard(PieceType::Queen, opp);
+            Bitboard o_pawns = get_bitboard(PieceType::Pawn, opp);
+            Bitboard o_knights = get_bitboard(PieceType::Knight, opp);
+            Bitboard o_bishops = get_bitboard(PieceType::Bishop, opp);
+            Bitboard o_rooks = get_bitboard(PieceType::Rook, opp);
+            Bitboard o_queens = get_bitboard(PieceType::Queen, opp);
 
             return
                 // Knight checkmask
-                (get_knight_mask(king) & knights) |
+                (get_knight_mask(king) & o_knights) |
 
                 // Queen checkmask
                 (get_queen_mask(king, friends, enemies) &
-                 (get_queen_mask(queens, enemies, friends) | queens)) |
+                 (get_queen_mask(o_queens, enemies, friends) | o_queens)) |
 
                 // Bishop checkmask
                 (get_bishop_mask(king, friends, enemies) &
-                 (get_bishop_mask(bishops, enemies, friends) | bishops)) |
+                 (get_bishop_mask(o_bishops, enemies, friends) | o_bishops)) |
 
                 // Rook checkmask
                 (get_rook_mask(king, friends, enemies) &
-                 (get_rook_mask(rooks, enemies, friends) | rooks)) |
+                 (get_rook_mask(o_rooks, enemies, friends) | o_rooks)) |
 
                 // Pawn checkmask
                 (get_pawn_capture_mask(king, _turn) &
-                 (get_pawn_capture_mask(pawns, opp) | pawns));
+                 (get_pawn_capture_mask(o_pawns, opp) | o_pawns));
         }
         return 0xFFFFFFFFFFFFFFFF;
     }
@@ -168,10 +168,157 @@ namespace brainiac {
         }
     }
 
+    // TODO: (mostly) legal move generation!
+    void Board::generate_moves() {
+        BoardState &state = _states[_current_state];
+        Color opp = static_cast<Color>(!_turn);
+        Bitboard friends = get_bitboard(_turn);
+        Bitboard enemies = get_bitboard(opp);
+        Bitboard all = get_bitboard(13); // All pieces
+
+        // Current turn pieces
+        Bitboard pawns = get_bitboard(PieceType::Pawn, _turn);
+        Bitboard knights = get_bitboard(PieceType::Knight, _turn);
+        Bitboard bishops = get_bitboard(PieceType::Bishop, _turn);
+        Bitboard rooks = get_bitboard(PieceType::Rook, _turn);
+        Bitboard queens = get_bitboard(PieceType::Queen, _turn);
+        Bitboard king = get_bitboard(PieceType::King, _turn);
+
+        // Opponent pieces
+        Bitboard o_pawns = get_bitboard(PieceType::Pawn, opp);
+        Bitboard o_knights = get_bitboard(PieceType::Knight, opp);
+        Bitboard o_bishops = get_bitboard(PieceType::Bishop, opp);
+        Bitboard o_rooks = get_bitboard(PieceType::Rook, opp);
+        Bitboard o_queens = get_bitboard(PieceType::Queen, opp);
+        Bitboard o_king = get_bitboard(PieceType::King, opp);
+
+        // Current turn moves (TODO: Needs to be calculated per bit D: )
+        // Bitboard pawn_single = get_pawn_advance_mask(pawns, all, _turn);
+        // Bitboard pawn_double = get_pawn_double_mask(pawns, all, _turn);
+        // Bitboard pawn_capture = get_pawn_capture_mask(pawns, _turn);
+        // Bitboard knight_moves = get_knight_mask(knights);
+        // Bitboard bishop_moves = get_bishop_mask(bishops, friends, enemies);
+        // Bitboard rook_moves = get_rook_mask(rooks, friends, enemies);
+        // Bitboard queen_moves = get_queen_mask(rooks, friends, enemies);
+        // Bitboard king_moves = get_king_mask(king);
+
+        // Opponent captures
+        Bitboard o_pawns_caps = get_pawn_capture_mask(o_pawns, opp);
+        Bitboard o_knights_caps = get_knight_mask(o_knights);
+        Bitboard o_bishops_caps = get_bishop_mask(o_bishops, enemies, friends);
+        Bitboard o_rooks_caps = get_rook_mask(o_rooks, enemies, friends);
+        Bitboard o_queens_caps = get_queen_mask(o_queens, enemies, friends);
+
+        Bitboard attackmask =
+            ~enemies & (o_pawns_caps | o_knights_caps | o_bishops_caps |
+                        o_rooks_caps | o_queens_caps);
+
+        // Calculate the check mask to filter out illegal moves
+        Bitboard checkmask = 0xFFFFFFFFFFFFFFFF;
+        if (attackmask & king) {
+            Bitboard checkmask =
+                // Knight checkmask
+                (get_knight_mask(king) & o_knights) |
+
+                // Queen checkmask
+                (get_queen_mask(king, friends, enemies) &
+                 (o_queens_caps | o_queens)) |
+
+                // Bishop checkmask
+                (get_bishop_mask(king, friends, enemies) &
+                 (o_bishops_caps | o_bishops)) |
+
+                // Rook checkmask
+                (get_rook_mask(king, friends, enemies) &
+                 (o_rooks_caps | o_rooks)) |
+
+                // Pawn checkmask
+                (get_pawn_capture_mask(king, _turn) & (o_pawns_caps | o_pawns));
+        }
+
+        // Generate pawn moves
+        Bitboard bits;
+        {
+            bits = pawns;
+            while (bits) {
+                Bitboard unit = (bits & -bits);
+                Square square = find_lsb(unit);
+
+                // Calculate move masks
+                Bitboard pawn_single =
+                    get_pawn_advance_mask(unit, all, _turn) & checkmask;
+                Bitboard pawn_double =
+                    get_pawn_double_mask(unit, all, _turn) & checkmask;
+                Bitboard pawn_capture =
+                    get_pawn_capture_mask(unit, _turn) & checkmask;
+
+                // En-passant mask
+                Bitboard en_passant_mask = 0;
+                if (!is_square_invalid(state._en_passant_target)) {
+                    en_passant_mask =
+                        get_square_mask(state._en_passant_target) & checkmask;
+                }
+
+                // Single pawn advance
+                while (pawn_single) {
+                    Bitboard target = pawn_single & (-pawn_single);
+                    if (target & end_ranks) {
+                        for (int i = 0; i < 4; i++) {
+                            Move move(square,
+                                      find_lsb(target),
+                                      pawn_single_flags | promotions[i]);
+                            register_move(move);
+                        }
+                    } else {
+                        Move move(square, find_lsb(target), pawn_single_flags);
+                        register_move(move);
+                    }
+                    pawn_single &= (pawn_single - 1);
+                }
+
+                // Double pawn advance
+                while (pawn_double) {
+                    Bitboard target = pawn_double & (-pawn_double);
+                    Move move(square, find_lsb(target), pawn_double_flags);
+                    register_move(move);
+                    pawn_double &= (pawn_double - 1);
+                }
+
+                // Regular captures
+                Bitboard captures = pawn_capture & enemies;
+                while (captures) {
+                    Bitboard target = capture_board & (-capture_board);
+                    if (target & end_ranks) {
+                        for (int i = 0; i < 4; i++) {
+                            Move move(square,
+                                      find_lsb(target),
+                                      pawn_capture_flags | promotions[i]);
+                            register_move(move);
+                        }
+                    } else {
+                        Move move(square, find_lsb(target), pawn_capture_flags);
+                        register_move(move);
+                    }
+                    capture_board &= (capture_board - 1);
+                }
+
+                // En-passant captures
+                Bitboard ep_board = pawn_capture & en_passant_mask;
+                while (ep_board) {
+                    Bitboard target = ep_board & (-ep_board);
+                    Move moveobj(square, find_lsb(target), en_passant_flags);
+                    register_move(moveobj);
+                    ep_board &= (ep_board - 1);
+                }
+                bits &= (bits - 1);
+            }
+        }
+    }
+
     void Board::generate_pawn_moves(Bitboard bitboard) {
         BoardState &state = _states[_current_state];
-        Bitboard friends = state._bitboards[PieceType::NPieces * 2 + _turn];
-        Bitboard enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
+        Bitboard friends = state._bitboards[PieceType::NPieces2 + _turn];
+        Bitboard enemies = state._bitboards[PieceType::NPieces2 + !_turn];
         Bitboard all_pieces = friends | enemies;
         int piece_shift = find_lsb(bitboard);
 
@@ -247,8 +394,8 @@ namespace brainiac {
                                     bool is_king,
                                     Bitboard (*mask_func)(Bitboard)) {
         BoardState &state = _states[_current_state];
-        Bitboard friends = state._bitboards[PieceType::NPieces * 2 + _turn];
-        Bitboard enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
+        Bitboard friends = state._bitboards[PieceType::NPieces2 + _turn];
+        Bitboard enemies = state._bitboards[PieceType::NPieces2 + !_turn];
         int piece_shift = find_lsb(bitboard);
 
         // King cannot move in range of his attackers
@@ -280,8 +427,8 @@ namespace brainiac {
                                                             Bitboard,
                                                             Bitboard)) {
         BoardState &state = _states[_current_state];
-        Bitboard friends = state._bitboards[PieceType::NPieces * 2 + _turn];
-        Bitboard enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
+        Bitboard friends = state._bitboards[PieceType::NPieces2 + _turn];
+        Bitboard enemies = state._bitboards[PieceType::NPieces2 + !_turn];
         int piece_shift = find_lsb(bitboard);
 
         Bitboard checkmask = get_checkmask();
@@ -306,8 +453,8 @@ namespace brainiac {
 
     void Board::generate_castling_moves(Bitboard bitboard) {
         BoardState &state = _states[_current_state];
-        Bitboard friends = state._bitboards[PieceType::NPieces * 2 + _turn];
-        Bitboard enemies = state._bitboards[PieceType::NPieces * 2 + !_turn];
+        Bitboard friends = state._bitboards[PieceType::NPieces2 + _turn];
+        Bitboard enemies = state._bitboards[PieceType::NPieces2 + !_turn];
         Bitboard all_pieces = friends | enemies;
 
         uint8_t rights = state._castling_rights & color_castling_rights[_turn];
@@ -338,10 +485,9 @@ namespace brainiac {
         Piece king(PieceType::King, _turn);
         Bitboard source_mask = ~enemies_exclude & ~friends_include;
         Bitboard source_squares =
-            state._bitboards[PieceType::NPieces * 2 + opponent] & source_mask;
+            state._bitboards[PieceType::NPieces2 + opponent] & source_mask;
         Bitboard target_squares =
-            (state._bitboards[PieceType::NPieces * 2 + _turn] |
-             friends_include) &
+            (state._bitboards[PieceType::NPieces2 + _turn] | friends_include) &
             ~state._bitboards[king.get_index()] & ~friends_exclude;
 
         Bitboard attacked = 0;
@@ -529,7 +675,7 @@ namespace brainiac {
         Bitboard mask = get_square_mask(sq);
 
         BoardState &state = _states[_current_state];
-        state._bitboards[2 * PieceType::NPieces + piece.color] |= mask;
+        state._bitboards[PieceType::NPieces2 + piece.color] |= mask;
         state._bitboards[piece.get_index()] |= mask;
     }
 
