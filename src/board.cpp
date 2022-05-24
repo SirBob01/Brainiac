@@ -53,7 +53,6 @@ namespace brainiac {
                                    state._en_passant_target);
     }
 
-    // TODO: (mostly) legal move generation!
     void Board::generate_moves() {
         // Clear move list
         BoardState &state = _states[_current_state];
