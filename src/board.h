@@ -128,6 +128,13 @@ namespace brainiac {
         Bitboard get_checkmask();
 
         /**
+         * @brief Get the pinmask
+         *
+         * @return Bitboard
+         */
+        Bitboard get_pinmask();
+
+        /**
          * @brief Register a move to the main move list, if it is legal
          *
          * @param move
@@ -401,7 +408,7 @@ namespace brainiac {
          */
         inline Bitboard get_bitboard(Color color) {
             return _states[_current_state]
-                ._bitboards[2 * PieceType::NPieces + color];
+                ._bitboards[PieceType::NPieces2 + color];
         }
 
         /**
