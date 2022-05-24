@@ -41,11 +41,9 @@ namespace brainiac {
         // advance or capture reset)
         int _halfmoves;
 
-        // Bitboard representing the attackers on each square (excluding king)
-        Bitboard _attackers = 0;
-        std::vector<Move> _legal_moves;
-
         uint64_t _hash;
+        bool check = false;
+        std::vector<Move> _legal_moves;
     };
 
     /**
@@ -60,21 +58,6 @@ namespace brainiac {
         int _fullmoves;
 
         /**
-         * @brief Test if a move is legal
-         *
-         * - If king is the moving piece, make sure destination square is not an
-         * attack target
-         * - If move is an en passant, king must not currently be in check
-         * - If non-king piece, it must not be pinned, or if it is, to and from
-         * pieces must be aligned with king
-         *
-         * @param move
-         * @return true
-         * @return false
-         */
-        bool is_legal(Move &move);
-
-        /**
          * @brief Register a move to the main move list, if it is legal
          *
          * @param move
@@ -82,18 +65,6 @@ namespace brainiac {
         inline void register_move(Move &move) {
             _states[_current_state]._legal_moves.push_back(move);
         }
-
-        /**
-         * @brief Get the pieces attacking the king
-         *
-         * @param allies_include
-         * @param allies_exclude
-         * @param enemies_exclude
-         * @return Bitboard
-         */
-        Bitboard get_attackers(Bitboard allies_include = 0,
-                               Bitboard allies_exclude = 0,
-                               Bitboard enemies_exclude = 0);
 
         /**
          * Generate all legal moves
@@ -231,7 +202,7 @@ namespace brainiac {
          * @return true
          * @return false
          */
-        bool is_check();
+        inline bool is_check() { return _states[_current_state].check; }
 
         /**
          * @brief Tests if the current player is in checkmate (lost)
