@@ -100,13 +100,6 @@ namespace brainiac {
         return (new_attackers & kingbit) == 0;
     }
 
-    void Board::register_move(Move &move) {
-        BoardState &state = _states[_current_state];
-        if (is_legal(move)) {
-            state._legal_moves.push_back(move);
-        }
-    }
-
     // TODO: (mostly) legal move generation!
     void Board::generate_moves() {
         // Clear move list
@@ -117,7 +110,7 @@ namespace brainiac {
         Color opp = static_cast<Color>(!_turn);
         Bitboard friends = get_bitboard(_turn);
         Bitboard enemies = get_bitboard(opp);
-        Bitboard all = get_bitboard(13);
+        Bitboard all = friends | enemies;
 
         // Current turn pieces
         Bitboard pawns = get_bitboard(PieceType::Pawn, _turn);
@@ -135,26 +128,17 @@ namespace brainiac {
         Bitboard o_queens = get_bitboard(PieceType::Queen, opp);
         Bitboard o_king = get_bitboard(PieceType::King, opp);
 
-        // Current turn moves (TODO: Needs to be calculated per bit D: )
-        // Bitboard pawn_single = get_pawn_advance_mask(pawns, all, _turn);
-        // Bitboard pawn_double = get_pawn_double_mask(pawns, all, _turn);
-        // Bitboard pawn_capture = get_pawn_capture_mask(pawns, _turn);
-        // Bitboard knight_moves = get_knight_mask(knights);
-        // Bitboard bishop_moves = get_bishop_mask(bishops, friends, enemies);
-        // Bitboard rook_moves = get_rook_mask(rooks, friends, enemies);
-        // Bitboard queen_moves = get_queen_mask(rooks, friends, enemies);
-        // Bitboard king_moves = get_king_mask(king);
-
         // Opponent captures
         Bitboard o_pawns_caps = get_pawn_capture_mask(o_pawns, opp);
         Bitboard o_knights_caps = get_knight_mask(o_knights);
         Bitboard o_bishops_caps = get_bishop_mask(o_bishops, enemies, friends);
         Bitboard o_rooks_caps = get_rook_mask(o_rooks, enemies, friends);
         Bitboard o_queens_caps = get_queen_mask(o_queens, enemies, friends);
+        Bitboard o_king_caps = get_king_mask(o_king);
 
         Bitboard attackmask =
             ~enemies & (o_pawns_caps | o_knights_caps | o_bishops_caps |
-                        o_rooks_caps | o_queens_caps);
+                        o_rooks_caps | o_queens_caps | o_king_caps);
 
         // Calculate the check mask to filter out illegal moves
         Bitboard checkmask = 0xFFFFFFFFFFFFFFFF;
@@ -181,7 +165,7 @@ namespace brainiac {
 
         // Filters
         Bitboard check_filter = ~friends & checkmask;
-        Bitboard attack_filter = ~friends & checkmask;
+        Bitboard attack_filter = ~friends & ~attackmask;
 
         // Generate pawn moves
         Bitboard bits;
@@ -294,7 +278,6 @@ namespace brainiac {
             Bitboard unit = king;
             Square square = find_lsb(unit);
 
-            // TODO: Get filter right
             Bitboard king_moves = get_king_mask(unit) & attack_filter;
 
             Bitboard captures = king_moves & enemies;
@@ -398,57 +381,28 @@ namespace brainiac {
         }
     }
 
-    // void Board::generate_slider_moves(Bitboard bitboard,
-    //                                   Bitboard (*mask_func)(Bitboard,
-    //                                                         Bitboard,
-    //                                                         Bitboard)) {
+    // void Board::generate_castling_moves(Bitboard bitboard) {
     //     BoardState &state = _states[_current_state];
     //     Bitboard friends = state._bitboards[PieceType::NPieces2 + _turn];
     //     Bitboard enemies = state._bitboards[PieceType::NPieces2 + !_turn];
-    //     int piece_shift = find_lsb(bitboard);
+    //     Bitboard all_pieces = friends | enemies;
 
-    //     Bitboard checkmask = get_checkmask();
+    //     uint8_t rights = state._castling_rights &
+    //     color_castling_rights[_turn]; Square from(find_lsb(bitboard)); while
+    //     (rights) {
+    //         Castle side = static_cast<Castle>(rights & (-rights));
 
-    //     Bitboard moves = mask_func(bitboard, friends, enemies) & checkmask;
-
-    //     Bitboard capture_board = moves & enemies;
-    //     Bitboard quiet_board = moves & ~enemies;
-    //     while (quiet_board) {
-    //         Bitboard move = quiet_board & (-quiet_board);
-    //         Move moveobj(piece_shift, find_lsb(move), 0);
-    //         register_move(moveobj);
-    //         quiet_board &= (quiet_board - 1);
-    //     }
-    //     while (capture_board) {
-    //         Bitboard move = capture_board & (-capture_board);
-    //         Move moveobj(piece_shift, find_lsb(move), MoveFlag::Capture);
-    //         register_move(moveobj);
-    //         capture_board &= (capture_board - 1);
+    //         // King cannot move in range of his attackers
+    //         Bitboard mask =
+    //             get_castling_mask(all_pieces, side) & ~state._attackers;
+    //         if (mask) {
+    //             Square to(find_lsb(mask));
+    //             Move move(from, to, MoveFlag::Castling);
+    //             register_move(move);
+    //         }
+    //         rights &= (rights - 1);
     //     }
     // }
-
-    void Board::generate_castling_moves(Bitboard bitboard) {
-        BoardState &state = _states[_current_state];
-        Bitboard friends = state._bitboards[PieceType::NPieces2 + _turn];
-        Bitboard enemies = state._bitboards[PieceType::NPieces2 + !_turn];
-        Bitboard all_pieces = friends | enemies;
-
-        uint8_t rights = state._castling_rights & color_castling_rights[_turn];
-        Square from(find_lsb(bitboard));
-        while (rights) {
-            Castle side = static_cast<Castle>(rights & (-rights));
-
-            // King cannot move in range of his attackers
-            Bitboard mask =
-                get_castling_mask(all_pieces, side) & ~state._attackers;
-            if (mask) {
-                Square to(find_lsb(mask));
-                Move move(from, to, MoveFlag::Castling);
-                register_move(move);
-            }
-            rights &= (rights - 1);
-        }
-    }
 
     Bitboard Board::get_attackers(Bitboard friends_include,
                                   Bitboard friends_exclude,

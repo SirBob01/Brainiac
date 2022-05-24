@@ -60,35 +60,6 @@ namespace brainiac {
         int _fullmoves;
 
         /**
-         * @brief Generate single-step moves
-         *
-         * @param bitboard
-         * @param is_king
-         * @param mask_func
-         */
-        void generate_step_moves(Bitboard bitboard,
-                                 bool is_king,
-                                 Bitboard (*mask_func)(Bitboard));
-
-        /**
-         * @brief Generate slider moves
-         *
-         * @param bitboard
-         * @param mask_func
-         */
-        void generate_slider_moves(Bitboard bitboard,
-                                   Bitboard (*mask_func)(Bitboard,
-                                                         Bitboard,
-                                                         Bitboard));
-
-        /**
-         * @brief Generate castling moves
-         *
-         * @param bitboard
-         */
-        void generate_castling_moves(Bitboard bitboard);
-
-        /**
          * @brief Test if a move is legal
          *
          * - If king is the moving piece, make sure destination square is not an
@@ -108,7 +79,9 @@ namespace brainiac {
          *
          * @param move
          */
-        void register_move(Move &move);
+        inline void register_move(Move &move) {
+            _states[_current_state]._legal_moves.push_back(move);
+        }
 
         /**
          * @brief Get the pieces attacking the king
