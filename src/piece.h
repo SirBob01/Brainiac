@@ -38,7 +38,10 @@ namespace brainiac {
         Knight = 3,
         Bishop = 4,
         Queen = 5,
-        NPieces = 6
+        NPieces = 6,
+
+        // Useful constant for bitboard manipulation
+        NPieces2 = 2 * PieceType::NPieces
     };
 
     /**
