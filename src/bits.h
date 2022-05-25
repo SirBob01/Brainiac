@@ -50,10 +50,10 @@ namespace brainiac {
         uint64_t block_mask;
         uint64_t magic;
 
-        // { full, c1, c2 }, where full = c1 | c2
-        // For rooks, these are the horizontal and vertical
-        // For bishops, these are the diagonal and antidiagonal
-        uint64_t move_masks[1ULL << 12][3];
+        // { full, a1, a2, b1, b2 }, where full = a1 | a2 | b1 | b2
+        // For rooks, these are the north, south, east and west
+        // For bishops, these are nw, ne, se, sw (CC order)
+        uint64_t move_masks[1ULL << 12][5];
     };
 
     /**
@@ -307,47 +307,62 @@ namespace brainiac {
     }
 
     /**
-     * @brief Get the vertical movement mask for a sliding piece, on-the-fly
+     * @brief Get the north movement mask for a sliding piece, on-the-fly
      *
      * @param bitboard
      * @param occupied
      * @return uint64_t
      */
-    inline uint64_t get_vertical_mask_otf(uint64_t bitboard,
-                                          uint64_t occupied) {
-
+    inline uint64_t get_north_mask_otf(uint64_t bitboard, uint64_t occupied) {
         const int shift = find_lsb(bitboard);
         const uint64_t file_mask = fileA << (7 & shift);
-
-        uint64_t file_positive =
-            get_ray_attack(bitboard, occupied & file_mask) & file_mask;
-        uint64_t file_negative =
-            get_ray_attack(flip_vertical(bitboard),
-                           flip_vertical(occupied & file_mask)) &
-            file_mask;
-        return (file_positive | flip_vertical(file_negative));
+        return get_ray_attack(bitboard, occupied & file_mask) & file_mask;
     }
 
     /**
-     * @brief Get the horizontal movement mask for a sliding piece, on-the-fly
+     * @brief Get the south movement mask for a sliding piece, on-the-fly
      *
      * @param bitboard
      * @param occupied
      * @return uint64_t
      */
-    inline uint64_t get_horizontal_mask_otf(uint64_t bitboard,
-                                            uint64_t occupied) {
+    inline uint64_t get_south_mask_otf(uint64_t bitboard, uint64_t occupied) {
+        const int shift = find_lsb(bitboard);
+        const uint64_t file_mask = fileA << (7 & shift);
+        return flip_vertical(
+            get_ray_attack(flip_vertical(bitboard),
+                           flip_vertical(occupied & file_mask)) &
+            file_mask);
+    }
 
+    /**
+     * @brief Get the west movement mask for a sliding piece, on-the-fly
+     *
+     * @param bitboard
+     * @param occupied
+     * @return uint64_t
+     */
+    inline uint64_t get_west_mask_otf(uint64_t bitboard, uint64_t occupied) {
         const int shift = find_lsb(bitboard);
         const uint64_t rank_mask = rank8 >> (56 - 8 * (shift / 8));
 
-        uint64_t rank_positive =
-            get_ray_attack(bitboard, occupied & rank_mask) & rank_mask;
-        uint64_t rank_negative =
+        return get_ray_attack(bitboard, occupied & rank_mask) & rank_mask;
+    }
+
+    /**
+     * @brief Get the east movement mask for a sliding piece, on-the-fly
+     *
+     * @param bitboard
+     * @param occupied
+     * @return uint64_t
+     */
+    inline uint64_t get_east_mask_otf(uint64_t bitboard, uint64_t occupied) {
+        const int shift = find_lsb(bitboard);
+        const uint64_t rank_mask = rank8 >> (56 - 8 * (shift / 8));
+        return flip_horizontal(
             get_ray_attack(flip_horizontal(bitboard),
                            flip_horizontal(occupied & rank_mask)) &
-            rank_mask;
-        return (rank_positive | flip_horizontal(rank_negative));
+            rank_mask);
     }
 
     /**
@@ -402,8 +417,10 @@ namespace brainiac {
      * @return uint64_t
      */
     inline uint64_t get_rook_mask_otf(uint64_t bitboard, uint64_t occupied) {
-        return get_vertical_mask_otf(bitboard, occupied) |
-               get_horizontal_mask_otf(bitboard, occupied);
+        return get_north_mask_otf(bitboard, occupied) |
+               get_south_mask_otf(bitboard, occupied) |
+               get_east_mask_otf(bitboard, occupied) |
+               get_west_mask_otf(bitboard, occupied);
     }
 
     /**
@@ -611,7 +628,7 @@ namespace brainiac {
             const uint64_t blockers = table.block_mask & (friends | enemies);
             const uint64_t index =
                 (blockers * table.magic) >> (64 - table.shift);
-            mask |= table.move_masks[index][1];
+            mask |= (table.move_masks[index][3] | table.move_masks[index][4]);
 
             bitboard &= (bitboard - 1);
         }
@@ -638,7 +655,7 @@ namespace brainiac {
             const uint64_t blockers = table.block_mask & (friends | enemies);
             const uint64_t index =
                 (blockers * table.magic) >> (64 - table.shift);
-            mask |= table.move_masks[index][2];
+            mask |= (table.move_masks[index][1] | table.move_masks[index][2]);
 
             bitboard &= (bitboard - 1);
         }
@@ -693,6 +710,114 @@ namespace brainiac {
             const uint64_t index =
                 (blockers * table.magic) >> (64 - table.shift);
             mask |= table.move_masks[index][2];
+
+            bitboard &= (bitboard - 1);
+        }
+        return mask & ~friends;
+    }
+
+    /**
+     * @brief Get the north slider mask
+     *
+     * @param bitboard
+     * @param friends
+     * @param enemies
+     * @return constexpr uint64_t
+     */
+    constexpr inline uint64_t
+    get_north_mask(uint64_t bitboard, uint64_t friends, uint64_t enemies) {
+        uint64_t mask = 0;
+
+        while (bitboard) {
+            const uint64_t unit = bitboard & -bitboard;
+            const int square = find_lsb(unit);
+
+            const SlidingMoveTable &table = rook_attack_tables[square];
+            const uint64_t blockers = table.block_mask & (friends | enemies);
+            const uint64_t index =
+                (blockers * table.magic) >> (64 - table.shift);
+            mask |= table.move_masks[index][1];
+
+            bitboard &= (bitboard - 1);
+        }
+        return mask & ~friends;
+    }
+
+    /**
+     * @brief Get the south slider mask
+     *
+     * @param bitboard
+     * @param friends
+     * @param enemies
+     * @return constexpr uint64_t
+     */
+    constexpr inline uint64_t
+    get_south_mask(uint64_t bitboard, uint64_t friends, uint64_t enemies) {
+        uint64_t mask = 0;
+
+        while (bitboard) {
+            const uint64_t unit = bitboard & -bitboard;
+            const int square = find_lsb(unit);
+
+            const SlidingMoveTable &table = rook_attack_tables[square];
+            const uint64_t blockers = table.block_mask & (friends | enemies);
+            const uint64_t index =
+                (blockers * table.magic) >> (64 - table.shift);
+            mask |= table.move_masks[index][2];
+
+            bitboard &= (bitboard - 1);
+        }
+        return mask & ~friends;
+    }
+
+    /**
+     * @brief Get the east slider mask
+     *
+     * @param bitboard
+     * @param friends
+     * @param enemies
+     * @return constexpr uint64_t
+     */
+    constexpr inline uint64_t
+    get_east_mask(uint64_t bitboard, uint64_t friends, uint64_t enemies) {
+        uint64_t mask = 0;
+
+        while (bitboard) {
+            const uint64_t unit = bitboard & -bitboard;
+            const int square = find_lsb(unit);
+
+            const SlidingMoveTable &table = rook_attack_tables[square];
+            const uint64_t blockers = table.block_mask & (friends | enemies);
+            const uint64_t index =
+                (blockers * table.magic) >> (64 - table.shift);
+            mask |= table.move_masks[index][3];
+
+            bitboard &= (bitboard - 1);
+        }
+        return mask & ~friends;
+    }
+
+    /**
+     * @brief Get the west slider mask
+     *
+     * @param bitboard
+     * @param friends
+     * @param enemies
+     * @return constexpr uint64_t
+     */
+    constexpr inline uint64_t
+    get_west_mask(uint64_t bitboard, uint64_t friends, uint64_t enemies) {
+        uint64_t mask = 0;
+
+        while (bitboard) {
+            const uint64_t unit = bitboard & -bitboard;
+            const int square = find_lsb(unit);
+
+            const SlidingMoveTable &table = rook_attack_tables[square];
+            const uint64_t blockers = table.block_mask & (friends | enemies);
+            const uint64_t index =
+                (blockers * table.magic) >> (64 - table.shift);
+            mask |= table.move_masks[index][4];
 
             bitboard &= (bitboard - 1);
         }
@@ -779,9 +904,13 @@ namespace brainiac {
                 table.move_masks[index][0] =
                     get_rook_mask_otf(bitboard, blockers);
                 table.move_masks[index][1] =
-                    get_horizontal_mask_otf(bitboard, blockers);
+                    get_north_mask_otf(bitboard, blockers);
                 table.move_masks[index][2] =
-                    get_vertical_mask_otf(bitboard, blockers);
+                    get_south_mask_otf(bitboard, blockers);
+                table.move_masks[index][3] =
+                    get_east_mask_otf(bitboard, blockers);
+                table.move_masks[index][4] =
+                    get_west_mask_otf(bitboard, blockers);
             }
         }
     }
