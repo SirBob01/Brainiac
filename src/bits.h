@@ -49,7 +49,11 @@ namespace brainiac {
         int shift;
         uint64_t block_mask;
         uint64_t magic;
-        uint64_t move_masks[1ULL << 12];
+
+        // { full, c1, c2 }, where full = c1 | c2
+        // For rooks, these are the horizontal and vertical
+        // For bishops, these are the diagonal and antidiagonal
+        uint64_t move_masks[1ULL << 12][3];
     };
 
     /**
@@ -514,7 +518,7 @@ namespace brainiac {
             const uint64_t blockers = table.block_mask & (allies | enemies);
             const uint64_t index =
                 (blockers * table.magic) >> (64 - table.shift);
-            mask |= table.move_masks[index];
+            mask |= table.move_masks[index][0];
 
             bitboard &= (bitboard - 1);
         }
@@ -541,7 +545,7 @@ namespace brainiac {
             const uint64_t blockers = table.block_mask & (allies | enemies);
             const uint64_t index =
                 (blockers * table.magic) >> (64 - table.shift);
-            mask |= table.move_masks[index];
+            mask |= table.move_masks[index][0];
 
             bitboard &= (bitboard - 1);
         }
@@ -570,7 +574,7 @@ namespace brainiac {
                 rook_table.block_mask & (allies | enemies);
             const uint64_t rook_index =
                 (rook_blockers * rook_table.magic) >> (64 - rook_table.shift);
-            const uint64_t rook_mask = rook_table.move_masks[rook_index];
+            const uint64_t rook_mask = rook_table.move_masks[rook_index][0];
 
             const SlidingMoveTable &bishop_table = bishop_attack_tables[square];
             const uint64_t bishop_blockers =
@@ -578,7 +582,8 @@ namespace brainiac {
             const uint64_t bishop_index =
                 (bishop_blockers * bishop_table.magic) >>
                 (64 - bishop_table.shift);
-            const uint64_t bishop_mask = bishop_table.move_masks[bishop_index];
+            const uint64_t bishop_mask =
+                bishop_table.move_masks[bishop_index][0];
             mask |= rook_mask | bishop_mask;
 
             bitboard &= (bitboard - 1);
@@ -663,7 +668,12 @@ namespace brainiac {
                 uint64_t blockers =
                     generate_occupancy(j, table.shift, block_mask);
                 uint64_t index = (blockers * table.magic) >> (64 - table.shift);
-                table.move_masks[index] = get_rook_mask_otf(bitboard, blockers);
+                table.move_masks[index][0] =
+                    get_rook_mask_otf(bitboard, blockers);
+                table.move_masks[index][1] =
+                    get_horizontal_mask_otf(bitboard, blockers);
+                table.move_masks[index][2] =
+                    get_vertical_mask_otf(bitboard, blockers);
             }
         }
     }
@@ -691,8 +701,13 @@ namespace brainiac {
                 uint64_t blockers =
                     generate_occupancy(j, table.shift, block_mask);
                 uint64_t index = (blockers * table.magic) >> (64 - table.shift);
-                table.move_masks[index] =
+
+                table.move_masks[index][0] =
                     get_bishop_mask_otf(bitboard, blockers);
+                table.move_masks[index][1] =
+                    get_diagonal_mask_otf(bitboard, blockers);
+                table.move_masks[index][2] =
+                    get_antidiag_mask_otf(bitboard, blockers);
             }
         }
     }
