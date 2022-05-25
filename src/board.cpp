@@ -83,34 +83,59 @@ namespace brainiac {
         // Opponent captures
         Bitboard o_pawns_caps = get_pawn_capture_mask(o_pawns, opp);
         Bitboard o_knights_caps = get_knight_mask(o_knights);
-        Bitboard o_bishops_caps = get_bishop_mask(o_bishops, enemies, friends);
-        Bitboard o_rooks_caps = get_rook_mask(o_rooks, enemies, friends);
-        Bitboard o_queens_caps = get_queen_mask(o_queens, enemies, friends);
         Bitboard o_king_caps = get_king_mask(o_king);
 
+        // Slider captures need to be handled per-axis
+        Bitboard o_bishops_d1_caps =
+            get_diagonal_mask(o_bishops, enemies, friends);
+        Bitboard o_bishops_d2_caps =
+            get_antidiag_mask(o_bishops, enemies, friends);
+
+        Bitboard o_rooks_h_caps =
+            get_horizontal_mask(o_rooks, enemies, friends);
+        Bitboard o_rooks_v_caps = get_vertical_mask(o_rooks, enemies, friends);
+
+        Bitboard o_queens_d1_caps =
+            get_diagonal_mask(o_queens, enemies, friends);
+        Bitboard o_queens_d2_caps =
+            get_antidiag_mask(o_queens, enemies, friends);
+
+        Bitboard o_queens_h_caps =
+            get_horizontal_mask(o_queens, enemies, friends);
+        Bitboard o_queens_v_caps =
+            get_vertical_mask(o_queens, enemies, friends);
+
         Bitboard attackmask =
-            ~enemies & (o_pawns_caps | o_knights_caps | o_bishops_caps |
-                        o_rooks_caps | o_queens_caps | o_king_caps);
+            ~enemies & (o_pawns_caps | o_knights_caps | o_bishops_d1_caps |
+                        o_bishops_d2_caps | o_rooks_h_caps | o_rooks_v_caps |
+                        o_queens_d1_caps | o_queens_d2_caps | o_queens_h_caps |
+                        o_queens_v_caps | o_king_caps);
 
         // Calculate the check mask to filter out illegal moves
         Bitboard checkmask = 0xFFFFFFFFFFFFFFFF;
         if (attackmask & king) {
             state.check = true;
-            Bitboard checkmask =
+            checkmask =
                 // Knight checkmask
                 (get_knight_mask(king) & o_knights) |
 
-                // Queen checkmask
-                (get_queen_mask(king, friends, enemies) &
-                 (o_queens_caps | o_queens)) |
+                // Horizontal checkmask
+                (get_horizontal_mask(king, friends, enemies) &
+                 (o_rooks_h_caps | o_queens_h_caps | o_rooks | o_queens)) |
 
-                // Bishop checkmask
-                (get_bishop_mask(king, friends, enemies) &
-                 (o_bishops_caps | o_bishops)) |
+                // Vertical checkmask
+                (get_vertical_mask(king, friends, enemies) &
+                 (o_rooks_v_caps | o_queens_v_caps | o_rooks | o_queens)) |
 
-                // Rook checkmask
-                (get_rook_mask(king, friends, enemies) &
-                 (o_rooks_caps | o_rooks)) |
+                // Diagonal checkmask
+                (get_diagonal_mask(king, friends, enemies) &
+                 (o_bishops_d1_caps | o_queens_d1_caps | o_bishops |
+                  o_queens)) |
+
+                // Anti-diagonal checkmask
+                (get_antidiag_mask(king, friends, enemies) &
+                 (o_bishops_d2_caps | o_queens_d2_caps | o_bishops |
+                  o_queens)) |
 
                 // Pawn checkmask
                 (get_pawn_capture_mask(king, _turn) & (o_pawns_caps | o_pawns));
