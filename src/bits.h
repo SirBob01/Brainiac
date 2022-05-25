@@ -234,7 +234,7 @@ namespace brainiac {
      * @param shift
      * @return constexpr uint64_t
      */
-    constexpr inline uint64_t get_diagonal_mask(int shift) {
+    constexpr inline uint64_t get_full_diagonal_mask(int shift) {
         int diag = 8 * (shift & 7) - (shift & 56);
         int nort = -diag & (diag >> 31);
         int sout = diag & (-diag >> 31);
@@ -247,7 +247,7 @@ namespace brainiac {
      * @param shift
      * @return constexpr uint64_t
      */
-    constexpr inline uint64_t get_antidiag_mask(int shift) {
+    constexpr inline uint64_t get_full_antidiag_mask(int shift) {
         int diag = 56 - 8 * (shift & 7) - (shift & 56);
         int nort = -diag & (diag >> 31);
         int sout = diag & (-diag >> 31);
@@ -303,6 +303,92 @@ namespace brainiac {
     }
 
     /**
+     * @brief Get the vertical movement mask for a sliding piece
+     *
+     * @param bitboard
+     * @param occupied
+     * @return uint64_t
+     */
+    inline uint64_t get_vertical_mask_otf(uint64_t bitboard,
+                                          uint64_t occupied) {
+
+        const int shift = find_lsb(bitboard);
+        const uint64_t file_mask = fileA << (7 & shift);
+
+        uint64_t file_positive =
+            get_ray_attack(bitboard, occupied & file_mask) & file_mask;
+        uint64_t file_negative =
+            get_ray_attack(flip_vertical(bitboard),
+                           flip_vertical(occupied & file_mask)) &
+            file_mask;
+        return (file_positive | flip_vertical(file_negative));
+    }
+
+    /**
+     * @brief Get the horizontal movement mask for a sliding piece
+     *
+     * @param bitboard
+     * @param occupied
+     * @return uint64_t
+     */
+    inline uint64_t get_horizontal_mask_otf(uint64_t bitboard,
+                                            uint64_t occupied) {
+
+        const int shift = find_lsb(bitboard);
+        const uint64_t rank_mask = rank8 >> (56 - 8 * (shift / 8));
+
+        uint64_t rank_positive =
+            get_ray_attack(bitboard, occupied & rank_mask) & rank_mask;
+        uint64_t rank_negative =
+            get_ray_attack(flip_horizontal(bitboard),
+                           flip_horizontal(occupied & rank_mask)) &
+            rank_mask;
+        return (rank_positive | flip_horizontal(rank_negative));
+    }
+
+    /**
+     * @brief Get the diagonal movement mask for a sliding piece
+     *
+     * @param bitboard
+     * @param occupied
+     * @return uint64_t
+     */
+    inline uint64_t get_diagonal_mask_otf(uint64_t bitboard,
+                                          uint64_t occupied) {
+        int shift = find_lsb(bitboard);
+        uint64_t diagonal_mask = get_full_diagonal_mask(shift);
+
+        uint64_t diagonal_positive =
+            get_ray_attack(bitboard, occupied & diagonal_mask) & diagonal_mask;
+        uint64_t diagonal_negative =
+            get_ray_attack(flip_vertical(bitboard),
+                           flip_vertical(occupied & diagonal_mask)) &
+            flip_vertical(diagonal_mask);
+        return (diagonal_positive | flip_vertical(diagonal_negative));
+    }
+
+    /**
+     * @brief Get the antidiagonal movement mask for a sliding piece
+     *
+     * @param bitboard
+     * @param occupied
+     * @return uint64_t
+     */
+    inline uint64_t get_antidiag_mask_otf(uint64_t bitboard,
+                                          uint64_t occupied) {
+
+        int shift = find_lsb(bitboard);
+        uint64_t antidiag_mask = get_full_antidiag_mask(shift);
+        uint64_t antidiag_positive =
+            get_ray_attack(bitboard, occupied & antidiag_mask) & antidiag_mask;
+        uint64_t antidiag_negative =
+            get_ray_attack(flip_vertical(bitboard),
+                           flip_vertical(occupied & antidiag_mask)) &
+            flip_vertical(antidiag_mask);
+        return (antidiag_positive | flip_vertical(antidiag_negative));
+    }
+
+    /**
      * @brief Generate a rook move set on-the-fly
      *
      * This is slow, so it is used for generating the rook attack tables
@@ -312,25 +398,8 @@ namespace brainiac {
      * @return uint64_t
      */
     inline uint64_t get_rook_mask_otf(uint64_t bitboard, uint64_t occupied) {
-        const int shift = find_lsb(bitboard);
-        const uint64_t rank_mask = rank8 >> (56 - 8 * (shift / 8));
-        const uint64_t file_mask = fileA << (7 & shift);
-
-        uint64_t rank_positive =
-            get_ray_attack(bitboard, occupied & rank_mask) & rank_mask;
-        uint64_t rank_negative =
-            get_ray_attack(flip_horizontal(bitboard),
-                           flip_horizontal(occupied & rank_mask)) &
-            rank_mask;
-
-        uint64_t file_positive =
-            get_ray_attack(bitboard, occupied & file_mask) & file_mask;
-        uint64_t file_negative =
-            get_ray_attack(flip_vertical(bitboard),
-                           flip_vertical(occupied & file_mask)) &
-            file_mask;
-        return (rank_positive | flip_horizontal(rank_negative) | file_positive |
-                flip_vertical(file_negative));
+        return get_vertical_mask_otf(bitboard, occupied) |
+               get_horizontal_mask_otf(bitboard, occupied);
     }
 
     /**
@@ -343,25 +412,8 @@ namespace brainiac {
      * @return uint64_t
      */
     inline uint64_t get_bishop_mask_otf(uint64_t bitboard, uint64_t occupied) {
-        int shift = find_lsb(bitboard);
-        uint64_t diagonal_mask = get_diagonal_mask(shift);
-        uint64_t antidiag_mask = get_antidiag_mask(shift);
-
-        uint64_t diagonal_positive =
-            get_ray_attack(bitboard, occupied & diagonal_mask) & diagonal_mask;
-        uint64_t diagonal_negative =
-            get_ray_attack(flip_vertical(bitboard),
-                           flip_vertical(occupied & diagonal_mask)) &
-            flip_vertical(diagonal_mask);
-
-        uint64_t antidiag_positive =
-            get_ray_attack(bitboard, occupied & antidiag_mask) & antidiag_mask;
-        uint64_t antidiag_negative =
-            get_ray_attack(flip_vertical(bitboard),
-                           flip_vertical(occupied & antidiag_mask)) &
-            flip_vertical(antidiag_mask);
-        return (diagonal_positive | flip_vertical(diagonal_negative) |
-                antidiag_positive | flip_vertical(antidiag_negative));
+        return get_diagonal_mask_otf(bitboard, occupied) |
+               get_antidiag_mask_otf(bitboard, occupied);
     }
 
     /**
@@ -624,8 +676,8 @@ namespace brainiac {
         for (int i = 0; i < 64; i++) {
             uint64_t bitboard = 1ULL << i;
 
-            uint64_t diagonal_mask = get_diagonal_mask(i);
-            uint64_t antidiag_mask = get_antidiag_mask(i);
+            uint64_t diagonal_mask = get_full_diagonal_mask(i);
+            uint64_t antidiag_mask = get_full_antidiag_mask(i);
 
             uint64_t block_mask = diagonal_mask | antidiag_mask;
             block_mask &= ~(bitboard | end_ranks | end_files);
