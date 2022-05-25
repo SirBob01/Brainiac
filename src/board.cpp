@@ -141,8 +141,45 @@ namespace brainiac {
                 (get_pawn_capture_mask(king, _turn) & (o_pawns_caps | o_pawns));
         }
 
+        // Calculate pin masks
+        Bitboard directions[8] = {
+            // N
+            get_north_mask(king, 0, enemies) &
+                (o_rooks_v_caps | o_queens_v_caps | o_rooks | o_queens),
+            // S
+            get_south_mask(king, 0, enemies) &
+                (o_rooks_v_caps | o_queens_v_caps | o_rooks | o_queens),
+            // E
+            get_east_mask(king, 0, enemies) &
+                (o_rooks_h_caps | o_queens_h_caps | o_rooks | o_queens),
+            // W
+            get_west_mask(king, 0, enemies) &
+                (o_rooks_h_caps | o_queens_h_caps | o_rooks | o_queens),
+            // NE
+            get_northeast_mask(king, 0, enemies) &
+                (o_bishops_d1_caps | o_queens_d1_caps | o_bishops | o_queens),
+            // SW
+            get_southwest_mask(king, 0, enemies) &
+                (o_bishops_d1_caps | o_queens_d1_caps | o_bishops | o_queens),
+            // NW
+            get_northwest_mask(king, 0, enemies) &
+                (o_bishops_d2_caps | o_queens_d2_caps | o_bishops | o_queens),
+            // SE
+            get_southeast_mask(king, 0, enemies) &
+                (o_bishops_d2_caps | o_queens_d2_caps | o_bishops | o_queens),
+        };
+        for (int i = 0; i < 8; i++) {
+            Bitboard mask = directions[i] & friends;
+            if (mask & (mask - 1)) { // count_set_bits(mask) != 1
+                directions[i] = 0;
+            }
+        }
+        Bitboard v_pins = directions[0] | directions[1];
+        Bitboard h_pins = directions[2] | directions[3];
+        Bitboard d1_pins = directions[4] | directions[5];
+        Bitboard d2_pins = directions[6] | directions[7];
+
         // Filters
-        // TODO: Calculate pinned pieces
         Bitboard check_filter = ~friends & checkmask;
         Bitboard attack_filter = ~friends & ~attackmask;
 
