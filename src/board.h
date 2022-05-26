@@ -42,7 +42,7 @@ namespace brainiac {
         int _halfmoves;
 
         uint64_t _hash;
-        bool check = false;
+        bool _check = false;
         std::vector<Move> _legal_moves;
     };
 
@@ -202,7 +202,7 @@ namespace brainiac {
          * @return true
          * @return false
          */
-        inline bool is_check() { return _states[_current_state].check; }
+        inline bool is_check() { return _states[_current_state]._check; }
 
         /**
          * @brief Tests if the current player is in checkmate (lost)
