@@ -240,6 +240,7 @@ namespace brainiac {
         // print_bitboard(king_dangermask);
         // print_bitboard(attackmask);
         // print_bitboard(all_pins);
+        // print_bitboard(0x0400000000000000);
 
         // King moves
         {
@@ -263,19 +264,28 @@ namespace brainiac {
                 captures &= (captures - 1);
             }
 
-            // TODO: Optimize?
-            CastlingFlagSet rights =
-                state._castling_rights & color_castling_rights[_turn];
-            while (rights) {
-                Castle side = static_cast<Castle>(rights & (-rights));
+            // Castling moves
+            if (!state._check) {
+                CastlingFlagSet rights =
+                    state._castling_rights & color_castling_rights[_turn];
+                while (rights) {
+                    Castle side = static_cast<Castle>(rights & (-rights));
 
-                // King cannot move in range of his attackers
-                Bitboard mask = get_castling_mask(all, side) & ~attackmask;
-                if (mask) {
-                    Move move(square, find_lsb(mask), MoveFlag::Castling);
-                    register_move(move);
+                    // King cannot move in range of his attackers
+                    Bitboard mask = get_castling_mask(all, side) & ~attackmask;
+
+                    if (mask) {
+                        Square to = find_lsb(mask);
+                        int rankd = to - square;
+                        int dir = (rankd > 0) - (rankd < 0);
+                        Square pass_through = to - dir;
+                        if (!(get_square_mask(pass_through) & attackmask)) {
+                            Move move(square, to, MoveFlag::Castling);
+                            register_move(move);
+                        }
+                    }
+                    rights &= (rights - 1);
                 }
-                rights &= (rights - 1);
             }
         }
 
