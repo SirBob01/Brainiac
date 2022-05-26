@@ -123,16 +123,16 @@ namespace brainiac {
 
         // Squares that are attacked by the enemy
         Bitboard attackmask =
-            ~enemies & (o_pawns_moves | o_knights_moves | o_bishops_d1_moves |
-                        o_bishops_d2_moves | o_rooks_h_moves | o_rooks_v_moves |
-                        o_queens_d1_moves | o_queens_d2_moves |
-                        o_queens_h_moves | o_queens_v_moves | o_king_moves);
+            o_pawns_moves | o_knights_moves | o_bishops_d1_moves |
+            o_bishops_d2_moves | o_rooks_h_moves | o_rooks_v_moves |
+            o_queens_d1_moves | o_queens_d2_moves | o_queens_h_moves |
+            o_queens_v_moves | o_king_moves;
 
         // Squares that king cannot go to
-        Bitboard king_dangermask =
-            ~enemies &
-            (o_pawns_moves | o_knights_moves | o_bishops_king_danger |
-             o_rooks_king_danger | o_queens_d1_king_danger | o_king_moves);
+        Bitboard king_dangermask = o_pawns_moves | o_knights_moves |
+                                   o_bishops_king_danger | o_rooks_king_danger |
+                                   o_queens_d1_king_danger | o_king_moves;
+
 
         // Calculate the check mask to filter out illegal moves
         Bitboard checkmask = 0xFFFFFFFFFFFFFFFF;
