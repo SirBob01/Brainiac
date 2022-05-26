@@ -84,6 +84,7 @@ namespace brainiac {
 
         Bitboard o_bishops_or_queens = o_bishops | o_queens;
         Bitboard o_rooks_or_queens = o_rooks | o_queens;
+        Bitboard all_no_king = (friends & ~king) | enemies;
 
         // Opponent moves
         Bitboard o_pawns_moves = get_pawn_capture_mask(o_pawns, opp);
@@ -113,13 +114,10 @@ namespace brainiac {
         // Slider captures ignoring the king
         Bitboard friends_no_king = friends & ~king;
         Bitboard o_bishops_king_danger =
-            get_bishop_mask(o_bishops, enemies, friends_no_king);
-
-        Bitboard o_rooks_king_danger =
-            get_rook_mask(o_rooks, enemies, friends_no_king);
-
+            get_bishop_mask(o_bishops, 0, all_no_king);
+        Bitboard o_rooks_king_danger = get_rook_mask(o_rooks, 0, all_no_king);
         Bitboard o_queens_d1_king_danger =
-            get_queen_mask(o_queens, enemies, friends_no_king);
+            get_queen_mask(o_queens, 0, all_no_king);
 
         // Squares that are attacked by the enemy
         Bitboard attackmask =
@@ -132,7 +130,6 @@ namespace brainiac {
         Bitboard king_dangermask = o_pawns_moves | o_knights_moves |
                                    o_bishops_king_danger | o_rooks_king_danger |
                                    o_queens_d1_king_danger | o_king_moves;
-
 
         // Calculate the check mask to filter out illegal moves
         Bitboard checkmask = 0xFFFFFFFFFFFFFFFF;
