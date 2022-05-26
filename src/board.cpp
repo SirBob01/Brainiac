@@ -203,22 +203,16 @@ namespace brainiac {
                 (o_bishops_d2_clear | o_queens_d2_clear),
         };
         for (int i = 0; i < 4; i++) {
-            if (cardinal[i] & enemies) {
-                cardinal[i] = 0;
-            }
             Bitboard mask = cardinal[i] & friends;
-            if (mask & (mask - 1)) {
+            if ((cardinal[i] & enemies) || (mask & (mask - 1))) {
                 cardinal[i] = 0;
             } else {
                 cardinal[i] |= o_rooks_or_queens;
             }
         }
         for (int i = 0; i < 4; i++) {
-            if (ordinal[i] & enemies) {
-                ordinal[i] = 0;
-            }
             Bitboard mask = ordinal[i] & friends;
-            if (mask & (mask - 1)) {
+            if ((ordinal[i] & enemies) || mask & (mask - 1)) {
                 ordinal[i] = 0;
             } else {
                 ordinal[i] |= o_bishops_or_queens;
