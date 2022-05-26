@@ -310,7 +310,12 @@ namespace brainiac {
                 if (!is_square_invalid(state._en_passant_target)) {
                     Bitboard captured_pawn = get_square_mask(
                         state._en_passant_target - (pawn_dir * 8));
-                    if (!(captured_pawn & all_pins)) {
+                    bool horizontal_discovered =
+                        get_horizontal_mask(king,
+                                            friends & ~unit,
+                                            enemies & ~captured_pawn) &
+                        (o_queens | o_rooks);
+                    if (!(captured_pawn & all_pins) && !horizontal_discovered) {
                         pawn_ep = get_square_mask(state._en_passant_target);
                     }
                 }
