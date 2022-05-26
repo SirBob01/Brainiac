@@ -161,67 +161,96 @@ namespace brainiac {
                 (get_pawn_capture_mask(king, _turn) & o_pawns);
         }
 
-        // Calculate pin masks
-        Bitboard o_rooks_h_clear = get_horizontal_mask(o_rooks, king, 0);
-        Bitboard o_rooks_v_clear = get_vertical_mask(o_rooks, king, 0);
+        // Calculate pin masks for each slider
+        Bitboard o_rooks_h_clear =
+            get_horizontal_mask(o_rooks, king, 0) | o_rooks;
+        Bitboard o_rooks_v_clear =
+            get_vertical_mask(o_rooks, king, 0) | o_rooks;
 
-        Bitboard o_bishops_d1_clear = get_diagonal_mask(o_bishops, king, 0);
-        Bitboard o_bishops_d2_clear = get_antidiag_mask(o_bishops, king, 0);
+        Bitboard o_bishops_d1_clear =
+            get_diagonal_mask(o_bishops, king, 0) | o_bishops;
+        Bitboard o_bishops_d2_clear =
+            get_antidiag_mask(o_bishops, king, 0) | o_bishops;
 
-        Bitboard o_queens_h_clear = get_horizontal_mask(o_queens, king, 0);
-        Bitboard o_queens_v_clear = get_vertical_mask(o_queens, king, 0);
-        Bitboard o_queens_d1_clear = get_diagonal_mask(o_queens, king, 0);
-        Bitboard o_queens_d2_clear = get_antidiag_mask(o_queens, king, 0);
+        Bitboard o_queens_h_clear =
+            get_horizontal_mask(o_queens, king, 0) | o_queens;
+        Bitboard o_queens_v_clear =
+            get_vertical_mask(o_queens, king, 0) | o_queens;
+        Bitboard o_queens_d1_clear =
+            get_diagonal_mask(o_queens, king, 0) | o_queens;
+        Bitboard o_queens_d2_clear =
+            get_antidiag_mask(o_queens, king, 0) | o_queens;
 
-        Bitboard king_pins_visible = get_queen_mask(king, 0, 0);
-        Bitboard cardinal[4] = {
+        Bitboard rook_pins[4] = {
             // N
-            get_north_mask(king, 0, o_rooks_or_queens) &
-                (o_rooks_v_clear | o_queens_v_clear),
+            (get_north_mask(king, 0, o_rooks) & o_rooks_v_clear),
             // S
-            get_south_mask(king, 0, o_rooks_or_queens) &
-                (o_rooks_v_clear | o_queens_v_clear),
+            (get_south_mask(king, 0, o_rooks) & o_rooks_v_clear),
             // E
-            get_east_mask(king, 0, o_rooks_or_queens) &
-                (o_rooks_h_clear | o_queens_h_clear),
+            (get_east_mask(king, 0, o_rooks) & o_rooks_h_clear),
             // W
-            get_west_mask(king, 0, o_rooks_or_queens) &
-                (o_rooks_h_clear | o_queens_h_clear),
+            (get_west_mask(king, 0, o_rooks) & o_rooks_h_clear),
         };
-        Bitboard ordinal[4] = {
+        Bitboard bishop_pins[4] = {
             // NE
-            get_northeast_mask(king, 0, o_bishops_or_queens) &
-                (o_bishops_d1_clear | o_queens_d1_clear),
+            (get_northeast_mask(king, 0, o_bishops) & o_bishops_d1_clear),
             // SW
-            get_southwest_mask(king, 0, o_bishops_or_queens) &
-                (o_bishops_d1_clear | o_queens_d1_clear),
+            (get_southwest_mask(king, 0, o_bishops) & o_bishops_d1_clear),
             // NW
-            get_northwest_mask(king, 0, o_bishops_or_queens) &
-                (o_bishops_d2_clear | o_queens_d2_clear),
+            (get_northwest_mask(king, 0, o_bishops) & o_bishops_d2_clear),
             // SE
-            get_southeast_mask(king, 0, o_bishops_or_queens) &
-                (o_bishops_d2_clear | o_queens_d2_clear),
+            (get_southeast_mask(king, 0, o_bishops) & o_bishops_d2_clear),
+        };
+        Bitboard queen_pins[8] = {
+            // N
+            (get_north_mask(king, 0, o_queens) & o_queens_v_clear),
+            // S
+            (get_south_mask(king, 0, o_queens) & o_queens_v_clear),
+            // E
+            (get_east_mask(king, 0, o_queens) & o_queens_h_clear),
+            // W
+            (get_west_mask(king, 0, o_queens) & o_queens_h_clear),
+            // NE
+            (get_northeast_mask(king, 0, o_queens) & o_queens_d1_clear),
+            // SW
+            (get_southwest_mask(king, 0, o_queens) & o_queens_d1_clear),
+            // NW
+            (get_northwest_mask(king, 0, o_queens) & o_queens_d2_clear),
+            // SE
+            (get_southeast_mask(king, 0, o_queens) & o_queens_d2_clear),
         };
         for (int i = 0; i < 4; i++) {
-            Bitboard mask = cardinal[i] & friends;
-            if ((cardinal[i] & enemies) || (mask & (mask - 1))) {
-                cardinal[i] = 0;
-            } else {
-                cardinal[i] |= o_rooks_or_queens;
+            Bitboard mask_friends = rook_pins[i] & friends;
+            Bitboard mask_enemies = rook_pins[i] & enemies;
+            if ((mask_enemies & (mask_enemies - 1)) ||
+                (mask_friends & (mask_friends - 1))) {
+                rook_pins[i] = 0;
             }
         }
         for (int i = 0; i < 4; i++) {
-            Bitboard mask = ordinal[i] & friends;
-            if ((ordinal[i] & enemies) || mask & (mask - 1)) {
-                ordinal[i] = 0;
-            } else {
-                ordinal[i] |= o_bishops_or_queens;
+            Bitboard mask_friends = bishop_pins[i] & friends;
+            Bitboard mask_enemies = bishop_pins[i] & enemies;
+            if ((mask_enemies & (mask_enemies - 1)) ||
+                (mask_friends & (mask_friends - 1))) {
+                bishop_pins[i] = 0;
             }
         }
-        Bitboard v_pins = (cardinal[0] | cardinal[1]) & king_pins_visible;
-        Bitboard h_pins = (cardinal[2] | cardinal[3]) & king_pins_visible;
-        Bitboard d1_pins = (ordinal[0] | ordinal[1]) & king_pins_visible;
-        Bitboard d2_pins = (ordinal[2] | ordinal[3]) & king_pins_visible;
+        for (int i = 0; i < 8; i++) {
+            Bitboard mask_friends = queen_pins[i] & friends;
+            Bitboard mask_enemies = queen_pins[i] & enemies;
+            if ((mask_enemies & (mask_enemies - 1)) ||
+                (mask_friends & (mask_friends - 1))) {
+                queen_pins[i] = 0;
+            }
+        }
+        Bitboard v_pins =
+            (rook_pins[0] | rook_pins[1] | queen_pins[0] | queen_pins[1]);
+        Bitboard h_pins =
+            (rook_pins[2] | rook_pins[3] | queen_pins[2] | queen_pins[3]);
+        Bitboard d1_pins =
+            (bishop_pins[0] | bishop_pins[1] | queen_pins[4] | queen_pins[5]);
+        Bitboard d2_pins =
+            (bishop_pins[2] | bishop_pins[3] | queen_pins[6] | queen_pins[7]);
         Bitboard hv_pins = h_pins | v_pins;
         Bitboard d12_pins = d1_pins | d2_pins;
         Bitboard all_pins = hv_pins | d12_pins;
@@ -229,12 +258,6 @@ namespace brainiac {
         // Filters
         Bitboard knight_filter = ~friends & checkmask;
         Bitboard king_filter = ~friends & ~king_dangermask;
-
-        // TODO: Fix discovered check when capturing
-        // print_bitboard(king_dangermask);
-        // print_bitboard(attackmask);
-        // print_bitboard(all_pins);
-        // print_bitboard(0x0400000000000000);
 
         // King moves
         {
