@@ -56,6 +56,7 @@ namespace brainiac {
     void Board::generate_moves() {
         // Clear move list
         BoardState &state = _states[_current_state];
+        state._check = false;
         state._legal_moves.clear();
 
         // Relevant occupancy bitboards
@@ -80,6 +81,9 @@ namespace brainiac {
         Bitboard o_rooks = get_bitboard(PieceType::Rook, opp);
         Bitboard o_queens = get_bitboard(PieceType::Queen, opp);
         Bitboard o_king = get_bitboard(PieceType::King, opp);
+
+        Bitboard o_bishops_or_queens = o_bishops | o_queens;
+        Bitboard o_rooks_or_queens = o_rooks | o_queens;
 
         // Opponent moves
         Bitboard o_pawns_moves = get_pawn_capture_mask(o_pawns, opp);
@@ -128,11 +132,14 @@ namespace brainiac {
         Bitboard o_queens_v_king_danger =
             get_vertical_mask(o_queens, enemies, friends_no_king);
 
+        // Squares that are attacked by the enemy
         Bitboard attackmask =
             ~enemies & (o_pawns_moves | o_knights_moves | o_bishops_d1_moves |
                         o_bishops_d2_moves | o_rooks_h_moves | o_rooks_v_moves |
                         o_queens_d1_moves | o_queens_d2_moves |
                         o_queens_h_moves | o_queens_v_moves | o_king_moves);
+
+        // Squares that king cannot go to
         Bitboard king_dangermask =
             ~enemies &
             (o_pawns_moves | o_knights_moves | o_bishops_d1_king_danger |
@@ -144,28 +151,28 @@ namespace brainiac {
         // Calculate the check mask to filter out illegal moves
         Bitboard checkmask = 0xFFFFFFFFFFFFFFFF;
         if (attackmask & king) {
-            state.check = true;
+            state._check = true;
             checkmask =
                 // Knight checkmask
                 (get_knight_mask(king) & o_knights) |
 
                 // Horizontal checkmask
                 (get_horizontal_mask(king, friends, enemies) &
-                 (o_rooks_h_moves | o_queens_h_moves | o_rooks | o_queens)) |
+                 (o_rooks_h_moves | o_queens_h_moves | o_rooks_or_queens)) |
 
                 // Vertical checkmask
                 (get_vertical_mask(king, friends, enemies) &
-                 (o_rooks_v_moves | o_queens_v_moves | o_rooks | o_queens)) |
+                 (o_rooks_v_moves | o_queens_v_moves | o_rooks_or_queens)) |
 
                 // Diagonal checkmask
                 (get_diagonal_mask(king, friends, enemies) &
-                 (o_bishops_d1_moves | o_queens_d1_moves | o_bishops |
-                  o_queens)) |
+                 (o_bishops_d1_moves | o_queens_d1_moves |
+                  o_bishops_or_queens)) |
 
                 // Anti-diagonal checkmask
                 (get_antidiag_mask(king, friends, enemies) &
-                 (o_bishops_d2_moves | o_queens_d2_moves | o_bishops |
-                  o_queens)) |
+                 (o_bishops_d2_moves | o_queens_d2_moves |
+                  o_bishops_or_queens)) |
 
                 // Pawn checkmask
                 (get_pawn_capture_mask(king, _turn) &
@@ -183,8 +190,6 @@ namespace brainiac {
         Bitboard o_queens_v_clear = get_vertical_mask(o_queens, king, 0);
         Bitboard o_queens_d1_clear = get_diagonal_mask(o_queens, king, 0);
         Bitboard o_queens_d2_clear = get_antidiag_mask(o_queens, king, 0);
-        Bitboard o_bishops_or_queens = o_bishops | o_queens;
-        Bitboard o_rooks_or_queens = o_rooks | o_queens;
 
         Bitboard cardinal[8] = {
             // N
@@ -248,7 +253,50 @@ namespace brainiac {
         Bitboard knight_filter = ~friends & checkmask;
         Bitboard king_filter = ~friends & ~king_dangermask;
 
-        // Generate pawn moves
+        // King moves
+        {
+            Bitboard unit = king;
+            Square square = find_lsb(unit);
+
+            Bitboard king_moves = get_king_mask(unit) & king_filter;
+
+            Bitboard captures = king_moves & enemies;
+            Bitboard quiet = king_moves & ~enemies;
+            while (quiet) {
+                Bitboard target = quiet & (-quiet);
+                Move move(square, find_lsb(target), 0);
+                register_move(move);
+                quiet &= (quiet - 1);
+            }
+            while (captures) {
+                Bitboard target = captures & (-captures);
+                Move move(square, find_lsb(target), MoveFlag::Capture);
+                register_move(move);
+                captures &= (captures - 1);
+            }
+
+            // TODO: Optimize?
+            CastlingFlagSet rights =
+                state._castling_rights & color_castling_rights[_turn];
+            while (rights) {
+                Castle side = static_cast<Castle>(rights & (-rights));
+
+                // King cannot move in range of his attackers
+                Bitboard mask = get_castling_mask(all, side) & ~attackmask;
+                if (mask) {
+                    Move move(square, find_lsb(mask), MoveFlag::Castling);
+                    register_move(move);
+                }
+                rights &= (rights - 1);
+            }
+        }
+
+        // Early return on double check, only king can move
+        if (state._check && count_set_bits(checkmask & enemies) > 1) {
+            return;
+        }
+
+        // Pawn moves
         Bitboard bits;
         {
             bits = pawns;
@@ -359,44 +407,6 @@ namespace brainiac {
                 }
 
                 bits &= (bits - 1);
-            }
-        }
-
-        // King moves
-        {
-            Bitboard unit = king;
-            Square square = find_lsb(unit);
-
-            Bitboard king_moves = get_king_mask(unit) & king_filter;
-
-            Bitboard captures = king_moves & enemies;
-            Bitboard quiet = king_moves & ~enemies;
-            while (quiet) {
-                Bitboard target = quiet & (-quiet);
-                Move move(square, find_lsb(target), 0);
-                register_move(move);
-                quiet &= (quiet - 1);
-            }
-            while (captures) {
-                Bitboard target = captures & (-captures);
-                Move move(square, find_lsb(target), MoveFlag::Capture);
-                register_move(move);
-                captures &= (captures - 1);
-            }
-
-            // TODO: Optimize?
-            CastlingFlagSet rights =
-                state._castling_rights & color_castling_rights[_turn];
-            while (rights) {
-                Castle side = static_cast<Castle>(rights & (-rights));
-
-                // King cannot move in range of his attackers
-                Bitboard mask = get_castling_mask(all, side) & ~attackmask;
-                if (mask) {
-                    Move move(square, find_lsb(mask), MoveFlag::Castling);
-                    register_move(move);
-                }
-                rights &= (rights - 1);
             }
         }
 
