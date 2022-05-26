@@ -180,6 +180,8 @@ namespace brainiac {
         }
 
         // Calculate pin masks
+        // TODO: Still not working properly
+        // rn1qkbnr/pppbpppp/3p4/1B6/4P1Q1/8/PPPP1PPP/RNB1K1NR b KQkq - 3 3
         Bitboard o_rooks_h_clear = get_horizontal_mask(o_rooks, king, 0);
         Bitboard o_rooks_v_clear = get_vertical_mask(o_rooks, king, 0);
 
@@ -191,7 +193,7 @@ namespace brainiac {
         Bitboard o_queens_d1_clear = get_diagonal_mask(o_queens, king, 0);
         Bitboard o_queens_d2_clear = get_antidiag_mask(o_queens, king, 0);
 
-        Bitboard cardinal[8] = {
+        Bitboard cardinal[4] = {
             // N
             get_north_mask(king, 0, o_rooks_or_queens) &
                 (o_rooks_v_clear | o_queens_v_clear),
