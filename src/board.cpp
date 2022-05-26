@@ -112,25 +112,14 @@ namespace brainiac {
 
         // Slider captures ignoring the king
         Bitboard friends_no_king = friends & ~king;
-        Bitboard o_bishops_d1_king_danger =
-            get_diagonal_mask(o_bishops, enemies, friends_no_king);
-        Bitboard o_bishops_d2_king_danger =
-            get_antidiag_mask(o_bishops, enemies, friends_no_king);
+        Bitboard o_bishops_king_danger =
+            get_bishop_mask(o_bishops, enemies, friends_no_king);
 
-        Bitboard o_rooks_h_king_danger =
-            get_horizontal_mask(o_rooks, enemies, friends_no_king);
-        Bitboard o_rooks_v_king_danger =
-            get_vertical_mask(o_rooks, enemies, friends_no_king);
+        Bitboard o_rooks_king_danger =
+            get_rook_mask(o_rooks, enemies, friends_no_king);
 
         Bitboard o_queens_d1_king_danger =
-            get_diagonal_mask(o_queens, enemies, friends_no_king);
-        Bitboard o_queens_d2_king_danger =
-            get_antidiag_mask(o_queens, enemies, friends_no_king);
-
-        Bitboard o_queens_h_king_danger =
-            get_horizontal_mask(o_queens, enemies, friends_no_king);
-        Bitboard o_queens_v_king_danger =
-            get_vertical_mask(o_queens, enemies, friends_no_king);
+            get_queen_mask(o_queens, enemies, friends_no_king);
 
         // Squares that are attacked by the enemy
         Bitboard attackmask =
@@ -142,11 +131,8 @@ namespace brainiac {
         // Squares that king cannot go to
         Bitboard king_dangermask =
             ~enemies &
-            (o_pawns_moves | o_knights_moves | o_bishops_d1_king_danger |
-             o_bishops_d2_king_danger | o_rooks_h_king_danger |
-             o_rooks_v_king_danger | o_queens_d1_king_danger |
-             o_queens_d2_king_danger | o_queens_h_king_danger |
-             o_queens_v_king_danger | o_king_moves);
+            (o_pawns_moves | o_knights_moves | o_bishops_king_danger |
+             o_rooks_king_danger | o_queens_d1_king_danger | o_king_moves);
 
         // Calculate the check mask to filter out illegal moves
         Bitboard checkmask = 0xFFFFFFFFFFFFFFFF;
@@ -175,13 +161,10 @@ namespace brainiac {
                   o_bishops_or_queens)) |
 
                 // Pawn checkmask
-                (get_pawn_capture_mask(king, _turn) &
-                 (o_pawns_moves | o_pawns));
+                (get_pawn_capture_mask(king, _turn) & o_pawns);
         }
 
         // Calculate pin masks
-        // TODO: Still not working properly
-        // rn1qkbnr/pppbpppp/3p4/1B6/4P1Q1/8/PPPP1PPP/RNB1K1NR b KQkq - 3 3
         Bitboard o_rooks_h_clear = get_horizontal_mask(o_rooks, king, 0);
         Bitboard o_rooks_v_clear = get_vertical_mask(o_rooks, king, 0);
 
@@ -193,6 +176,7 @@ namespace brainiac {
         Bitboard o_queens_d1_clear = get_diagonal_mask(o_queens, king, 0);
         Bitboard o_queens_d2_clear = get_antidiag_mask(o_queens, king, 0);
 
+        Bitboard king_pins_visible = get_queen_mask(king, 0, 0);
         Bitboard cardinal[4] = {
             // N
             get_north_mask(king, 0, o_rooks_or_queens) &
@@ -243,10 +227,10 @@ namespace brainiac {
                 ordinal[i] |= o_bishops_or_queens;
             }
         }
-        Bitboard v_pins = cardinal[0] | cardinal[1];
-        Bitboard h_pins = cardinal[2] | cardinal[3];
-        Bitboard d1_pins = ordinal[0] | ordinal[1];
-        Bitboard d2_pins = ordinal[2] | ordinal[3];
+        Bitboard v_pins = (cardinal[0] | cardinal[1]) & king_pins_visible;
+        Bitboard h_pins = (cardinal[2] | cardinal[3]) & king_pins_visible;
+        Bitboard d1_pins = (ordinal[0] | ordinal[1]) & king_pins_visible;
+        Bitboard d2_pins = (ordinal[2] | ordinal[3]) & king_pins_visible;
         Bitboard hv_pins = h_pins | v_pins;
         Bitboard d12_pins = d1_pins | d2_pins;
         Bitboard all_pins = hv_pins | d12_pins;
@@ -421,11 +405,8 @@ namespace brainiac {
 
                 Bitboard moves =
                     get_bishop_mask(unit, friends, enemies) & checkmask;
-                if (unit & d1_pins) {
-                    moves &= d1_pins;
-                }
-                if (unit & d2_pins) {
-                    moves &= d2_pins;
+                if (unit & all_pins) {
+                    moves &= d12_pins;
                 }
 
                 Bitboard captures = moves & enemies;
@@ -455,11 +436,8 @@ namespace brainiac {
 
                 Bitboard moves =
                     get_rook_mask(unit, friends, enemies) & checkmask;
-                if (unit & h_pins) {
-                    moves &= h_pins;
-                }
-                if (unit & v_pins) {
-                    moves &= v_pins;
+                if (unit & all_pins) {
+                    moves &= hv_pins;
                 }
 
                 Bitboard captures = moves & enemies;
@@ -489,17 +467,8 @@ namespace brainiac {
 
                 Bitboard moves =
                     get_queen_mask(unit, friends, enemies) & checkmask;
-                if (unit & h_pins) {
-                    moves &= h_pins;
-                }
-                if (unit & v_pins) {
-                    moves &= v_pins;
-                }
-                if (unit & d1_pins) {
-                    moves &= d1_pins;
-                }
-                if (unit & d2_pins) {
-                    moves &= d2_pins;
+                if (unit & all_pins) {
+                    moves &= all_pins;
                 }
 
                 Bitboard captures = moves & enemies;
