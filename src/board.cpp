@@ -319,19 +319,6 @@ namespace brainiac {
                 Bitboard unit = (bits & -bits);
                 Square square = find_lsb(unit);
 
-                // Calculate move masks
-                Bitboard pawn_single =
-                    get_pawn_advance_mask(unit, all, _turn) & checkmask;
-                Bitboard pawn_double =
-                    get_pawn_double_mask(unit, all, _turn) & checkmask;
-                Bitboard pawn_capture =
-                    get_pawn_capture_mask(unit, _turn) & checkmask;
-                if (unit & all_pins) {
-                    pawn_single &= v_pins;
-                    pawn_double &= v_pins;
-                    pawn_capture &= d12_pins;
-                }
-
                 // En-passant mask (captured piece cannot be pinned)
                 Bitboard pawn_ep = 0;
                 if (!is_square_invalid(state._en_passant_target)) {
@@ -345,6 +332,19 @@ namespace brainiac {
                     if (!(captured_pawn & all_pins) && !horizontal_discovered) {
                         pawn_ep = get_square_mask(state._en_passant_target);
                     }
+                }
+
+                // Calculate move masks
+                Bitboard pawn_single =
+                    get_pawn_advance_mask(unit, all, _turn) & checkmask;
+                Bitboard pawn_double =
+                    get_pawn_double_mask(unit, all, _turn) & checkmask;
+                Bitboard pawn_capture = (get_pawn_capture_mask(unit, _turn) &
+                                         (checkmask | pawn_ep));
+                if (unit & all_pins) {
+                    pawn_single &= v_pins;
+                    pawn_double &= v_pins;
+                    pawn_capture &= d12_pins;
                 }
 
                 // Single pawn advance
@@ -439,8 +439,17 @@ namespace brainiac {
 
                 Bitboard moves =
                     get_bishop_mask(unit, friends, enemies) & checkmask;
-                if (unit & all_pins) {
-                    moves &= d12_pins;
+                if (unit & h_pins) {
+                    moves &= h_pins;
+                }
+                if (unit & v_pins) {
+                    moves &= v_pins;
+                }
+                if (unit & d1_pins) {
+                    moves &= d1_pins;
+                }
+                if (unit & d2_pins) {
+                    moves &= d2_pins;
                 }
 
                 Bitboard captures = moves & enemies;
@@ -470,8 +479,17 @@ namespace brainiac {
 
                 Bitboard moves =
                     get_rook_mask(unit, friends, enemies) & checkmask;
-                if (unit & all_pins) {
-                    moves &= hv_pins;
+                if (unit & h_pins) {
+                    moves &= h_pins;
+                }
+                if (unit & v_pins) {
+                    moves &= v_pins;
+                }
+                if (unit & d1_pins) {
+                    moves &= d1_pins;
+                }
+                if (unit & d2_pins) {
+                    moves &= d2_pins;
                 }
 
                 Bitboard captures = moves & enemies;
@@ -501,11 +519,17 @@ namespace brainiac {
 
                 Bitboard moves =
                     get_queen_mask(unit, friends, enemies) & checkmask;
-                if (unit & hv_pins) {
-                    moves &= hv_pins;
+                if (unit & h_pins) {
+                    moves &= h_pins;
                 }
-                if (unit & d12_pins) {
-                    moves &= d12_pins;
+                if (unit & v_pins) {
+                    moves &= v_pins;
+                }
+                if (unit & d1_pins) {
+                    moves &= d1_pins;
+                }
+                if (unit & d2_pins) {
+                    moves &= d2_pins;
                 }
 
                 Bitboard captures = moves & enemies;
