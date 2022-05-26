@@ -239,6 +239,11 @@ namespace brainiac {
         Bitboard knight_filter = ~friends & checkmask;
         Bitboard king_filter = ~friends & ~king_dangermask;
 
+        // TODO: Fix discovered check when capturing
+        // print_bitboard(king_dangermask);
+        // print_bitboard(attackmask);
+        // print_bitboard(all_pins);
+
         // King moves
         {
             Bitboard unit = king;
@@ -467,8 +472,11 @@ namespace brainiac {
 
                 Bitboard moves =
                     get_queen_mask(unit, friends, enemies) & checkmask;
-                if (unit & all_pins) {
-                    moves &= all_pins;
+                if (unit & hv_pins) {
+                    moves &= hv_pins;
+                }
+                if (unit & d12_pins) {
+                    moves &= d12_pins;
                 }
 
                 Bitboard captures = moves & enemies;
