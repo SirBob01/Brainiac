@@ -874,7 +874,7 @@ namespace brainiac {
      * @brief Initialize the rook attack tables
      *
      */
-    constexpr inline void init_rook_tables() {
+    inline void init_rook_tables() {
         for (int i = 0; i < 64; i++) {
             uint64_t bitboard = 1ULL << i;
 
@@ -913,7 +913,7 @@ namespace brainiac {
      * @brief Initialize the bishop attack tables
      *
      */
-    constexpr inline void init_bishop_tables() {
+    inline void init_bishop_tables() {
         for (int i = 0; i < 64; i++) {
             uint64_t bitboard = 1ULL << i;
 
