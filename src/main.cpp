@@ -116,7 +116,7 @@ void run_tests() {
         brainiac::Board b(test_case.fen);
         int nodes = perft(b, test_case.depth, test_case.depth, false);
         if (nodes != test_case.result) {
-            std::cout << "Perft failed for `" << test_case.fen << "`!\n";
+            std::cout << "Test failed!\n";
         }
         std::cout << nodes << " " << test_case.result << "\n\n";
     }
