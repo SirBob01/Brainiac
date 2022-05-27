@@ -828,13 +828,8 @@ namespace brainiac {
     bool Board::is_draw() {
         // If there are only 2 pieces left (both kings), then it is a draw
         BoardState &state = _states[_current_state];
-        Bitboard all_pieces = state._bitboards[12] | state._bitboards[13];
-        int pieces_left = 0;
-        while (all_pieces) {
-            all_pieces &= (all_pieces - 1);
-            pieces_left++;
-        }
-        return is_stalemate() || state._halfmoves >= 100 || pieces_left == 2;
+        int rem = count_set_bits(state._bitboards[12] | state._bitboards[13]);
+        return is_stalemate() || state._halfmoves >= 100 || rem == 2;
     }
 
     Move
