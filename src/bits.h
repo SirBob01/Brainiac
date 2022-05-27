@@ -743,222 +743,6 @@ namespace brainiac {
     }
 
     /**
-     * @brief Get the north slider mask
-     *
-     * @param bitboard
-     * @param friends
-     * @param enemies
-     * @return constexpr uint64_t
-     */
-    constexpr inline uint64_t
-    get_north_mask(uint64_t bitboard, uint64_t friends, uint64_t enemies) {
-        uint64_t mask = 0;
-
-        while (bitboard) {
-            const uint64_t unit = bitboard & -bitboard;
-            const int square = find_lsb(unit);
-
-            const SlidingMoveTable &table = rook_attack_tables[square];
-            const uint64_t blockers = table.block_mask & (friends | enemies);
-            const uint64_t index =
-                (blockers * table.magic) >> (64 - table.shift);
-            mask |= table.move_masks[index][1];
-
-            bitboard &= (bitboard - 1);
-        }
-        return mask & ~friends;
-    }
-
-    /**
-     * @brief Get the south slider mask
-     *
-     * @param bitboard
-     * @param friends
-     * @param enemies
-     * @return constexpr uint64_t
-     */
-    constexpr inline uint64_t
-    get_south_mask(uint64_t bitboard, uint64_t friends, uint64_t enemies) {
-        uint64_t mask = 0;
-
-        while (bitboard) {
-            const uint64_t unit = bitboard & -bitboard;
-            const int square = find_lsb(unit);
-
-            const SlidingMoveTable &table = rook_attack_tables[square];
-            const uint64_t blockers = table.block_mask & (friends | enemies);
-            const uint64_t index =
-                (blockers * table.magic) >> (64 - table.shift);
-            mask |= table.move_masks[index][2];
-
-            bitboard &= (bitboard - 1);
-        }
-        return mask & ~friends;
-    }
-
-    /**
-     * @brief Get the east slider mask
-     *
-     * @param bitboard
-     * @param friends
-     * @param enemies
-     * @return constexpr uint64_t
-     */
-    constexpr inline uint64_t
-    get_east_mask(uint64_t bitboard, uint64_t friends, uint64_t enemies) {
-        uint64_t mask = 0;
-
-        while (bitboard) {
-            const uint64_t unit = bitboard & -bitboard;
-            const int square = find_lsb(unit);
-
-            const SlidingMoveTable &table = rook_attack_tables[square];
-            const uint64_t blockers = table.block_mask & (friends | enemies);
-            const uint64_t index =
-                (blockers * table.magic) >> (64 - table.shift);
-            mask |= table.move_masks[index][3];
-
-            bitboard &= (bitboard - 1);
-        }
-        return mask & ~friends;
-    }
-
-    /**
-     * @brief Get the west slider mask
-     *
-     * @param bitboard
-     * @param friends
-     * @param enemies
-     * @return constexpr uint64_t
-     */
-    constexpr inline uint64_t
-    get_west_mask(uint64_t bitboard, uint64_t friends, uint64_t enemies) {
-        uint64_t mask = 0;
-
-        while (bitboard) {
-            const uint64_t unit = bitboard & -bitboard;
-            const int square = find_lsb(unit);
-
-            const SlidingMoveTable &table = rook_attack_tables[square];
-            const uint64_t blockers = table.block_mask & (friends | enemies);
-            const uint64_t index =
-                (blockers * table.magic) >> (64 - table.shift);
-            mask |= table.move_masks[index][4];
-
-            bitboard &= (bitboard - 1);
-        }
-        return mask & ~friends;
-    }
-
-    /**
-     * @brief Get the northeast slider mask
-     *
-     * @param bitboard
-     * @param friends
-     * @param enemies
-     * @return constexpr uint64_t
-     */
-    constexpr inline uint64_t
-    get_northeast_mask(uint64_t bitboard, uint64_t friends, uint64_t enemies) {
-        uint64_t mask = 0;
-
-        while (bitboard) {
-            const uint64_t unit = bitboard & -bitboard;
-            const int square = find_lsb(unit);
-
-            const SlidingMoveTable &table = bishop_attack_tables[square];
-            const uint64_t blockers = table.block_mask & (friends | enemies);
-            const uint64_t index =
-                (blockers * table.magic) >> (64 - table.shift);
-            mask |= table.move_masks[index][1];
-
-            bitboard &= (bitboard - 1);
-        }
-        return mask & ~friends;
-    }
-
-    /**
-     * @brief Get the southeast slider mask
-     *
-     * @param bitboard
-     * @param friends
-     * @param enemies
-     * @return constexpr uint64_t
-     */
-    constexpr inline uint64_t
-    get_southeast_mask(uint64_t bitboard, uint64_t friends, uint64_t enemies) {
-        uint64_t mask = 0;
-
-        while (bitboard) {
-            const uint64_t unit = bitboard & -bitboard;
-            const int square = find_lsb(unit);
-
-            const SlidingMoveTable &table = bishop_attack_tables[square];
-            const uint64_t blockers = table.block_mask & (friends | enemies);
-            const uint64_t index =
-                (blockers * table.magic) >> (64 - table.shift);
-            mask |= table.move_masks[index][2];
-
-            bitboard &= (bitboard - 1);
-        }
-        return mask & ~friends;
-    }
-
-    /**
-     * @brief Get the southwest slider mask
-     *
-     * @param bitboard
-     * @param friends
-     * @param enemies
-     * @return constexpr uint64_t
-     */
-    constexpr inline uint64_t
-    get_southwest_mask(uint64_t bitboard, uint64_t friends, uint64_t enemies) {
-        uint64_t mask = 0;
-
-        while (bitboard) {
-            const uint64_t unit = bitboard & -bitboard;
-            const int square = find_lsb(unit);
-
-            const SlidingMoveTable &table = bishop_attack_tables[square];
-            const uint64_t blockers = table.block_mask & (friends | enemies);
-            const uint64_t index =
-                (blockers * table.magic) >> (64 - table.shift);
-            mask |= table.move_masks[index][3];
-
-            bitboard &= (bitboard - 1);
-        }
-        return mask & ~friends;
-    }
-
-    /**
-     * @brief Get the northwest slider mask
-     *
-     * @param bitboard
-     * @param friends
-     * @param enemies
-     * @return constexpr uint64_t
-     */
-    constexpr inline uint64_t
-    get_northwest_mask(uint64_t bitboard, uint64_t friends, uint64_t enemies) {
-        uint64_t mask = 0;
-
-        while (bitboard) {
-            const uint64_t unit = bitboard & -bitboard;
-            const int square = find_lsb(unit);
-
-            const SlidingMoveTable &table = bishop_attack_tables[square];
-            const uint64_t blockers = table.block_mask & (friends | enemies);
-            const uint64_t index =
-                (blockers * table.magic) >> (64 - table.shift);
-            mask |= table.move_masks[index][4];
-
-            bitboard &= (bitboard - 1);
-        }
-        return mask & ~friends;
-    }
-
-    /**
      * @brief Get the horizontal and vertical slider masks
      *
      * @param bitboard
@@ -990,6 +774,12 @@ namespace brainiac {
 
             bitboard &= (bitboard - 1);
         }
+        const uint64_t not_friends = ~friends;
+        dest[0] &= not_friends;
+        dest[1] &= not_friends;
+        dest[2] &= not_friends;
+        dest[3] &= not_friends;
+        dest[4] &= not_friends;
     }
 
     /**
@@ -1024,6 +814,12 @@ namespace brainiac {
 
             bitboard &= (bitboard - 1);
         }
+        const uint64_t not_friends = ~friends;
+        dest[0] &= not_friends;
+        dest[1] &= not_friends;
+        dest[2] &= not_friends;
+        dest[3] &= not_friends;
+        dest[4] &= not_friends;
     }
 
     /**
