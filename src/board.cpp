@@ -162,62 +162,77 @@ namespace brainiac {
         }
 
         // Calculate pin masks for each slider
-        Bitboard o_rooks_h_clear =
-            get_horizontal_mask(o_rooks, king, 0) | o_rooks;
+        Bitboard cardinal_masks[5]; // { r, n, s, e, w }
+        Bitboard ordinal_masks[5];  // { b, ne, se, sw, nw }
+        Bitboard cardinal_queens_masks[5];
+        Bitboard ordinal_queens_masks[5];
+
+        get_cardinal_masks(o_rooks, king, 0, cardinal_masks);
+        get_ordinal_masks(o_bishops, king, 0, ordinal_masks);
+        get_cardinal_masks(o_queens, king, 0, cardinal_queens_masks);
+        get_ordinal_masks(o_queens, king, 0, ordinal_queens_masks);
+
         Bitboard o_rooks_v_clear =
-            get_vertical_mask(o_rooks, king, 0) | o_rooks;
+            cardinal_masks[1] | cardinal_masks[2] | o_rooks;
+        Bitboard o_rooks_h_clear =
+            cardinal_masks[3] | cardinal_masks[4] | o_rooks;
 
         Bitboard o_bishops_d1_clear =
-            get_diagonal_mask(o_bishops, king, 0) | o_bishops;
+            ordinal_masks[1] | ordinal_masks[3] | o_bishops;
         Bitboard o_bishops_d2_clear =
-            get_antidiag_mask(o_bishops, king, 0) | o_bishops;
+            ordinal_masks[2] | ordinal_masks[4] | o_bishops;
 
-        Bitboard o_queens_h_clear =
-            get_horizontal_mask(o_queens, king, 0) | o_queens;
         Bitboard o_queens_v_clear =
-            get_vertical_mask(o_queens, king, 0) | o_queens;
+            cardinal_queens_masks[1] | cardinal_queens_masks[2] | o_queens;
+        Bitboard o_queens_h_clear =
+            cardinal_queens_masks[3] | cardinal_queens_masks[4] | o_queens;
         Bitboard o_queens_d1_clear =
-            get_diagonal_mask(o_queens, king, 0) | o_queens;
+            ordinal_queens_masks[1] | ordinal_queens_masks[3] | o_queens;
         Bitboard o_queens_d2_clear =
-            get_antidiag_mask(o_queens, king, 0) | o_queens;
+            ordinal_queens_masks[2] | ordinal_queens_masks[4] | o_queens;
+
+        get_cardinal_masks(king, 0, o_rooks, cardinal_masks);
+        get_ordinal_masks(king, 0, o_bishops, ordinal_masks);
+        get_cardinal_masks(king, 0, o_queens, cardinal_queens_masks);
+        get_ordinal_masks(king, 0, o_queens, ordinal_queens_masks);
 
         Bitboard rook_pins[4] = {
             // N
-            (get_north_mask(king, 0, o_rooks) & o_rooks_v_clear),
+            (cardinal_masks[1] & o_rooks_v_clear),
             // S
-            (get_south_mask(king, 0, o_rooks) & o_rooks_v_clear),
+            (cardinal_masks[2] & o_rooks_v_clear),
             // E
-            (get_east_mask(king, 0, o_rooks) & o_rooks_h_clear),
+            (cardinal_masks[3] & o_rooks_h_clear),
             // W
-            (get_west_mask(king, 0, o_rooks) & o_rooks_h_clear),
+            (cardinal_masks[4] & o_rooks_h_clear),
         };
         Bitboard bishop_pins[4] = {
             // NE
-            (get_northeast_mask(king, 0, o_bishops) & o_bishops_d1_clear),
+            (ordinal_masks[1] & o_bishops_d1_clear),
             // SW
-            (get_southwest_mask(king, 0, o_bishops) & o_bishops_d1_clear),
+            (ordinal_masks[3] & o_bishops_d1_clear),
             // NW
-            (get_northwest_mask(king, 0, o_bishops) & o_bishops_d2_clear),
+            (ordinal_masks[4] & o_bishops_d2_clear),
             // SE
-            (get_southeast_mask(king, 0, o_bishops) & o_bishops_d2_clear),
+            (ordinal_masks[2] & o_bishops_d2_clear),
         };
         Bitboard queen_pins[8] = {
             // N
-            (get_north_mask(king, 0, o_queens) & o_queens_v_clear),
+            (cardinal_queens_masks[1] & o_queens_v_clear),
             // S
-            (get_south_mask(king, 0, o_queens) & o_queens_v_clear),
+            (cardinal_queens_masks[2] & o_queens_v_clear),
             // E
-            (get_east_mask(king, 0, o_queens) & o_queens_h_clear),
+            (cardinal_queens_masks[3] & o_queens_h_clear),
             // W
-            (get_west_mask(king, 0, o_queens) & o_queens_h_clear),
+            (cardinal_queens_masks[4] & o_queens_h_clear),
             // NE
-            (get_northeast_mask(king, 0, o_queens) & o_queens_d1_clear),
+            (ordinal_queens_masks[1] & o_queens_d1_clear),
             // SW
-            (get_southwest_mask(king, 0, o_queens) & o_queens_d1_clear),
+            (ordinal_queens_masks[3] & o_queens_d1_clear),
             // NW
-            (get_northwest_mask(king, 0, o_queens) & o_queens_d2_clear),
+            (ordinal_queens_masks[4] & o_queens_d2_clear),
             // SE
-            (get_southeast_mask(king, 0, o_queens) & o_queens_d2_clear),
+            (ordinal_queens_masks[2] & o_queens_d2_clear),
         };
         for (int i = 0; i < 4; i++) {
             Bitboard mask_friends = rook_pins[i] & friends;
