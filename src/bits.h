@@ -753,8 +753,8 @@ namespace brainiac {
     constexpr void get_cardinal_masks(uint64_t bitboard,
                                       uint64_t friends,
                                       uint64_t enemies,
-                                      uint64_t dest[5]) {
-        memset(dest, 0, 5 * sizeof(uint64_t));
+                                      uint64_t dest[4]) {
+        memset(dest, 0, 4 * sizeof(uint64_t));
         while (bitboard) {
             const uint64_t unit = bitboard & -bitboard;
             const int square = find_lsb(unit);
@@ -766,11 +766,10 @@ namespace brainiac {
 
             // Join masks together
             const uint64_t *masks = table.move_masks[index];
-            dest[0] |= masks[0];
-            dest[1] |= masks[1];
-            dest[2] |= masks[2];
-            dest[3] |= masks[3];
-            dest[4] |= masks[4];
+            dest[0] |= masks[1];
+            dest[1] |= masks[2];
+            dest[2] |= masks[3];
+            dest[3] |= masks[4];
 
             bitboard &= (bitboard - 1);
         }
@@ -779,7 +778,6 @@ namespace brainiac {
         dest[1] &= not_friends;
         dest[2] &= not_friends;
         dest[3] &= not_friends;
-        dest[4] &= not_friends;
     }
 
     /**
@@ -793,8 +791,8 @@ namespace brainiac {
     constexpr void get_ordinal_masks(uint64_t bitboard,
                                      uint64_t friends,
                                      uint64_t enemies,
-                                     uint64_t dest[5]) {
-        memset(dest, 0, 5 * sizeof(uint64_t));
+                                     uint64_t dest[4]) {
+        memset(dest, 0, 4 * sizeof(uint64_t));
         while (bitboard) {
             const uint64_t unit = bitboard & -bitboard;
             const int square = find_lsb(unit);
@@ -806,11 +804,10 @@ namespace brainiac {
 
             // Join masks together
             const uint64_t *masks = table.move_masks[index];
-            dest[0] |= masks[0];
-            dest[1] |= masks[1];
-            dest[2] |= masks[2];
-            dest[3] |= masks[3];
-            dest[4] |= masks[4];
+            dest[0] |= masks[1];
+            dest[1] |= masks[2];
+            dest[2] |= masks[3];
+            dest[3] |= masks[4];
 
             bitboard &= (bitboard - 1);
         }
@@ -819,7 +816,6 @@ namespace brainiac {
         dest[1] &= not_friends;
         dest[2] &= not_friends;
         dest[3] &= not_friends;
-        dest[4] &= not_friends;
     }
 
     /**

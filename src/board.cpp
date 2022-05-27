@@ -92,30 +92,30 @@ namespace brainiac {
         Bitboard o_king_moves = get_king_mask(o_king);
 
         // Slider moves need to be handled per-axis
-        Bitboard cardinal_masks[5]; // { r, n, s, e, w }
-        Bitboard ordinal_masks[5];  // { b, ne, se, sw, nw }
-        Bitboard cardinal_queens_masks[5];
-        Bitboard ordinal_queens_masks[5];
+        Bitboard cardinal_masks[4]; // { n, s, e, w }
+        Bitboard ordinal_masks[4];  // { ne, se, sw, nw }
+        Bitboard cardinal_queens_masks[4];
+        Bitboard ordinal_queens_masks[4];
 
         get_cardinal_masks(o_rooks, enemies, friends, cardinal_masks);
         get_ordinal_masks(o_bishops, enemies, friends, ordinal_masks);
         get_cardinal_masks(o_queens, enemies, friends, cardinal_queens_masks);
         get_ordinal_masks(o_queens, enemies, friends, ordinal_queens_masks);
 
-        Bitboard o_rooks_v_moves = cardinal_masks[1] | cardinal_masks[2];
-        Bitboard o_rooks_h_moves = cardinal_masks[3] | cardinal_masks[4];
+        Bitboard o_rooks_v_moves = cardinal_masks[0] | cardinal_masks[1];
+        Bitboard o_rooks_h_moves = cardinal_masks[2] | cardinal_masks[3];
 
-        Bitboard o_bishops_d1_moves = ordinal_masks[1] | ordinal_masks[3];
-        Bitboard o_bishops_d2_moves = ordinal_masks[2] | ordinal_masks[4];
+        Bitboard o_bishops_d1_moves = ordinal_masks[0] | ordinal_masks[2];
+        Bitboard o_bishops_d2_moves = ordinal_masks[1] | ordinal_masks[3];
 
         Bitboard o_queens_v_moves =
-            cardinal_queens_masks[1] | cardinal_queens_masks[2];
+            cardinal_queens_masks[0] | cardinal_queens_masks[1];
         Bitboard o_queens_h_moves =
-            cardinal_queens_masks[3] | cardinal_queens_masks[4];
+            cardinal_queens_masks[2] | cardinal_queens_masks[3];
         Bitboard o_queens_d1_moves =
-            ordinal_queens_masks[1] | ordinal_queens_masks[3];
+            ordinal_queens_masks[0] | ordinal_queens_masks[2];
         Bitboard o_queens_d2_moves =
-            ordinal_queens_masks[2] | ordinal_queens_masks[4];
+            ordinal_queens_masks[1] | ordinal_queens_masks[3];
 
         // Slider captures ignoring the king
         Bitboard friends_no_king = friends & ~king;
@@ -174,23 +174,23 @@ namespace brainiac {
         get_ordinal_masks(o_queens, king, 0, ordinal_queens_masks);
 
         Bitboard o_rooks_v_clear =
-            cardinal_masks[1] | cardinal_masks[2] | o_rooks;
+            cardinal_masks[0] | cardinal_masks[1] | o_rooks;
         Bitboard o_rooks_h_clear =
-            cardinal_masks[3] | cardinal_masks[4] | o_rooks;
+            cardinal_masks[2] | cardinal_masks[3] | o_rooks;
 
         Bitboard o_bishops_d1_clear =
-            ordinal_masks[1] | ordinal_masks[3] | o_bishops;
+            ordinal_masks[0] | ordinal_masks[2] | o_bishops;
         Bitboard o_bishops_d2_clear =
-            ordinal_masks[2] | ordinal_masks[4] | o_bishops;
+            ordinal_masks[1] | ordinal_masks[3] | o_bishops;
 
         Bitboard o_queens_v_clear =
-            cardinal_queens_masks[1] | cardinal_queens_masks[2] | o_queens;
+            cardinal_queens_masks[0] | cardinal_queens_masks[1] | o_queens;
         Bitboard o_queens_h_clear =
-            cardinal_queens_masks[3] | cardinal_queens_masks[4] | o_queens;
+            cardinal_queens_masks[2] | cardinal_queens_masks[3] | o_queens;
         Bitboard o_queens_d1_clear =
-            ordinal_queens_masks[1] | ordinal_queens_masks[3] | o_queens;
+            ordinal_queens_masks[0] | ordinal_queens_masks[2] | o_queens;
         Bitboard o_queens_d2_clear =
-            ordinal_queens_masks[2] | ordinal_queens_masks[4] | o_queens;
+            ordinal_queens_masks[1] | ordinal_queens_masks[3] | o_queens;
 
         get_cardinal_masks(king, 0, o_rooks, cardinal_masks);
         get_ordinal_masks(king, 0, o_bishops, ordinal_masks);
@@ -199,41 +199,41 @@ namespace brainiac {
 
         Bitboard rook_pins[4] = {
             // N
-            (cardinal_masks[1] & o_rooks_v_clear),
+            (cardinal_masks[0] & o_rooks_v_clear),
             // S
-            (cardinal_masks[2] & o_rooks_v_clear),
+            (cardinal_masks[1] & o_rooks_v_clear),
             // E
-            (cardinal_masks[3] & o_rooks_h_clear),
+            (cardinal_masks[2] & o_rooks_h_clear),
             // W
-            (cardinal_masks[4] & o_rooks_h_clear),
+            (cardinal_masks[3] & o_rooks_h_clear),
         };
         Bitboard bishop_pins[4] = {
             // NE
-            (ordinal_masks[1] & o_bishops_d1_clear),
+            (ordinal_masks[0] & o_bishops_d1_clear),
             // SW
-            (ordinal_masks[3] & o_bishops_d1_clear),
+            (ordinal_masks[2] & o_bishops_d1_clear),
             // NW
-            (ordinal_masks[4] & o_bishops_d2_clear),
+            (ordinal_masks[3] & o_bishops_d2_clear),
             // SE
-            (ordinal_masks[2] & o_bishops_d2_clear),
+            (ordinal_masks[1] & o_bishops_d2_clear),
         };
         Bitboard queen_pins[8] = {
             // N
-            (cardinal_queens_masks[1] & o_queens_v_clear),
+            (cardinal_queens_masks[0] & o_queens_v_clear),
             // S
-            (cardinal_queens_masks[2] & o_queens_v_clear),
+            (cardinal_queens_masks[1] & o_queens_v_clear),
             // E
-            (cardinal_queens_masks[3] & o_queens_h_clear),
+            (cardinal_queens_masks[2] & o_queens_h_clear),
             // W
-            (cardinal_queens_masks[4] & o_queens_h_clear),
+            (cardinal_queens_masks[3] & o_queens_h_clear),
             // NE
-            (ordinal_queens_masks[1] & o_queens_d1_clear),
+            (ordinal_queens_masks[0] & o_queens_d1_clear),
             // SW
-            (ordinal_queens_masks[3] & o_queens_d1_clear),
+            (ordinal_queens_masks[2] & o_queens_d1_clear),
             // NW
-            (ordinal_queens_masks[4] & o_queens_d2_clear),
+            (ordinal_queens_masks[3] & o_queens_d2_clear),
             // SE
-            (ordinal_queens_masks[2] & o_queens_d2_clear),
+            (ordinal_queens_masks[1] & o_queens_d2_clear),
         };
         for (int i = 0; i < 4; i++) {
             Bitboard mask_friends = rook_pins[i] & friends;
