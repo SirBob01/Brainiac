@@ -197,6 +197,22 @@ namespace brainiac {
         inline bool is_latest() { return _current_state == _states.size() - 1; }
 
         /**
+         * @brief Test if a move is legal
+         *
+         * @param move
+         * @return true
+         * @return false
+         */
+        inline bool is_legal(Move &move) {
+            for (auto &legal : _states[_current_state]._legal_moves) {
+                if (move == legal) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
          * @brief Tests if the current player's king is in check
          *
          * @return true
