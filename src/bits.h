@@ -172,6 +172,12 @@ namespace brainiac {
     };
 
     /**
+     * @brief Ranks relevant to castling (indexed by color)
+     *
+     */
+    constexpr uint64_t castling_ranks[2] = {rank1, rank8};
+
+    /**
      * @brief Print a bitboard (8 bits per row)
      *
      * Useful for debugging

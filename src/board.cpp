@@ -141,7 +141,7 @@ namespace brainiac {
         Bitboard checkmask = 0xFFFFFFFFFFFFFFFF;
         if (attackmask & king) {
             state._check = true;
-            
+
             get_cardinal_masks(king, friends, enemies, cardinal_masks);
             get_ordinal_masks(king, friends, enemies, ordinal_masks);
             checkmask =
@@ -303,7 +303,8 @@ namespace brainiac {
             // Castling moves
             if (!state._check) {
                 CastlingFlagSet rights =
-                    state._castling_rights & color_castling_rights[_turn];
+                    state._castling_rights & (castling_rights[_turn * 2] |
+                                              castling_rights[_turn * 2 + 1]);
                 while (rights) {
                     Castle side = static_cast<Castle>(rights & (-rights));
 
@@ -641,38 +642,6 @@ namespace brainiac {
         return {};
     }
 
-    void Board::set_at(const Square sq, const Piece &piece) {
-        clear_at(sq);
-        Bitboard mask = get_square_mask(sq);
-
-        BoardState &state = _states[_current_state];
-        state._bitboards[PieceType::NPieces2 + piece.color] |= mask;
-        state._bitboards[piece.get_index()] |= mask;
-    }
-
-    Piece Board::get_at_coords(int row, int col) {
-        return get_at(row * 8 + col);
-    }
-
-    void Board::set_at_coords(int row, int col, const Piece &piece) {
-        set_at(row * 8 + col, piece);
-    }
-
-    void Board::clear_at(const Square sq) {
-        // Clear all bitboards at this Square
-        BoardState &state = _states[_current_state];
-        Bitboard mask = ~(get_square_mask(sq));
-        state._bitboards[12] &= mask;
-        state._bitboards[13] &= mask;
-
-        for (uint8_t piece = 0; piece < 14; piece++) {
-            if (state._bitboards[piece] & get_square_mask(sq)) {
-                state._bitboards[piece] &= mask;
-                break;
-            }
-        }
-    }
-
     void Board::skip_turn() {
         BoardState &state = push_state();
 
@@ -687,6 +656,7 @@ namespace brainiac {
 
     void Board::make_move(const Move &move) {
         BoardState &state = push_state();
+        Color opp = static_cast<Color>(!_turn);
 
         Square from = move.get_from();
         Square to = move.get_to();
@@ -696,38 +666,34 @@ namespace brainiac {
         Piece target = get_at(to);
 
         // Unset castling flags if relevant pieces were moved
-        Castle queen_side = Castle::WQ;
-        Castle king_side = Castle::WK;
-        Castle opp_queen_side = Castle::WQ;
-        Castle opp_king_side = Castle::WK;
-        if (_turn == Color::Black) {
-            queen_side = Castle::BQ;
-            king_side = Castle::BK;
-            opp_queen_side = Castle::WQ;
-            opp_king_side = Castle::WK;
-        }
-        if (state._castling_rights & (king_side | queen_side)) {
+        Castle k_castle = castling_rights[2 * _turn];
+        Castle q_castle = castling_rights[2 * _turn + 1];
+        Castle o_k_castle = castling_rights[2 * opp];
+        Castle o_q_castle = castling_rights[2 * opp + 1];
+
+        CastlingFlagSet castle_flags = k_castle | q_castle;
+        if (state._castling_rights & castle_flags) {
             if (piece.type == PieceType::King) {
-                if (state._castling_rights & king_side) {
-                    state._hash ^= castling_bitstrings[find_lsb(king_side)];
+                if (state._castling_rights & k_castle) {
+                    state._hash ^= castling_bitstrings[find_lsb(k_castle)];
                 }
-                if (state._castling_rights & queen_side) {
-                    state._hash ^= castling_bitstrings[find_lsb(queen_side)];
+                if (state._castling_rights & q_castle) {
+                    state._hash ^= castling_bitstrings[find_lsb(q_castle)];
                 }
-                state._castling_rights &= ~(king_side | queen_side);
+                state._castling_rights &= ~castle_flags;
             } else if (piece.type == PieceType::Rook) {
                 Bitboard mask = get_square_mask(from);
-                if (mask & fileA) {
-                    if (state._castling_rights & queen_side) {
-                        state._hash ^=
-                            castling_bitstrings[find_lsb(queen_side)];
+                Bitboard rank = castling_ranks[_turn];
+                if (mask & fileA & rank) {
+                    if (state._castling_rights & q_castle) {
+                        state._hash ^= castling_bitstrings[find_lsb(q_castle)];
                     }
-                    state._castling_rights &= ~queen_side;
-                } else if (mask & fileH) {
-                    if (state._castling_rights & king_side) {
-                        state._hash ^= castling_bitstrings[find_lsb(king_side)];
+                    state._castling_rights &= ~q_castle;
+                } else if (mask & fileH & rank) {
+                    if (state._castling_rights & k_castle) {
+                        state._hash ^= castling_bitstrings[find_lsb(k_castle)];
                     }
-                    state._castling_rights &= ~king_side;
+                    state._castling_rights &= ~k_castle;
                 }
             }
         }
@@ -735,42 +701,41 @@ namespace brainiac {
         // Unset castling opponent flags if pieces were captured
         if (target.type == PieceType::Rook) {
             Bitboard mask = get_square_mask(to);
-            Bitboard rank = (_turn == Color::White) ? rank8 : rank1;
+            Bitboard rank = castling_ranks[opp];
             if (mask & fileA & rank) {
-                if (state._castling_rights & opp_queen_side) {
-                    state._hash ^=
-                        castling_bitstrings[find_lsb(opp_queen_side)];
+                if (state._castling_rights & o_q_castle) {
+                    state._hash ^= castling_bitstrings[find_lsb(o_q_castle)];
                 }
-                state._castling_rights &= ~opp_queen_side;
+                state._castling_rights &= ~o_q_castle;
             } else if (mask & fileH & rank) {
-                if (state._castling_rights & opp_king_side) {
-                    state._hash ^= castling_bitstrings[find_lsb(opp_king_side)];
+                if (state._castling_rights & o_k_castle) {
+                    state._hash ^= castling_bitstrings[find_lsb(o_k_castle)];
                 }
-                state._castling_rights &= ~opp_king_side;
+                state._castling_rights &= ~o_k_castle;
             }
         }
 
         // Move to target square and handle promotions
-        clear_at(from);
+        clear_at(from, piece);
         state._hash ^= zobrist_bitstring(piece, from);
         if (!target.is_empty()) {
+            clear_at(to, target);
             state._hash ^= zobrist_bitstring(target, to);
         }
-        Piece promotion;
         if (flags & MoveFlag::BishopPromo) {
-            promotion = {PieceType::Bishop, _turn};
+            const Piece promotion(PieceType::Bishop, _turn);
             set_at(to, promotion);
             state._hash ^= zobrist_bitstring(promotion, to);
         } else if (flags & MoveFlag::RookPromo) {
-            promotion = {PieceType::Rook, _turn};
+            const Piece promotion(PieceType::Rook, _turn);
             set_at(to, promotion);
             state._hash ^= zobrist_bitstring(promotion, to);
         } else if (flags & MoveFlag::KnightPromo) {
-            promotion = {PieceType::Knight, _turn};
+            const Piece promotion(PieceType::Knight, _turn);
             set_at(to, promotion);
             state._hash ^= zobrist_bitstring(promotion, to);
         } else if (flags & MoveFlag::QueenPromo) {
-            promotion = {PieceType::Queen, _turn};
+            const Piece promotion(PieceType::Queen, _turn);
             set_at(to, promotion);
             state._hash ^= zobrist_bitstring(promotion, to);
         } else {
@@ -782,7 +747,7 @@ namespace brainiac {
         if (flags & MoveFlag::Castling) {
             int rankd = to - from;
             int dir = (rankd > 0) - (rankd < 0);
-            Piece rook(PieceType::Rook, _turn);
+            const Piece rook(PieceType::Rook, _turn);
             Bitboard rook_rank = (_turn == Color::Black) ? rank8 : rank1;
             Bitboard rook_board =
                 state._bitboards[rook.get_index()] & rook_rank;
@@ -793,7 +758,7 @@ namespace brainiac {
                 rook_board &= fileH;
             }
             Square initial_position = find_lsb(rook_board);
-            clear_at(initial_position);
+            clear_at(initial_position, rook);
             set_at(target, rook);
 
             state._hash ^= zobrist_bitstring(rook, initial_position);
@@ -809,18 +774,20 @@ namespace brainiac {
             int dir = (rankd > 0) - (rankd < 0);
             Square en_passant_square = state._en_passant_target - (dir * 8);
             Piece en_passant_piece = get_at(en_passant_square);
-            clear_at(en_passant_square);
+            clear_at(en_passant_square, en_passant_piece);
 
             state._hash ^=
                 zobrist_bitstring(en_passant_piece, en_passant_square);
             state._hash ^= en_passant_bitstrings[state._en_passant_target % 8];
             state._en_passant_target = Squares::InvalidSquare;
+
+            if (!is_square_invalid(state._en_passant_target)) {
+                state._hash ^=
+                    en_passant_bitstrings[state._en_passant_target % 8];
+            }
         }
 
         // Update en passant position if pawn advanced two ranks
-        if (!is_square_invalid(state._en_passant_target)) {
-            state._hash ^= en_passant_bitstrings[state._en_passant_target % 8];
-        }
         if (flags & MoveFlag::PawnDouble) {
             state._en_passant_target = from + (to - from) / 2;
             state._hash ^= en_passant_bitstrings[state._en_passant_target % 8];
@@ -828,8 +795,7 @@ namespace brainiac {
             state._en_passant_target = Squares::InvalidSquare;
         }
 
-        // Reset halfmove counter if piece was pawn advance or move was a
-        // capture
+        // Reset halfmoves if move was a pawn advance or a capture
         if (flags & (MoveFlag::PawnAdvance | MoveFlag::PawnDouble |
                      MoveFlag::EnPassant | MoveFlag::Capture)) {
             state._halfmoves = 0;

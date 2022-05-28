@@ -53,9 +53,12 @@ namespace brainiac {
     /**
      * Castling rights grouped by color
      */
-    constexpr CastlingFlagSet color_castling_rights[2] = {
-        Castle::WK | Castle::WQ,
-        Castle::BK | Castle::BQ,
+    constexpr Castle castling_rights[4] = {
+        Castle::WK,
+        Castle::WQ,
+
+        Castle::BK,
+        Castle::BQ,
     };
 
     /**
