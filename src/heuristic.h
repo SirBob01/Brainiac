@@ -106,7 +106,7 @@ namespace brainiac {
      */
     inline float mobility_score(Board &board) {
         float mobility = board.get_moves().size();
-        board.skip_turn();
+        board.skip_move();
         mobility -= board.get_moves().size();
         board.undo_move();
 

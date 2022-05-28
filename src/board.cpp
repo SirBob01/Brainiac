@@ -642,7 +642,7 @@ namespace brainiac {
         return {};
     }
 
-    void Board::skip_turn() {
+    void Board::skip_move() {
         BoardState &state = push_state();
 
         // Null move does not do anything, current turn is skipped
