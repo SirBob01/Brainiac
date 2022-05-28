@@ -141,25 +141,28 @@ namespace brainiac {
         Bitboard checkmask = 0xFFFFFFFFFFFFFFFF;
         if (attackmask & king) {
             state._check = true;
+            
+            get_cardinal_masks(king, friends, enemies, cardinal_masks);
+            get_ordinal_masks(king, friends, enemies, ordinal_masks);
             checkmask =
                 // Knight checkmask
                 (get_knight_mask(king) & o_knights) |
 
-                // Horizontal checkmask
-                (get_horizontal_mask(king, friends, enemies) &
-                 (o_rooks_h_moves | o_queens_h_moves | o_rooks_or_queens)) |
-
                 // Vertical checkmask
-                (get_vertical_mask(king, friends, enemies) &
+                ((cardinal_masks[0] | cardinal_masks[1]) &
                  (o_rooks_v_moves | o_queens_v_moves | o_rooks_or_queens)) |
 
+                // Horizontal checkmask
+                ((cardinal_masks[2] | cardinal_masks[3]) &
+                 (o_rooks_h_moves | o_queens_h_moves | o_rooks_or_queens)) |
+
                 // Diagonal checkmask
-                (get_diagonal_mask(king, friends, enemies) &
+                ((ordinal_masks[0] | ordinal_masks[2]) &
                  (o_bishops_d1_moves | o_queens_d1_moves |
                   o_bishops_or_queens)) |
 
                 // Anti-diagonal checkmask
-                (get_antidiag_mask(king, friends, enemies) &
+                ((ordinal_masks[1] | ordinal_masks[3]) &
                  (o_bishops_d2_moves | o_queens_d2_moves |
                   o_bishops_or_queens)) |
 
@@ -693,16 +696,16 @@ namespace brainiac {
         Piece target = get_at(to);
 
         // Unset castling flags if relevant pieces were moved
-        Castle queen_side =
-            (_turn == Color::White) ? (Castle::WQ) : (Castle::BQ);
-        Castle king_side =
-            (_turn == Color::White) ? (Castle::WK) : (Castle::BK);
-
-        Castle opp_queen_side =
-            (_turn == Color::Black) ? (Castle::WQ) : (Castle::BQ);
-        Castle opp_king_side =
-            (_turn == Color::Black) ? (Castle::WK) : (Castle::BK);
-
+        Castle queen_side = Castle::WQ;
+        Castle king_side = Castle::WK;
+        Castle opp_queen_side = Castle::WQ;
+        Castle opp_king_side = Castle::WK;
+        if (_turn == Color::Black) {
+            queen_side = Castle::BQ;
+            king_side = Castle::BK;
+            opp_queen_side = Castle::WQ;
+            opp_king_side = Castle::WK;
+        }
         if (state._castling_rights & (king_side | queen_side)) {
             if (piece.type == PieceType::King) {
                 if (state._castling_rights & king_side) {
