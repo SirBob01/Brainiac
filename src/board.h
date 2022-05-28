@@ -111,7 +111,12 @@ namespace brainiac {
          * @param sq
          * @param piece
          */
-        void set_at(const Square sq, const Piece &piece);
+        inline void set_at(const Square sq, const Piece &piece) {
+            BoardState &state = _states[_current_state];
+            Bitboard mask = get_square_mask(sq);
+            state._bitboards[PieceType::NPieces2 + piece.color] |= mask;
+            state._bitboards[piece.get_index()] |= mask;
+        }
 
         /**
          * @brief Get a piece on the board by coordinates
@@ -120,7 +125,9 @@ namespace brainiac {
          * @param col
          * @return Piece
          */
-        Piece get_at_coords(int row, int col);
+        inline Piece get_at_coords(int row, int col) {
+            return get_at(row * 8 + col);
+        }
 
         /**
          * @brief Set a piece on the board by coordinates
@@ -129,14 +136,21 @@ namespace brainiac {
          * @param col
          * @param piece
          */
-        void set_at_coords(int row, int col, const Piece &piece);
+        inline void set_at_coords(int row, int col, const Piece &piece) {
+            set_at(row * 8 + col, piece);
+        }
 
         /**
-         * @brief Clear a square on the board
+         * @brief Clear the square of a piece bitboard
          *
          * @param sq
          */
-        void clear_at(const Square sq);
+        inline void clear_at(const Square sq, const Piece &piece) {
+            BoardState &state = _states[_current_state];
+            Bitboard mask = ~get_square_mask(sq);
+            state._bitboards[PieceType::NPieces2 + piece.color] &= mask;
+            state._bitboards[piece.get_index()] &= mask;
+        }
 
         /**
          * @brief Perform a null move, skipping the current turn
@@ -313,7 +327,7 @@ namespace brainiac {
          * @param piece
          * @return Bitboard
          */
-        inline Bitboard get_bitboard(Piece piece) {
+        inline Bitboard &get_bitboard(Piece &piece) {
             return _states[_current_state]._bitboards[piece.get_index()];
         }
 
@@ -324,7 +338,7 @@ namespace brainiac {
          * @param color
          * @return Bitboard
          */
-        inline Bitboard get_bitboard(PieceType type, Color color) {
+        inline Bitboard &get_bitboard(PieceType type, Color color) {
             return _states[_current_state]
                 ._bitboards[color * PieceType::NPieces + type];
         }
@@ -335,7 +349,7 @@ namespace brainiac {
          * @param color
          * @return Bitboard
          */
-        inline Bitboard get_bitboard(Color color) {
+        inline Bitboard &get_bitboard(Color color) {
             return _states[_current_state]
                 ._bitboards[PieceType::NPieces2 + color];
         }
@@ -346,7 +360,7 @@ namespace brainiac {
          * @param index
          * @return Bitboard
          */
-        inline Bitboard get_bitboard(int index) {
+        inline Bitboard &get_bitboard(int index) {
             return _states[_current_state]._bitboards[index];
         }
 
