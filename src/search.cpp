@@ -61,7 +61,7 @@ namespace brainiac {
         // Null move reduction
         if (depth >= 5 && !board.is_check()) {
             int R = depth > 6 ? 4 : 3;
-            board.skip_turn();
+            board.skip_move();
             float reduction =
                 -negamax(board, -beta, -beta + 1, depth - R - 1, opp, move);
             board.undo_move();

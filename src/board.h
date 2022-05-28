@@ -156,7 +156,7 @@ namespace brainiac {
          * @brief Perform a null move, skipping the current turn
          *
          */
-        void skip_turn();
+        void skip_move();
 
         /**
          * @brief Make a move and update internal state
