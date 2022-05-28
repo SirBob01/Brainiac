@@ -118,7 +118,6 @@ namespace brainiac {
             ordinal_queens_masks[1] | ordinal_queens_masks[3];
 
         // Slider captures ignoring the king
-        Bitboard friends_no_king = friends & ~king;
         Bitboard o_bishops_king_danger =
             get_bishop_mask(o_bishops, 0, all_no_king);
         Bitboard o_rooks_king_danger = get_rook_mask(o_rooks, 0, all_no_king);
