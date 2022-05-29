@@ -57,7 +57,7 @@ namespace brainiac {
         // Clear move list
         BoardState &state = _states[_current_state];
         state._check = false;
-        state._legal_moves.clear();
+        state._moves.clear();
 
         // Relevant occupancy bitboards
         Color opp = static_cast<Color>(!_turn);
@@ -288,14 +288,12 @@ namespace brainiac {
             Bitboard quiet = king_moves & ~enemies;
             while (quiet) {
                 Bitboard target = quiet & (-quiet);
-                Move move(square, find_lsb(target), 0);
-                register_move(move);
+                state._moves.add(square, find_lsb(target), 0);
                 quiet &= (quiet - 1);
             }
             while (captures) {
                 Bitboard target = captures & (-captures);
-                Move move(square, find_lsb(target), MoveFlag::Capture);
-                register_move(move);
+                state._moves.add(square, find_lsb(target), MoveFlag::Capture);
                 captures &= (captures - 1);
             }
 
@@ -316,8 +314,7 @@ namespace brainiac {
                         int dir = (rankd > 0) - (rankd < 0);
                         Square pass_through = to - dir;
                         if (!(get_square_mask(pass_through) & attackmask)) {
-                            Move move(square, to, MoveFlag::Castling);
-                            register_move(move);
+                            state._moves.add(square, to, MoveFlag::Castling);
                         }
                     }
                     rights &= (rights - 1);
@@ -371,14 +368,14 @@ namespace brainiac {
                     Bitboard target = pawn_single & (-pawn_single);
                     if (target & end_ranks) {
                         for (int i = 0; i < 4; i++) {
-                            Move move(square,
-                                      find_lsb(target),
-                                      pawn_single_flags | promotions[i]);
-                            register_move(move);
+                            state._moves.add(square,
+                                             find_lsb(target),
+                                             pawn_single_flags | promotions[i]);
                         }
                     } else {
-                        Move move(square, find_lsb(target), pawn_single_flags);
-                        register_move(move);
+                        state._moves.add(square,
+                                         find_lsb(target),
+                                         pawn_single_flags);
                     }
                     pawn_single &= (pawn_single - 1);
                 }
@@ -386,8 +383,9 @@ namespace brainiac {
                 // Double pawn advance
                 while (pawn_double) {
                     Bitboard target = pawn_double & (-pawn_double);
-                    Move move(square, find_lsb(target), pawn_double_flags);
-                    register_move(move);
+                    state._moves.add(square,
+                                     find_lsb(target),
+                                     pawn_double_flags);
                     pawn_double &= (pawn_double - 1);
                 }
 
@@ -397,14 +395,15 @@ namespace brainiac {
                     Bitboard target = captures & (-captures);
                     if (target & end_ranks) {
                         for (int i = 0; i < 4; i++) {
-                            Move move(square,
-                                      find_lsb(target),
-                                      pawn_capture_flags | promotions[i]);
-                            register_move(move);
+                            state._moves.add(square,
+                                             find_lsb(target),
+                                             pawn_capture_flags |
+                                                 promotions[i]);
                         }
                     } else {
-                        Move move(square, find_lsb(target), pawn_capture_flags);
-                        register_move(move);
+                        state._moves.add(square,
+                                         find_lsb(target),
+                                         pawn_capture_flags);
                     }
                     captures &= (captures - 1);
                 }
@@ -413,8 +412,9 @@ namespace brainiac {
                 Bitboard ep = pawn_capture & pawn_ep;
                 while (ep) {
                     Bitboard target = ep & (-ep);
-                    Move move(square, find_lsb(target), en_passant_flags);
-                    register_move(move);
+                    state._moves.add(square,
+                                     find_lsb(target),
+                                     en_passant_flags);
                     ep &= (ep - 1);
                 }
                 bits &= (bits - 1);
@@ -434,14 +434,14 @@ namespace brainiac {
                 Bitboard quiet = knight_moves & ~enemies;
                 while (quiet) {
                     Bitboard target = quiet & (-quiet);
-                    Move move(square, find_lsb(target), 0);
-                    register_move(move);
+                    state._moves.add(square, find_lsb(target), 0);
                     quiet &= (quiet - 1);
                 }
                 while (captures) {
                     Bitboard target = captures & (-captures);
-                    Move move(square, find_lsb(target), MoveFlag::Capture);
-                    register_move(move);
+                    state._moves.add(square,
+                                     find_lsb(target),
+                                     MoveFlag::Capture);
                     captures &= (captures - 1);
                 }
 
@@ -475,14 +475,14 @@ namespace brainiac {
                 Bitboard quiet = moves & ~enemies;
                 while (quiet) {
                     Bitboard target = quiet & (-quiet);
-                    Move move(square, find_lsb(target), 0);
-                    register_move(move);
+                    state._moves.add(square, find_lsb(target), 0);
                     quiet &= (quiet - 1);
                 }
                 while (captures) {
                     Bitboard target = captures & (-captures);
-                    Move move(square, find_lsb(target), MoveFlag::Capture);
-                    register_move(move);
+                    state._moves.add(square,
+                                     find_lsb(target),
+                                     MoveFlag::Capture);
                     captures &= (captures - 1);
                 }
                 bits &= (bits - 1);
@@ -515,14 +515,14 @@ namespace brainiac {
                 Bitboard quiet = moves & ~enemies;
                 while (quiet) {
                     Bitboard target = quiet & (-quiet);
-                    Move move(square, find_lsb(target), 0);
-                    register_move(move);
+                    state._moves.add(square, find_lsb(target), 0);
                     quiet &= (quiet - 1);
                 }
                 while (captures) {
                     Bitboard target = captures & (-captures);
-                    Move move(square, find_lsb(target), MoveFlag::Capture);
-                    register_move(move);
+                    state._moves.add(square,
+                                     find_lsb(target),
+                                     MoveFlag::Capture);
                     captures &= (captures - 1);
                 }
                 bits &= (bits - 1);
@@ -555,14 +555,14 @@ namespace brainiac {
                 Bitboard quiet = moves & ~enemies;
                 while (quiet) {
                     Bitboard target = quiet & (-quiet);
-                    Move move(square, find_lsb(target), 0);
-                    register_move(move);
+                    state._moves.add(square, find_lsb(target), 0);
                     quiet &= (quiet - 1);
                 }
                 while (captures) {
                     Bitboard target = captures & (-captures);
-                    Move move(square, find_lsb(target), MoveFlag::Capture);
-                    register_move(move);
+                    state._moves.add(square,
+                                     find_lsb(target),
+                                     MoveFlag::Capture);
                     captures &= (captures - 1);
                 }
                 bits &= (bits - 1);
@@ -812,7 +812,7 @@ namespace brainiac {
     Move
     Board::create_move(const Square from, const Square to, char promotion) {
         BoardState &state = _states[_current_state];
-        for (auto &move : state._legal_moves) {
+        for (auto &move : state._moves) {
             Square move_from = move.get_from();
             Square move_to = move.get_to();
             MoveFlagSet flags = move.get_flags();
@@ -847,7 +847,7 @@ namespace brainiac {
 
     Move Board::create_move(std::string standard_notation) {
         BoardState &state = _states[_current_state];
-        for (auto &move : state._legal_moves) {
+        for (auto &move : state._moves) {
             if (move.standard_notation() == standard_notation) {
                 return move;
             }

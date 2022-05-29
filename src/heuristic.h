@@ -316,14 +316,14 @@ namespace brainiac {
      */
     inline int static_exchange_evaluation(Board &board, const Square square) {
         int value = 0;
-        const std::vector<Move> &moves = board.get_moves();
+        MoveList &moves = board.get_moves();
 
         Piece victim = board.get_at(square);
         int victim_value = std::fabs(piece_weights[victim.get_index()]);
 
         Move best_move;
         float min_value = INFINITY;
-        for (const Move &move : moves) {
+        for (Move &move : moves) {
             if (move.get_flags() & MoveFlag::Capture) {
                 Piece attacker = board.get_at(move.get_from());
                 float attacker_value =

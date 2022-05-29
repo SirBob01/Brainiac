@@ -71,7 +71,7 @@ namespace brainiac {
         }
 
         // Get move list
-        const std::vector<Move> &moves = board.get_moves();
+        const MoveList &moves = board.get_moves();
         int n = moves.size();
 
         // Map moves to heuristic scores for move ordering
@@ -282,7 +282,7 @@ namespace brainiac {
     Move Search::move(Board &board) {
         Time start = std::chrono::steady_clock::now();
 
-        std::vector<Move> moves = board.get_moves();
+        MoveList moves = board.get_moves();
         Move best_move = moves[0];
         float best_value = -INFINITY;
 
