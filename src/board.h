@@ -67,11 +67,6 @@ namespace brainiac {
         }
 
         /**
-         * Generate all legal moves
-         * If move list is empty, then player is in checkmate
-         */
-
-        /**
          * @brief Generate all legal moves
          * If move list is empty, then player is in checkmate
          *
