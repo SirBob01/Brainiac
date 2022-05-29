@@ -260,7 +260,13 @@ namespace brainiac {
          * @return true
          * @return false
          */
-        bool is_draw();
+        inline bool is_draw() {
+            // If there are only 2 pieces left (both kings), then it is a draw
+            BoardState &state = _states[_current_state];
+            Bitboard all = state._bitboards[12] | state._bitboards[13];
+            int rem = count_set_bits(all);
+            return is_stalemate() || state._halfmoves >= 100 || rem == 2;
+        }
 
         /**
          * @brief Generate a valid chess move from the given from-to square
