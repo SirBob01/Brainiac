@@ -1,6 +1,7 @@
 #ifndef BRAINIAC_BOARD_H_
 #define BRAINIAC_BOARD_H_
 
+#include <array>
 #include <iostream>
 #include <string>
 
@@ -19,6 +20,60 @@ namespace brainiac {
      *
      */
     using Bitboard = uint64_t;
+
+    /**
+     * @brief A stack-allocated list of moves
+     *
+     */
+    class MoveList {
+        std::array<Move, 512> _list;
+        int _count = 0;
+
+      public:
+        /**
+         * @brief Access a move in the list
+         *
+         * @param index
+         * @return Move
+         */
+        inline Move operator[](int index) const { return _list[index]; };
+
+        /**
+         * @brief Get the size of the list
+         *
+         * @return int
+         */
+        inline int size() const { return _count; };
+
+        /**
+         * @brief Clear the list
+         *
+         */
+        inline void clear() { _count = 0; };
+
+        /**
+         * @brief Add a new move to the list
+         *
+         * @param move
+         */
+        inline void add(Square from, Square to, MoveFlagSet flags) {
+            _list[_count++] = Move(from, to, flags);
+        };
+
+        /**
+         * @brief Get the pointer to the first move in the list
+         *
+         * @return Move*
+         */
+        inline Move *begin() { return _list.data(); };
+
+        /**
+         * @brief Get the pointer to after the end of the list
+         *
+         * @return Move*
+         */
+        inline Move *end() { return _list.data() + _count; };
+    };
 
     /**
      * @brief Represents chronological board state. This allows forward and
@@ -43,7 +98,8 @@ namespace brainiac {
 
         uint64_t _hash;
         bool _check = false;
-        std::vector<Move> _legal_moves;
+
+        MoveList _moves;
     };
 
     /**
@@ -56,15 +112,6 @@ namespace brainiac {
 
         Color _turn;
         int _fullmoves;
-
-        /**
-         * @brief Register a move to the main move list, if it is legal
-         *
-         * @param move
-         */
-        inline void register_move(Move &move) {
-            _states[_current_state]._legal_moves.push_back(move);
-        }
 
         /**
          * @brief Generate all legal moves
@@ -91,6 +138,12 @@ namespace brainiac {
          * @return std::string
          */
         std::string generate_fen();
+
+        /**
+         * @brief Get all legal moves available to the current player
+         *
+         */
+        inline MoveList &get_moves() { return _states[_current_state]._moves; }
 
         /**
          * @brief Get a piece on a square
@@ -213,8 +266,9 @@ namespace brainiac {
          * @return false
          */
         inline bool is_legal(Move &move) {
-            for (auto &legal : _states[_current_state]._legal_moves) {
-                if (move == legal) {
+            const MoveList &moves = get_moves();
+            for (int i = 0; i < moves.size(); i++) {
+                if (moves[i] == move) {
                     return true;
                 }
             }
@@ -284,14 +338,6 @@ namespace brainiac {
          * @return Move
          */
         Move create_move(std::string standard_notation);
-
-        /**
-         * @brief Get all legal moves available to the current player
-         *
-         */
-        inline const std::vector<Move> &get_moves() {
-            return _states[_current_state]._legal_moves;
-        }
 
         /**
          * @brief Get the current number of halfmoves to enforce the 50-move
