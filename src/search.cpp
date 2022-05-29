@@ -317,7 +317,8 @@ namespace brainiac {
         int count = 0;
         for (int ply = 0; ply < MAX_DEPTH; ply++) {
             TableEntry &entry = _transpositions.get(board);
-            if (!entry.best_move.is_invalid()) {
+            if (!entry.best_move.is_invalid() &&
+                board.is_legal(entry.best_move)) {
                 count++;
                 pv.push_back(entry.best_move);
                 board.make_move(entry.best_move);
