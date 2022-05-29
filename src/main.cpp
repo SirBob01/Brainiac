@@ -270,6 +270,9 @@ void play_command() {
                     b.redo_move();
                     break;
                 }
+            } else if (move_input == "skip") {
+                b.skip_move();
+                break;
             } else if (move_input == "stop") {
                 return;
             } else {
