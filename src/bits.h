@@ -545,8 +545,7 @@ namespace brainiac {
         uint64_t mask = 0;
 
         while (bitboard) {
-            const uint64_t unit = get_lsb(bitboard);
-            const int square = find_lsb(unit);
+            const int square = find_lsb(bitboard);
 
             const SlidingMoveTable &table = rook_attack_tables[square];
             const uint64_t blockers = table.block_mask & (friends | enemies);
@@ -572,8 +571,7 @@ namespace brainiac {
         uint64_t mask = 0;
 
         while (bitboard) {
-            const uint64_t unit = get_lsb(bitboard);
-            const int square = find_lsb(unit);
+            const int square = find_lsb(bitboard);
 
             const SlidingMoveTable &table = bishop_attack_tables[square];
             const uint64_t blockers = table.block_mask & (friends | enemies);
@@ -600,8 +598,7 @@ namespace brainiac {
         uint64_t mask = 0;
 
         while (bitboard) {
-            const uint64_t unit = get_lsb(bitboard);
-            const int square = find_lsb(unit);
+            const int square = find_lsb(bitboard);
 
             const SlidingMoveTable &rook_table = rook_attack_tables[square];
             const uint64_t rook_blockers =
@@ -638,8 +635,7 @@ namespace brainiac {
         uint64_t mask = 0;
 
         while (bitboard) {
-            const uint64_t unit = get_lsb(bitboard);
-            const int square = find_lsb(unit);
+            const int square = find_lsb(bitboard);
 
             const SlidingMoveTable &table = rook_attack_tables[square];
             const uint64_t blockers = table.block_mask & (friends | enemies);
@@ -665,8 +661,7 @@ namespace brainiac {
         uint64_t mask = 0;
 
         while (bitboard) {
-            const uint64_t unit = get_lsb(bitboard);
-            const int square = find_lsb(unit);
+            const int square = find_lsb(bitboard);
 
             const SlidingMoveTable &table = rook_attack_tables[square];
             const uint64_t blockers = table.block_mask & (friends | enemies);
@@ -692,8 +687,7 @@ namespace brainiac {
         uint64_t mask = 0;
 
         while (bitboard) {
-            const uint64_t unit = get_lsb(bitboard);
-            const int square = find_lsb(unit);
+            const int square = find_lsb(bitboard);
 
             const SlidingMoveTable &table = bishop_attack_tables[square];
             const uint64_t blockers = table.block_mask & (friends | enemies);
@@ -719,8 +713,7 @@ namespace brainiac {
         uint64_t mask = 0;
 
         while (bitboard) {
-            const uint64_t unit = get_lsb(bitboard);
-            const int square = find_lsb(unit);
+            const int square = find_lsb(bitboard);
 
             const SlidingMoveTable &table = bishop_attack_tables[square];
             const uint64_t blockers = table.block_mask & (friends | enemies);
@@ -747,8 +740,7 @@ namespace brainiac {
                                       uint64_t dest[4]) {
         memset(dest, 0, 4 * sizeof(uint64_t));
         while (bitboard) {
-            const uint64_t unit = get_lsb(bitboard);
-            const int square = find_lsb(unit);
+            const int square = find_lsb(bitboard);
 
             const SlidingMoveTable &table = rook_attack_tables[square];
             const uint64_t blockers = table.block_mask & (friends | enemies);
@@ -785,8 +777,7 @@ namespace brainiac {
                                      uint64_t dest[4]) {
         memset(dest, 0, 4 * sizeof(uint64_t));
         while (bitboard) {
-            const uint64_t unit = get_lsb(bitboard);
-            const int square = find_lsb(unit);
+            const int square = find_lsb(bitboard);
 
             const SlidingMoveTable &table = bishop_attack_tables[square];
             const uint64_t blockers = table.block_mask & (friends | enemies);
