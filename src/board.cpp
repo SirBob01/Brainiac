@@ -287,14 +287,14 @@ namespace brainiac {
             Bitboard captures = king_moves & enemies;
             Bitboard quiet = king_moves & ~enemies;
             while (quiet) {
-                Bitboard target = quiet & (-quiet);
+                Bitboard target = get_lsb(quiet);
                 state._moves.add(square, find_lsb(target), 0);
-                quiet &= (quiet - 1);
+                quiet = pop_lsb(quiet);
             }
             while (captures) {
-                Bitboard target = captures & (-captures);
+                Bitboard target = get_lsb(captures);
                 state._moves.add(square, find_lsb(target), MoveFlag::Capture);
-                captures &= (captures - 1);
+                captures = pop_lsb(captures);
             }
 
             // Castling moves
@@ -332,7 +332,7 @@ namespace brainiac {
         {
             bits = pawns;
             while (bits) {
-                Bitboard unit = (bits & -bits);
+                Bitboard unit = get_lsb(bits);
                 Square square = find_lsb(unit);
 
                 // En-passant mask (captured piece cannot be pinned)
@@ -365,7 +365,7 @@ namespace brainiac {
 
                 // Single pawn advance
                 while (pawn_single) {
-                    Bitboard target = pawn_single & (-pawn_single);
+                    Bitboard target = get_lsb(pawn_single);
                     if (target & end_ranks) {
                         for (int i = 0; i < 4; i++) {
                             state._moves.add(square,
@@ -377,22 +377,22 @@ namespace brainiac {
                                          find_lsb(target),
                                          pawn_single_flags);
                     }
-                    pawn_single &= (pawn_single - 1);
+                    pawn_single = pop_lsb(pawn_single);
                 }
 
                 // Double pawn advance
                 while (pawn_double) {
-                    Bitboard target = pawn_double & (-pawn_double);
+                    Bitboard target = get_lsb(pawn_double);
                     state._moves.add(square,
                                      find_lsb(target),
                                      pawn_double_flags);
-                    pawn_double &= (pawn_double - 1);
+                    pawn_double = pop_lsb(pawn_double);
                 }
 
                 // Regular captures
                 Bitboard captures = pawn_capture & enemies;
                 while (captures) {
-                    Bitboard target = captures & (-captures);
+                    Bitboard target = get_lsb(captures);
                     if (target & end_ranks) {
                         for (int i = 0; i < 4; i++) {
                             state._moves.add(square,
@@ -405,19 +405,19 @@ namespace brainiac {
                                          find_lsb(target),
                                          pawn_capture_flags);
                     }
-                    captures &= (captures - 1);
+                    captures = pop_lsb(captures);
                 }
 
                 // En-passant captures
                 Bitboard ep = pawn_capture & pawn_ep;
                 while (ep) {
-                    Bitboard target = ep & (-ep);
+                    Bitboard target = get_lsb(ep);
                     state._moves.add(square,
                                      find_lsb(target),
                                      en_passant_flags);
-                    ep &= (ep - 1);
+                    ep = pop_lsb(ep);
                 }
-                bits &= (bits - 1);
+                bits = pop_lsb(bits);
             }
         }
 
@@ -425,7 +425,7 @@ namespace brainiac {
         {
             bits = knights & ~all_pins; // Pinned knights can never move
             while (bits) {
-                Bitboard unit = (bits & -bits);
+                Bitboard unit = get_lsb(bits);
                 Square square = find_lsb(unit);
 
                 Bitboard knight_moves = get_knight_mask(unit) & knight_filter;
@@ -433,19 +433,19 @@ namespace brainiac {
                 Bitboard captures = knight_moves & enemies;
                 Bitboard quiet = knight_moves & ~enemies;
                 while (quiet) {
-                    Bitboard target = quiet & (-quiet);
+                    Bitboard target = get_lsb(quiet);
                     state._moves.add(square, find_lsb(target), 0);
-                    quiet &= (quiet - 1);
+                    quiet = pop_lsb(quiet);
                 }
                 while (captures) {
-                    Bitboard target = captures & (-captures);
+                    Bitboard target = get_lsb(captures);
                     state._moves.add(square,
                                      find_lsb(target),
                                      MoveFlag::Capture);
-                    captures &= (captures - 1);
+                    captures = pop_lsb(captures);
                 }
 
-                bits &= (bits - 1);
+                bits = pop_lsb(bits);
             }
         }
 
@@ -453,7 +453,7 @@ namespace brainiac {
         {
             bits = bishops;
             while (bits) {
-                Bitboard unit = (bits & -bits);
+                Bitboard unit = get_lsb(bits);
                 Square square = find_lsb(unit);
 
                 Bitboard moves =
@@ -474,18 +474,18 @@ namespace brainiac {
                 Bitboard captures = moves & enemies;
                 Bitboard quiet = moves & ~enemies;
                 while (quiet) {
-                    Bitboard target = quiet & (-quiet);
+                    Bitboard target = get_lsb(quiet);
                     state._moves.add(square, find_lsb(target), 0);
-                    quiet &= (quiet - 1);
+                    quiet = pop_lsb(quiet);
                 }
                 while (captures) {
-                    Bitboard target = captures & (-captures);
+                    Bitboard target = get_lsb(captures);
                     state._moves.add(square,
                                      find_lsb(target),
                                      MoveFlag::Capture);
-                    captures &= (captures - 1);
+                    captures = pop_lsb(captures);
                 }
-                bits &= (bits - 1);
+                bits = pop_lsb(bits);
             }
         }
 
@@ -493,7 +493,7 @@ namespace brainiac {
         {
             bits = rooks;
             while (bits) {
-                Bitboard unit = (bits & -bits);
+                Bitboard unit = get_lsb(bits);
                 Square square = find_lsb(unit);
 
                 Bitboard moves =
@@ -514,18 +514,18 @@ namespace brainiac {
                 Bitboard captures = moves & enemies;
                 Bitboard quiet = moves & ~enemies;
                 while (quiet) {
-                    Bitboard target = quiet & (-quiet);
+                    Bitboard target = get_lsb(quiet);
                     state._moves.add(square, find_lsb(target), 0);
-                    quiet &= (quiet - 1);
+                    quiet = pop_lsb(quiet);
                 }
                 while (captures) {
-                    Bitboard target = captures & (-captures);
+                    Bitboard target = get_lsb(captures);
                     state._moves.add(square,
                                      find_lsb(target),
                                      MoveFlag::Capture);
-                    captures &= (captures - 1);
+                    captures = pop_lsb(captures);
                 }
-                bits &= (bits - 1);
+                bits = pop_lsb(bits);
             }
         }
 
@@ -533,7 +533,7 @@ namespace brainiac {
         {
             bits = queens;
             while (bits) {
-                Bitboard unit = (bits & -bits);
+                Bitboard unit = get_lsb(bits);
                 Square square = find_lsb(unit);
 
                 Bitboard moves =
@@ -554,18 +554,18 @@ namespace brainiac {
                 Bitboard captures = moves & enemies;
                 Bitboard quiet = moves & ~enemies;
                 while (quiet) {
-                    Bitboard target = quiet & (-quiet);
+                    Bitboard target = get_lsb(quiet);
                     state._moves.add(square, find_lsb(target), 0);
-                    quiet &= (quiet - 1);
+                    quiet = pop_lsb(quiet);
                 }
                 while (captures) {
-                    Bitboard target = captures & (-captures);
+                    Bitboard target = get_lsb(captures);
                     state._moves.add(square,
                                      find_lsb(target),
                                      MoveFlag::Capture);
-                    captures &= (captures - 1);
+                    captures = pop_lsb(captures);
                 }
-                bits &= (bits - 1);
+                bits = pop_lsb(bits);
             }
         }
     }

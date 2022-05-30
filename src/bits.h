@@ -185,6 +185,20 @@ namespace brainiac {
     }
 
     /**
+     * @brief Get the least significant bit of a bitboard [x & -x]
+     *
+     * @param bitboard
+     * @return uint64_t
+     */
+    inline uint64_t get_lsb(uint64_t bitboard) { return _blsi_u64(bitboard); }
+
+    /**
+     * @brief Pop the least significant bit off a bitboard [x & (x - 1)]
+     *
+     */
+    inline uint64_t pop_lsb(uint64_t bitboard) { return _blsr_u64(bitboard); }
+
+    /**
      * @brief Vertically flip a bitboard
      *
      * @param bitboard
@@ -462,7 +476,7 @@ namespace brainiac {
         uint64_t mask = 0;
         while (bitboard) {
             mask |= knight_move_masks[find_lsb(bitboard)];
-            bitboard &= (bitboard - 1);
+            bitboard = pop_lsb(bitboard);
         }
         return mask;
     }
@@ -531,7 +545,7 @@ namespace brainiac {
         uint64_t mask = 0;
 
         while (bitboard) {
-            const uint64_t unit = bitboard & -bitboard;
+            const uint64_t unit = get_lsb(bitboard);
             const int square = find_lsb(unit);
 
             const SlidingMoveTable &table = rook_attack_tables[square];
@@ -540,7 +554,7 @@ namespace brainiac {
                 (blockers * table.magic) >> (64 - table.shift);
             mask |= table.move_masks[index][0];
 
-            bitboard &= (bitboard - 1);
+            bitboard = pop_lsb(bitboard);
         }
         return mask & ~friends;
     }
@@ -558,7 +572,7 @@ namespace brainiac {
         uint64_t mask = 0;
 
         while (bitboard) {
-            const uint64_t unit = bitboard & -bitboard;
+            const uint64_t unit = get_lsb(bitboard);
             const int square = find_lsb(unit);
 
             const SlidingMoveTable &table = bishop_attack_tables[square];
@@ -567,7 +581,7 @@ namespace brainiac {
                 (blockers * table.magic) >> (64 - table.shift);
             mask |= table.move_masks[index][0];
 
-            bitboard &= (bitboard - 1);
+            bitboard = pop_lsb(bitboard);
         }
         return mask & ~friends;
     }
@@ -586,7 +600,7 @@ namespace brainiac {
         uint64_t mask = 0;
 
         while (bitboard) {
-            const uint64_t unit = bitboard & -bitboard;
+            const uint64_t unit = get_lsb(bitboard);
             const int square = find_lsb(unit);
 
             const SlidingMoveTable &rook_table = rook_attack_tables[square];
@@ -606,7 +620,7 @@ namespace brainiac {
                 bishop_table.move_masks[bishop_index][0];
             mask |= rook_mask | bishop_mask;
 
-            bitboard &= (bitboard - 1);
+            bitboard = pop_lsb(bitboard);
         }
         return mask & ~friends;
     }
@@ -624,7 +638,7 @@ namespace brainiac {
         uint64_t mask = 0;
 
         while (bitboard) {
-            const uint64_t unit = bitboard & -bitboard;
+            const uint64_t unit = get_lsb(bitboard);
             const int square = find_lsb(unit);
 
             const SlidingMoveTable &table = rook_attack_tables[square];
@@ -633,7 +647,7 @@ namespace brainiac {
                 (blockers * table.magic) >> (64 - table.shift);
             mask |= (table.move_masks[index][3] | table.move_masks[index][4]);
 
-            bitboard &= (bitboard - 1);
+            bitboard = pop_lsb(bitboard);
         }
         return mask & ~friends;
     }
@@ -651,7 +665,7 @@ namespace brainiac {
         uint64_t mask = 0;
 
         while (bitboard) {
-            const uint64_t unit = bitboard & -bitboard;
+            const uint64_t unit = get_lsb(bitboard);
             const int square = find_lsb(unit);
 
             const SlidingMoveTable &table = rook_attack_tables[square];
@@ -660,7 +674,7 @@ namespace brainiac {
                 (blockers * table.magic) >> (64 - table.shift);
             mask |= (table.move_masks[index][1] | table.move_masks[index][2]);
 
-            bitboard &= (bitboard - 1);
+            bitboard = pop_lsb(bitboard);
         }
         return mask & ~friends;
     }
@@ -678,7 +692,7 @@ namespace brainiac {
         uint64_t mask = 0;
 
         while (bitboard) {
-            const uint64_t unit = bitboard & -bitboard;
+            const uint64_t unit = get_lsb(bitboard);
             const int square = find_lsb(unit);
 
             const SlidingMoveTable &table = bishop_attack_tables[square];
@@ -687,7 +701,7 @@ namespace brainiac {
                 (blockers * table.magic) >> (64 - table.shift);
             mask |= (table.move_masks[index][1] | table.move_masks[index][3]);
 
-            bitboard &= (bitboard - 1);
+            bitboard = pop_lsb(bitboard);
         }
         return mask & ~friends;
     }
@@ -705,7 +719,7 @@ namespace brainiac {
         uint64_t mask = 0;
 
         while (bitboard) {
-            const uint64_t unit = bitboard & -bitboard;
+            const uint64_t unit = get_lsb(bitboard);
             const int square = find_lsb(unit);
 
             const SlidingMoveTable &table = bishop_attack_tables[square];
@@ -714,7 +728,7 @@ namespace brainiac {
                 (blockers * table.magic) >> (64 - table.shift);
             mask |= (table.move_masks[index][2] | table.move_masks[index][4]);
 
-            bitboard &= (bitboard - 1);
+            bitboard = pop_lsb(bitboard);
         }
         return mask & ~friends;
     }
@@ -733,7 +747,7 @@ namespace brainiac {
                                       uint64_t dest[4]) {
         memset(dest, 0, 4 * sizeof(uint64_t));
         while (bitboard) {
-            const uint64_t unit = bitboard & -bitboard;
+            const uint64_t unit = get_lsb(bitboard);
             const int square = find_lsb(unit);
 
             const SlidingMoveTable &table = rook_attack_tables[square];
@@ -748,7 +762,7 @@ namespace brainiac {
             dest[2] |= masks[3];
             dest[3] |= masks[4];
 
-            bitboard &= (bitboard - 1);
+            bitboard = pop_lsb(bitboard);
         }
         const uint64_t not_friends = ~friends;
         dest[0] &= not_friends;
@@ -771,7 +785,7 @@ namespace brainiac {
                                      uint64_t dest[4]) {
         memset(dest, 0, 4 * sizeof(uint64_t));
         while (bitboard) {
-            const uint64_t unit = bitboard & -bitboard;
+            const uint64_t unit = get_lsb(bitboard);
             const int square = find_lsb(unit);
 
             const SlidingMoveTable &table = bishop_attack_tables[square];
@@ -786,7 +800,7 @@ namespace brainiac {
             dest[2] |= masks[3];
             dest[3] |= masks[4];
 
-            bitboard &= (bitboard - 1);
+            bitboard = pop_lsb(bitboard);
         }
         const uint64_t not_friends = ~friends;
         dest[0] &= not_friends;

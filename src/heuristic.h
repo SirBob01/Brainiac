@@ -165,9 +165,9 @@ namespace brainiac {
                                        const float matrix[64]) {
         float score = 0;
         while (bitboard) {
-            Bitboard unit = bitboard & (-bitboard);
+            Bitboard unit = get_lsb(bitboard);
             score += matrix[find_lsb(unit)];
-            bitboard &= (bitboard - 1);
+            bitboard = pop_lsb(bitboard);
         }
         return score;
     }
@@ -288,7 +288,7 @@ namespace brainiac {
             if (count_set_bits(mask & black_pawns) == 0) {
                 passed++;
             }
-            temp &= (temp - 1);
+            temp = pop_lsb(temp);
         }
 
         // Calculate passed pawns for black
@@ -308,7 +308,7 @@ namespace brainiac {
             if (count_set_bits(mask & white_pawns) == 0) {
                 passed--;
             }
-            temp &= (temp - 1);
+            temp = pop_lsb(temp);
         }
         return passed;
     }
