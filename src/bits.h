@@ -1,27 +1,13 @@
 #ifndef BRAINIAC_BITS_H_
 #define BRAINIAC_BITS_H_
 
-#ifdef _WIN32
-
-#include <stdlib.h>
-#define bswap_64(x) _byteswap_uint64(x)
-
-#elif defined(__APPLE__)
-
-#include <libkern/OSByteOrder.h>
-#define bswap_64(x) OSSwapInt64(x)
-
-#else
-
-#include <byteswap.h>
-
-#endif
-
 #include <bitset>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
 #include <stack>
+
+#include <x86intrin.h>
 
 #include "move.h"
 #include "piece.h"
@@ -56,17 +42,6 @@ namespace brainiac {
         // For bishops, these are nw, ne, se, sw (CC order)
         uint64_t move_masks[1ULL << 12][5];
     };
-
-    /**
-     * @brief Bit scan table for fetching the index of the least significant bit
-     *
-     */
-    constexpr uint64_t debruijn64 = 0x07EDD5E59A4E28C2;
-    constexpr int bitscan_table[64] = {
-        63, 0,  58, 1,  59, 47, 53, 2,  60, 39, 48, 27, 54, 33, 42, 3,
-        61, 51, 37, 40, 49, 18, 28, 20, 55, 30, 34, 11, 43, 14, 22, 4,
-        62, 57, 46, 52, 38, 26, 32, 41, 50, 36, 17, 19, 29, 10, 13, 21,
-        56, 45, 25, 31, 35, 16, 9,  12, 44, 24, 15, 8,  23, 7,  6,  5};
 
     /**
      * @brief Horizontal bitboard flip constants
@@ -187,18 +162,26 @@ namespace brainiac {
     void print_bitboard(uint64_t bitboard);
 
     /**
-     * @brief Count the number of set bits on a bitboard
+     * @brief Count the number of set bits on a bitboard using the POPCNT
+     * intrinsic
      *
      * @param bitboard
      * @return constexpr int
      */
     constexpr inline int count_set_bits(uint64_t bitboard) {
-        int count = 0;
-        while (bitboard) {
-            count++;
-            bitboard &= (bitboard - 1);
-        }
-        return count;
+        return __builtin_popcountll(bitboard);
+    }
+
+    /**
+     * @brief Calculates the index of the least significant bit in the binary
+     * string Use this to iterate through all set bits on a bitboard (active
+     * pieces)
+     *
+     * @param binary
+     * @return constexpr int
+     */
+    constexpr inline int find_lsb(uint64_t binary) {
+        return __builtin_ctzll(binary);
     }
 
     /**
@@ -207,8 +190,8 @@ namespace brainiac {
      * @param bitboard
      * @return uint64_t
      */
-    inline uint64_t flip_vertical(uint64_t bitboard) {
-        return bswap_64(bitboard);
+    constexpr inline uint64_t flip_vertical(uint64_t bitboard) {
+        return __builtin_bswap64(bitboard);
     }
 
     /**
@@ -225,18 +208,6 @@ namespace brainiac {
         bitboard =
             ((bitboard >> 4) & horflip_k[2]) + 16 * (bitboard & horflip_k[2]);
         return bitboard;
-    }
-
-    /**
-     * @brief Calculates the index of the least significant bit in the binary
-     * string Use this to iterate through all set bits on a bitboard (active
-     * pieces)
-     *
-     * @param binary
-     * @return constexpr int
-     */
-    constexpr inline int find_lsb(uint64_t binary) {
-        return bitscan_table[((binary & -binary) * debruijn64) >> 58];
     }
 
     /**
