@@ -99,6 +99,29 @@ namespace brainiac {
     }
 
     /**
+     * @brief Value of a move for mobility score calculation
+     *
+     * @param move
+     * @return float
+     */
+    inline float move_mobility_heuristic(Move move) {
+        float score = 1;
+        MoveFlagSet flags = move.get_flags();
+        if (flags & MoveFlag::Castling) {
+            score += 2;
+        } else {
+            if (flags & (MoveFlag::BishopPromo | MoveFlag::QueenPromo |
+                         MoveFlag::RookPromo | MoveFlag::KnightPromo)) {
+                score += 5;
+            }
+            if (flags & MoveFlag::Capture) {
+                score += 3;
+            }
+        }
+        return score;
+    }
+
+    /**
      * @brief Calculate the mobility heuristic of the board state
      *
      * This performs a null move to get the mobility score of the opposing
@@ -108,9 +131,20 @@ namespace brainiac {
      * @return float
      */
     inline float mobility_score(Board &board) {
-        float mobility = board.get_moves().size();
+        float mobility = 0;
+
+        // Calculate mobility of current turn
+        MoveList &curr_moves = board.get_moves();
+        for (int i = 0; i < curr_moves.size(); i++) {
+            mobility += move_mobility_heuristic(curr_moves[i]);
+        }
+
+        // Calculate mobility of opposing player
         board.skip_move();
-        mobility -= board.get_moves().size();
+        MoveList &next_moves = board.get_moves();
+        for (int i = 0; i < next_moves.size(); i++) {
+            mobility -= move_mobility_heuristic(next_moves[i]);
+        }
         board.undo_move();
 
         if (board.get_turn() == Color::Black) {
@@ -169,23 +203,18 @@ namespace brainiac {
         Bitboard b_k = board.get_bitboard(PieceType::King, Color::Black);
 
         // Sum the total placement heuristic
-        float score = (piece_placement_total(w_p, pawn_matrix) +
-                       piece_placement_total(w_n, knight_matrix) +
-                       piece_placement_total(w_b, bishop_matrix) +
-                       piece_placement_total(w_r, rook_matrix) +
-                       piece_placement_total(w_q, queen_matrix) +
-                       piece_placement_total(w_k, king_matrix)) -
-                      (piece_placement_total(b_p, pawn_matrix) +
-                       piece_placement_total(b_n, knight_matrix) +
-                       piece_placement_total(b_b, bishop_matrix) +
-                       piece_placement_total(b_r, rook_matrix) +
-                       piece_placement_total(b_q, queen_matrix) +
-                       piece_placement_total(b_k, king_matrix));
-
-        if (board.get_turn() == Color::Black) {
-            return -score;
-        }
-        return score;
+        return (piece_placement_total(w_p, pawn_matrix) +
+                piece_placement_total(w_n, knight_matrix) +
+                piece_placement_total(w_b, bishop_matrix) +
+                piece_placement_total(w_r, rook_matrix) +
+                piece_placement_total(w_q, queen_matrix) +
+                piece_placement_total(w_k, king_matrix)) -
+               (piece_placement_total(b_p, pawn_matrix) +
+                piece_placement_total(b_n, knight_matrix) +
+                piece_placement_total(b_b, bishop_matrix) +
+                piece_placement_total(b_r, rook_matrix) +
+                piece_placement_total(b_q, queen_matrix) +
+                piece_placement_total(b_k, king_matrix));
     }
 
     /**
