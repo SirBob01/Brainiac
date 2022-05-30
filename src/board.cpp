@@ -570,17 +570,6 @@ namespace brainiac {
         }
     }
 
-    BoardState &Board::push_state() {
-        // If executing a new move while in undo state, overwrite future history
-        _states.resize(_current_state + 1);
-        _states.emplace_back(_states[_current_state]);
-        _current_state++;
-
-        BoardState &state = _states[_current_state];
-        state._halfmoves++;
-        return state;
-    }
-
     std::string Board::generate_fen() {
         BoardState &state = _states[_current_state];
         std::string fen = "";
