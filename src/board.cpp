@@ -84,7 +84,7 @@ namespace brainiac {
 
         Bitboard o_bishops_or_queens = o_bishops | o_queens;
         Bitboard o_rooks_or_queens = o_rooks | o_queens;
-        Bitboard all_no_king = (friends & ~king) | enemies;
+        Bitboard all_no_king = all & ~king;
 
         // Opponent moves
         Bitboard o_pawns_moves = get_pawn_capture_mask(o_pawns, opp);
