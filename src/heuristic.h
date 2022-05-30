@@ -196,9 +196,9 @@ namespace brainiac {
      * @return float
      */
     inline float connected_pawn_score(Board &board) {
-        uint64_t white_pawns =
+        Bitboard white_pawns =
             board.get_bitboard(PieceType::Pawn, Color::White);
-        uint64_t black_pawns =
+        Bitboard black_pawns =
             board.get_bitboard(PieceType::Pawn, Color::Black);
 
         float connected = 0;
@@ -234,10 +234,10 @@ namespace brainiac {
      * @return float
      */
     inline float passed_pawn_score(Board &board) {
-        uint64_t temp;
-        uint64_t white_pawns =
+        Bitboard temp;
+        Bitboard white_pawns =
             board.get_bitboard(PieceType::Pawn, Color::White);
-        uint64_t black_pawns =
+        Bitboard black_pawns =
             board.get_bitboard(PieceType::Pawn, Color::Black);
 
         float passed = 0;
@@ -249,8 +249,8 @@ namespace brainiac {
             int rank = shift / 8;
             int file = shift % 8;
 
-            uint64_t mask = 0;
-            uint64_t file_mask = files[file];
+            Bitboard mask = 0;
+            Bitboard file_mask = files[file];
             if (file > 0) file_mask |= files[file - 1];
             if (file < 7) file_mask |= files[file + 1];
             for (int r = rank + 1; r < 8; r++) {
@@ -269,8 +269,8 @@ namespace brainiac {
             int rank = shift / 8;
             int file = shift % 8;
 
-            uint64_t mask = 0;
-            uint64_t file_mask = files[file];
+            Bitboard mask = 0;
+            Bitboard file_mask = files[file];
             if (file > 0) file_mask |= files[file - 1];
             if (file < 7) file_mask |= files[file + 1];
             for (int r = rank - 1; r >= 0; r--) {
@@ -295,9 +295,9 @@ namespace brainiac {
      * @return float
      */
     inline float bishop_pair_score(Board &board) {
-        uint64_t white_bishops =
+        Bitboard white_bishops =
             board.get_bitboard(PieceType::Bishop, Color::White);
-        uint64_t black_bishops =
+        Bitboard black_bishops =
             board.get_bitboard(PieceType::Bishop, Color::Black);
 
         float score = 0;
