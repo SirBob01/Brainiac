@@ -2,7 +2,7 @@
 
 namespace brainiac {
     Search::Search() {
-        _iterative_timeout_ns = 0.5 * SECONDS_TO_NANO;
+        _iterative_timeout_ns = 0.75 * SECONDS_TO_NANO;
         _visited = 0;
     }
 
@@ -99,49 +99,44 @@ namespace brainiac {
 
             // Prune only after a PV move has been found
             if (value != -INFINITY) {
-                if (depth < 0 && move_scores[i].score < 0) {
-                    // Prune bad captures during quiescence search
-                    continue;
-                } else {
+                board.make_move(move);
+                bool check_move = board.is_check();
+                board.undo_move();
+
+                if ((depth == 1 || depth == 2) &&
+                    !(flags & VOLATILE_MOVE_FLAGS) && !check_move &&
+                    !board.is_check()) {
+                    // Futility pruning - static evaluation is so poor, it's
+                    // not worth looking into
+                    float score = evaluate(board);
+                    float value = turn == Color::White ? score : -score;
+                    if (value + FUTILITY_MARGIN <= alpha) {
+                        continue;
+                    }
+                } else if (depth > 3 && !check_move && !board.is_check()) {
+                    // PV search with late move reduction
+                    // Tactical moves or check moves should not be reduced
+                    int R = 0;
+                    if (!(flags & VOLATILE_MOVE_FLAGS) && !check_move) {
+                        R++;
+                        if (i > 6) {
+                            R++;
+                        }
+                    }
+
+                    // Search with reduced depth and null-window
                     board.make_move(move);
-                    bool check_move = board.is_check();
+                    float reduction = -negamax(board,
+                                               -alpha - 1,
+                                               -alpha,
+                                               depth - R - 1,
+                                               opp,
+                                               move);
                     board.undo_move();
 
-                    if ((depth == 1 || depth == 2) &&
-                        !(flags & VOLATILE_MOVE_FLAGS) && !check_move &&
-                        !board.is_check()) {
-                        // Futility pruning - static evaluation is so poor, it's
-                        // not worth looking into
-                        float score = evaluate(board);
-                        float value = turn == Color::White ? score : -score;
-                        if (value + FUTILITY_MARGIN <= alpha) {
-                            continue;
-                        }
-                    } else if (depth > 3 && !check_move && !board.is_check()) {
-                        // PV search with late move reduction
-                        // Tactical moves or check moves should not be reduced
-                        int R = 0;
-                        if (!(flags & VOLATILE_MOVE_FLAGS) && !check_move) {
-                            R++;
-                            if (i > 6) {
-                                R++;
-                            }
-                        }
-
-                        // Search with reduced depth and null-window
-                        board.make_move(move);
-                        float reduction = -negamax(board,
-                                                   -alpha - 1,
-                                                   -alpha,
-                                                   depth - R - 1,
-                                                   opp,
-                                                   move);
-                        board.undo_move();
-
-                        // This move is proven to be not good, skip it
-                        if (reduction <= alpha || reduction >= beta) {
-                            continue;
-                        }
+                    // This move is proven to be not good, skip it
+                    if (reduction <= alpha || reduction >= beta) {
+                        continue;
                     }
                 }
             }
@@ -245,9 +240,9 @@ namespace brainiac {
             score += _history_heuristic[from][to];
         }
 
-        // Evaluate captures based on SEE heuristic
+        // Evaluate captures based on MVV-LVA heuristic
         if (flags & MoveFlag::Capture) {
-            score += see_heuristic(board, move) * 100;
+            score += mvv_lva_heuristic(board, move) * 100;
         }
 
         // Prioritize promotions
@@ -275,8 +270,8 @@ namespace brainiac {
         float pawns_passed = passed_pawn_score(board);
         float bishop_pair = bishop_pair_score(board);
 
-        return 2 * material + 0.2 * placement + 0.5 * mobility +
-               0.25 * pawns_connected + 1.5 * bishop_pair + 1.3 * pawns_passed;
+        return 3 * material + 0.5 * placement + 0.3 * mobility +
+               0.5 * pawns_connected + 2.5 * bishop_pair + 2 * pawns_passed;
     }
 
     Move Search::move(Board &board) {
