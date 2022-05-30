@@ -117,6 +117,25 @@ namespace brainiac {
     }
 
     /**
+     * @brief Utility function for calculating the total placement score for a
+     * piece's bitboard
+     *
+     * @param bitboard
+     * @param matrix
+     * @return float
+     */
+    inline float piece_placement_total(Bitboard bitboard,
+                                       const float matrix[64]) {
+        float score = 0;
+        while (bitboard) {
+            Bitboard unit = bitboard & (-bitboard);
+            score += matrix[find_lsb(unit)];
+            bitboard &= (bitboard - 1);
+        }
+        return score;
+    }
+
+    /**
      * @brief Calculate the placement score of the board using the piece-square
      * matrices
      *
@@ -125,46 +144,45 @@ namespace brainiac {
      */
     inline float placement_score(Board &board) {
         float score = 0;
-        for (int r = 0; r < 8; r++) {
-            for (int c = 0; c < 8; c++) {
-                Piece piece = board.get_at_coords(r, c);
-                if (piece.is_empty()) {
-                    continue;
-                }
 
-                // Piece-square tables are relative to white
-                int shift, sign;
-                if (piece.color == Color::White) {
-                    shift = r * 8 + c;
-                    sign = 1;
-                } else {
-                    shift = (8 - r - 1) * 8 + c;
-                    sign = -1;
-                }
+        // White pieces
+        Bitboard w_p = board.get_bitboard(PieceType::Pawn, Color::White);
+        Bitboard w_n = board.get_bitboard(PieceType::Knight, Color::White);
+        Bitboard w_b = board.get_bitboard(PieceType::Bishop, Color::White);
+        Bitboard w_r = board.get_bitboard(PieceType::Rook, Color::White);
+        Bitboard w_q = board.get_bitboard(PieceType::Queen, Color::White);
+        Bitboard w_k = board.get_bitboard(PieceType::King, Color::White);
 
-                switch (piece.type) {
-                case PieceType::Queen:
-                    score += queen_matrix[shift] * sign;
-                    break;
-                case PieceType::Bishop:
-                    score += bishop_matrix[shift] * sign;
-                    break;
-                case PieceType::Knight:
-                    score += knight_matrix[shift] * sign;
-                    break;
-                case PieceType::Rook:
-                    score += rook_matrix[shift] * sign;
-                    break;
-                case PieceType::Pawn:
-                    score += pawn_matrix[shift] * sign;
-                    break;
-                case PieceType::King:
-                    score += king_matrix[shift] * sign;
-                    break;
-                default:
-                    break;
-                }
-            }
+        // Black pieces
+        Bitboard b_p =
+            flip_vertical(board.get_bitboard(PieceType::Pawn, Color::Black));
+        Bitboard b_n =
+            flip_vertical(board.get_bitboard(PieceType::Knight, Color::Black));
+        Bitboard b_b =
+            flip_vertical(board.get_bitboard(PieceType::Bishop, Color::Black));
+        Bitboard b_r =
+            flip_vertical(board.get_bitboard(PieceType::Rook, Color::Black));
+        Bitboard b_q =
+            flip_vertical(board.get_bitboard(PieceType::Queen, Color::Black));
+        Bitboard b_k =
+            flip_vertical(board.get_bitboard(PieceType::King, Color::Black));
+
+        // Sum the total placement heuristic
+        score += (piece_placement_total(w_p, pawn_matrix) +
+                  piece_placement_total(w_n, knight_matrix) +
+                  piece_placement_total(w_b, bishop_matrix) +
+                  piece_placement_total(w_r, rook_matrix) +
+                  piece_placement_total(w_q, queen_matrix) +
+                  piece_placement_total(w_k, king_matrix));
+        score -= (piece_placement_total(b_p, pawn_matrix) +
+                  piece_placement_total(b_n, knight_matrix) +
+                  piece_placement_total(b_b, bishop_matrix) +
+                  piece_placement_total(b_r, rook_matrix) +
+                  piece_placement_total(b_q, queen_matrix) +
+                  piece_placement_total(b_k, king_matrix));
+
+        if (board.get_turn() == Color::Black) {
+            return -score;
         }
         return score;
     }
