@@ -26,7 +26,8 @@ namespace brainiac {
      *
      */
     class MoveList {
-        std::array<Move, 512> _list;
+        // Theoretical maximum number of moves
+        std::array<Move, 321> _list;
         int _count = 0;
 
       public:
