@@ -17,6 +17,9 @@ namespace brainiac {
      *
      * The higher the score at a particular index, the more favorable
      * that location for that piece
+     *
+     * Note that value placement matches the visual representation of the board,
+     * i.e., starting position is on the bottom 2 rows
      */
     // clang-format off
     const float queen_matrix[64] = {
@@ -143,43 +146,41 @@ namespace brainiac {
      * @return float
      */
     inline float placement_score(Board &board) {
-        float score = 0;
-
         // White pieces
-        Bitboard w_p = board.get_bitboard(PieceType::Pawn, Color::White);
-        Bitboard w_n = board.get_bitboard(PieceType::Knight, Color::White);
-        Bitboard w_b = board.get_bitboard(PieceType::Bishop, Color::White);
-        Bitboard w_r = board.get_bitboard(PieceType::Rook, Color::White);
-        Bitboard w_q = board.get_bitboard(PieceType::Queen, Color::White);
-        Bitboard w_k = board.get_bitboard(PieceType::King, Color::White);
+        Bitboard w_p =
+            flip_vertical(board.get_bitboard(PieceType::Pawn, Color::White));
+        Bitboard w_n =
+            flip_vertical(board.get_bitboard(PieceType::Knight, Color::White));
+        Bitboard w_b =
+            flip_vertical(board.get_bitboard(PieceType::Bishop, Color::White));
+        Bitboard w_r =
+            flip_vertical(board.get_bitboard(PieceType::Rook, Color::White));
+        Bitboard w_q =
+            flip_vertical(board.get_bitboard(PieceType::Queen, Color::White));
+        Bitboard w_k =
+            flip_vertical(board.get_bitboard(PieceType::King, Color::White));
 
         // Black pieces
-        Bitboard b_p =
-            flip_vertical(board.get_bitboard(PieceType::Pawn, Color::Black));
-        Bitboard b_n =
-            flip_vertical(board.get_bitboard(PieceType::Knight, Color::Black));
-        Bitboard b_b =
-            flip_vertical(board.get_bitboard(PieceType::Bishop, Color::Black));
-        Bitboard b_r =
-            flip_vertical(board.get_bitboard(PieceType::Rook, Color::Black));
-        Bitboard b_q =
-            flip_vertical(board.get_bitboard(PieceType::Queen, Color::Black));
-        Bitboard b_k =
-            flip_vertical(board.get_bitboard(PieceType::King, Color::Black));
+        Bitboard b_p = board.get_bitboard(PieceType::Pawn, Color::Black);
+        Bitboard b_n = board.get_bitboard(PieceType::Knight, Color::Black);
+        Bitboard b_b = board.get_bitboard(PieceType::Bishop, Color::Black);
+        Bitboard b_r = board.get_bitboard(PieceType::Rook, Color::Black);
+        Bitboard b_q = board.get_bitboard(PieceType::Queen, Color::Black);
+        Bitboard b_k = board.get_bitboard(PieceType::King, Color::Black);
 
         // Sum the total placement heuristic
-        score += (piece_placement_total(w_p, pawn_matrix) +
-                  piece_placement_total(w_n, knight_matrix) +
-                  piece_placement_total(w_b, bishop_matrix) +
-                  piece_placement_total(w_r, rook_matrix) +
-                  piece_placement_total(w_q, queen_matrix) +
-                  piece_placement_total(w_k, king_matrix));
-        score -= (piece_placement_total(b_p, pawn_matrix) +
-                  piece_placement_total(b_n, knight_matrix) +
-                  piece_placement_total(b_b, bishop_matrix) +
-                  piece_placement_total(b_r, rook_matrix) +
-                  piece_placement_total(b_q, queen_matrix) +
-                  piece_placement_total(b_k, king_matrix));
+        float score = (piece_placement_total(w_p, pawn_matrix) +
+                       piece_placement_total(w_n, knight_matrix) +
+                       piece_placement_total(w_b, bishop_matrix) +
+                       piece_placement_total(w_r, rook_matrix) +
+                       piece_placement_total(w_q, queen_matrix) +
+                       piece_placement_total(w_k, king_matrix)) -
+                      (piece_placement_total(b_p, pawn_matrix) +
+                       piece_placement_total(b_n, knight_matrix) +
+                       piece_placement_total(b_b, bishop_matrix) +
+                       piece_placement_total(b_r, rook_matrix) +
+                       piece_placement_total(b_q, queen_matrix) +
+                       piece_placement_total(b_k, king_matrix));
 
         if (board.get_turn() == Color::Black) {
             return -score;
