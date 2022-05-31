@@ -46,20 +46,6 @@ namespace brainiac {
      *
      */
     class Search {
-        double _iterative_timeout_ns;
-
-        // Index by [piece type][to]
-        int _history_heuristic[64][64] = {0};
-
-        // Index by depth
-        Move _killer_moves[MAX_DEPTH + 1];
-
-        Transpositions _transpositions;
-        Time _start_time;
-
-        // Statistic for measuring search pruning performance
-        int _visited;
-
         /**
          * @brief Pairing of a move with its heuristic score for ordering
          *
@@ -73,6 +59,31 @@ namespace brainiac {
             MoveScore(const Move &move, float score) :
                 move(move), score(score){};
         };
+
+        /**
+         * @brief History heuristic value is scaled based on the number of times
+         * it was visited. This means that moves are not prioritized just
+         * because they are visited more.
+         *
+         */
+        struct HistoryHeuristic {
+            float _h_score = 0;
+            float _b_score = 0;
+        };
+
+        double _iterative_timeout_ns;
+
+        // Index by [piece type][to]
+        HistoryHeuristic _history_heuristic[64][64] = {};
+
+        // Index by depth
+        Move _killer_moves[MAX_DEPTH + 1];
+
+        Transpositions _transpositions;
+        Time _start_time;
+
+        // Statistic for measuring search pruning performance
+        int _visited;
 
         /**
          * @brief Alpha-beta pruning algorithm with quiescence search, PVS, LMR,
