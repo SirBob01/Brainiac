@@ -238,26 +238,20 @@ namespace brainiac {
             (ordinal_queens_masks[1] & o_queens_d2_clear),
         };
         for (int i = 0; i < 4; i++) {
-            Bitboard mask_friends = rook_pins[i] & friends;
-            Bitboard mask_enemies = rook_pins[i] & enemies;
-            if ((mask_enemies & (mask_enemies - 1)) ||
-                (mask_friends & (mask_friends - 1))) {
+            if (pop_lsb(rook_pins[i] & friends) ||
+                pop_lsb(rook_pins[i] & enemies)) {
                 rook_pins[i] = 0;
             }
         }
         for (int i = 0; i < 4; i++) {
-            Bitboard mask_friends = bishop_pins[i] & friends;
-            Bitboard mask_enemies = bishop_pins[i] & enemies;
-            if ((mask_enemies & (mask_enemies - 1)) ||
-                (mask_friends & (mask_friends - 1))) {
+            if (pop_lsb(bishop_pins[i] & friends) ||
+                pop_lsb(bishop_pins[i] & enemies)) {
                 bishop_pins[i] = 0;
             }
         }
         for (int i = 0; i < 8; i++) {
-            Bitboard mask_friends = queen_pins[i] & friends;
-            Bitboard mask_enemies = queen_pins[i] & enemies;
-            if ((mask_enemies & (mask_enemies - 1)) ||
-                (mask_friends & (mask_friends - 1))) {
+            if (pop_lsb(queen_pins[i] & friends) ||
+                pop_lsb(queen_pins[i] & enemies)) {
                 queen_pins[i] = 0;
             }
         }
@@ -274,7 +268,7 @@ namespace brainiac {
 
         // Filters
         Bitboard knight_filter = ~friends & checkmask;
-        Bitboard king_filter = ~friends & ~king_dangermask;
+        Bitboard king_filter = ~(friends | king_dangermask);
 
         // King moves
         {
