@@ -66,14 +66,14 @@ namespace brainiac {
         -3, 3, 4, 1, 1, 0, 0, -3
     };
     const float pawn_matrix[64] = {
-        0, 0, 0, 0,    0,    0, 0, 0, 
-        5, 5,  5,  5,  5,  5,  5,  5,
-        1, 1, 2, 3,    3,    2, 1, 1, 
-        5, 5,  1,  27, 27, 1,  5,  5,
-        0, 0, 0, 2.5,  2.5,  0, 0, 0, 
-        5, -5, -1, 0,  0,  -1, -5, 5,
-        5, 1, 1, -2.5, -2.5, 1, 1, 5, 
-        0, 0,  0,  0,  0,  0,  0,  0
+        0,  0,  0,   0,   0,  0, 0, 0, 
+        5,  5,  5,   5,   5,  5, 5, 5,
+        1,  1,  2,   3,   3,  2, 1, 1, 
+        5,  5,  1,   7,   7,  1, 5, 5,
+        0,  0,  0, 2.5, 2.5,  0, 0, 0, 
+        5, -5, -1,   0,   0, -1,-5, 5,
+        5,  1,  1,-2.5,-2.5,  1, 1, 5, 
+        0,  0,  0,  0,  0,    0, 0, 0
     };
     const float king_matrix[64] = {
         -3, -4, -4, -5, -5, -4, -4, -3, 
@@ -102,15 +102,14 @@ namespace brainiac {
     }
 
     /**
-     * @brief Calculate the mobility heuristic of the board state
+     * @brief Calculate the board control heuristic of the board state
      *
-     * Rather than counting legal moves, this counts the number of squares
-     * controlled by a player
+     * This measures the number of squares controlled by each player (max 64)
      *
      * @param board
      * @return float
      */
-    inline float mobility_score(Board &board) {
+    inline float control_score(Board &board) {
         // Opponent's attack mask
         float mobility = -count_set_bits(board.get_attackmask());
 
