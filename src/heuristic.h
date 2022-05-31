@@ -102,53 +102,79 @@ namespace brainiac {
     }
 
     /**
-     * @brief Value of a move for mobility score calculation
-     *
-     * @param move
-     * @return float
-     */
-    inline float move_mobility_heuristic(Move move) {
-        float score = 1;
-        MoveFlagSet flags = move.get_flags();
-        if (flags & MoveFlag::Castling) {
-            score += 2;
-        } else {
-            if (flags & (MoveFlag::BishopPromo | MoveFlag::QueenPromo |
-                         MoveFlag::RookPromo | MoveFlag::KnightPromo)) {
-                score += 5;
-            }
-            if (flags & MoveFlag::Capture) {
-                score += 3;
-            }
-        }
-        return score;
-    }
-
-    /**
      * @brief Calculate the mobility heuristic of the board state
      *
-     * This performs a null move to get the mobility score of the opposing
-     * player
+     * Rather than counting legal moves, this counts the number of squares
+     * controlled by a player
      *
      * @param board
      * @return float
      */
     inline float mobility_score(Board &board) {
-        float mobility = 0;
+        // Opponent's attack mask
+        float mobility = -count_set_bits(board.get_attackmask());
 
-        // Calculate mobility of current turn
-        MoveList &curr_moves = board.get_moves();
-        for (int i = 0; i < curr_moves.size(); i++) {
-            mobility += move_mobility_heuristic(curr_moves[i]);
-        }
+        Color turn = board.get_turn();
+        Color opp = static_cast<Color>(!turn);
+        Bitboard friends = board.get_bitboard(opp);
+        Bitboard enemies = board.get_bitboard(turn);
+        Bitboard all = friends | enemies;
 
-        // Calculate mobility of opposing player
-        board.skip_move();
-        MoveList &next_moves = board.get_moves();
-        for (int i = 0; i < next_moves.size(); i++) {
-            mobility -= move_mobility_heuristic(next_moves[i]);
-        }
-        board.undo_move();
+        Bitboard o_king = board.get_bitboard(PieceType::King, opp);
+
+        Bitboard pawns = board.get_bitboard(PieceType::Pawn, turn);
+        Bitboard knights = board.get_bitboard(PieceType::Knight, turn);
+        Bitboard bishops = board.get_bitboard(PieceType::Bishop, turn);
+        Bitboard rooks = board.get_bitboard(PieceType::Rook, turn);
+        Bitboard queens = board.get_bitboard(PieceType::Queen, turn);
+        Bitboard king = board.get_bitboard(PieceType::King, turn);
+
+        Bitboard bishops_or_queens = bishops | queens;
+        Bitboard rooks_or_queens = rooks | queens;
+        Bitboard all_nking = all & ~o_king;
+
+        // Opponent moves
+        Bitboard pawns_moves = get_pawn_capture_mask(pawns, turn);
+        Bitboard knights_moves = get_knight_mask(knights);
+        Bitboard king_moves = get_king_mask(king);
+
+        // Slider moves need to be handled per-axis
+        Bitboard cardinal_masks[4]; // { n, s, e, w }
+        Bitboard ordinal_masks[4];  // { ne, se, sw, nw }
+        Bitboard cardinal_queens_masks[4];
+        Bitboard ordinal_queens_masks[4];
+
+        get_cardinal_masks(rooks, enemies, friends, cardinal_masks);
+        get_ordinal_masks(bishops, enemies, friends, ordinal_masks);
+        get_cardinal_masks(queens, enemies, friends, cardinal_queens_masks);
+        get_ordinal_masks(queens, enemies, friends, ordinal_queens_masks);
+
+        Bitboard rooks_v_moves = cardinal_masks[0] | cardinal_masks[1];
+        Bitboard rooks_h_moves = cardinal_masks[2] | cardinal_masks[3];
+
+        Bitboard bishops_d1_moves = ordinal_masks[0] | ordinal_masks[2];
+        Bitboard bishops_d2_moves = ordinal_masks[1] | ordinal_masks[3];
+
+        Bitboard queens_v_moves =
+            cardinal_queens_masks[0] | cardinal_queens_masks[1];
+        Bitboard queens_h_moves =
+            cardinal_queens_masks[2] | cardinal_queens_masks[3];
+        Bitboard queens_d1_moves =
+            ordinal_queens_masks[0] | ordinal_queens_masks[2];
+        Bitboard queens_d2_moves =
+            ordinal_queens_masks[1] | ordinal_queens_masks[3];
+
+        // Slider captures ignoring the king
+        Bitboard bishops_king_danger = get_bishop_mask(bishops, 0, all_nking);
+        Bitboard rooks_king_danger = get_rook_mask(rooks, 0, all_nking);
+        Bitboard queens_d1_king_danger = get_queen_mask(queens, 0, all_nking);
+
+        // Squares that are attacked by the current turn
+        Bitboard attackmask = pawns_moves | knights_moves | bishops_d1_moves |
+                              bishops_d2_moves | rooks_h_moves | rooks_v_moves |
+                              queens_d1_moves | queens_d2_moves |
+                              queens_h_moves | queens_v_moves | king_moves;
+        mobility += count_set_bits(attackmask);
 
         if (board.get_turn() == Color::Black) {
             return -mobility;

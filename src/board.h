@@ -89,6 +89,9 @@ namespace brainiac {
         // Extra 2 bitboards represent white/black pieces in general
         Bitboard _bitboards[14] = {0};
 
+        // Bitboard of squares controlled by the opponent
+        Bitboard _attackmask = 0;
+
         // qkQK (from most to least significant bit)
         CastlingFlagSet _castling_rights = 0;
         Square _en_passant_target = Squares::InvalidSquare;
@@ -365,6 +368,15 @@ namespace brainiac {
          */
         inline uint8_t get_castling_rights() {
             return _states[_current_state]._castling_rights;
+        }
+
+        /**
+         * @brief Get the squares controlled by the opponent
+         *
+         * @return Bitboard
+         */
+        inline Bitboard get_attackmask() {
+            return _states[_current_state]._attackmask;
         }
 
         /**

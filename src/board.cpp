@@ -125,11 +125,11 @@ namespace brainiac {
             get_queen_mask(o_queens, 0, all_no_king);
 
         // Squares that are attacked by the enemy
-        Bitboard attackmask =
-            o_pawns_moves | o_knights_moves | o_bishops_d1_moves |
-            o_bishops_d2_moves | o_rooks_h_moves | o_rooks_v_moves |
-            o_queens_d1_moves | o_queens_d2_moves | o_queens_h_moves |
-            o_queens_v_moves | o_king_moves;
+        state._attackmask = o_pawns_moves | o_knights_moves |
+                            o_bishops_d1_moves | o_bishops_d2_moves |
+                            o_rooks_h_moves | o_rooks_v_moves |
+                            o_queens_d1_moves | o_queens_d2_moves |
+                            o_queens_h_moves | o_queens_v_moves | o_king_moves;
 
         // Squares that king cannot go to
         Bitboard king_dangermask = o_pawns_moves | o_knights_moves |
@@ -138,7 +138,7 @@ namespace brainiac {
 
         // Calculate the check mask to filter out illegal moves
         Bitboard checkmask = 0xFFFFFFFFFFFFFFFF;
-        if (attackmask & king) {
+        if (state._attackmask & king) {
             state._check = true;
 
             get_cardinal_masks(king, friends, enemies, cardinal_masks);
@@ -299,14 +299,16 @@ namespace brainiac {
                     Castle side = static_cast<Castle>(rights & (-rights));
 
                     // King cannot move in range of his attackers
-                    Bitboard mask = get_castling_mask(all, side) & ~attackmask;
+                    Bitboard mask =
+                        get_castling_mask(all, side) & ~state._attackmask;
 
                     if (mask) {
                         Square to = find_lsb(mask);
                         int rankd = to - square;
                         int dir = (rankd > 0) - (rankd < 0);
                         Square pass_through = to - dir;
-                        if (!(get_square_mask(pass_through) & attackmask)) {
+                        if (!(get_square_mask(pass_through) &
+                              state._attackmask)) {
                             state._moves.add(square, to, MoveFlag::Castling);
                         }
                     }
