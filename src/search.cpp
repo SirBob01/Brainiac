@@ -48,8 +48,10 @@ namespace brainiac {
             return board.get_turn() != turn ? score : -score;
         } else if (board.is_draw()) {
             return 0;
-        } else if ((depth == -MAX_QUIESCENCE_DEPTH) ||
-                   (depth <= 0 && !(move.get_flags() & VOLATILE_MOVE_FLAGS))) {
+        } else if ((depth == -MAX_QUIESCENCE_DEPTH ||
+                    (depth <= 0 &&
+                     !(move.get_flags() & VOLATILE_MOVE_FLAGS))) &&
+                   !board.is_check()) { // Do not stop searching on check!
             float score = evaluate(board);
             return turn == Color::White ? score : -score;
         }
