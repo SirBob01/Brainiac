@@ -157,12 +157,17 @@ namespace brainiac {
                 if (value >= alpha) {
                     alpha = value;
                 }
+                if (!(flags & VOLATILE_MOVE_FLAGS)) {
+                    Square from = move.get_from();
+                    Square to = move.get_to();
+                    _history_heuristic[from][to]._b_score += depth * depth;
+                }
                 if (alpha >= beta) {
                     // Update history heuristic and killer move
                     if (!(flags & VOLATILE_MOVE_FLAGS)) {
                         Square from = move.get_from();
                         Square to = move.get_to();
-                        _history_heuristic[from][to] += (1 << depth);
+                        _history_heuristic[from][to]._h_score += depth * depth;
                     }
                     if (depth >= 0) {
                         _killer_moves[depth] = move;
@@ -237,7 +242,8 @@ namespace brainiac {
 
         // History heuristic
         if (!(flags & VOLATILE_MOVE_FLAGS)) {
-            score += _history_heuristic[from][to];
+            HistoryHeuristic &history = _history_heuristic[from][to];
+            score += history._h_score / history._b_score;
         }
 
         // Evaluate captures based on MVV-LVA heuristic
