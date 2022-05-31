@@ -6,10 +6,14 @@
 
 namespace brainiac {
     /**
-     * @brief Material weight of each piece type
+     * @brief Material weight of each piece type (and color)
      *
      */
-    constexpr int piece_weights[] = {4, 1, 5, 3, 3, 9, -4, -1, -5, -3, -3, -9};
+    // clang-format off
+    constexpr float piece_weights[] ={
+         4,  1,  5.5,  3.05,  3.33,  9.5, 
+        -4, -1, -5.5, -3.05, -3.33, -9.5
+    };
 
     /**
      * @brief The matrices below determine the placement scores of each piece
@@ -21,7 +25,6 @@ namespace brainiac {
      * Note that value placement matches the visual representation of the board,
      * i.e., starting position is on the bottom 2 rows
      */
-    // clang-format off
     const float queen_matrix[64] = {
         -4, -2, -2, -1, -1, -2, -2, -4, 
         -2, 0,  0,  0,  0,  0,  0,  -2,
