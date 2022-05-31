@@ -269,9 +269,8 @@ namespace brainiac {
             (bishop_pins[0] | bishop_pins[1] | queen_pins[4] | queen_pins[5]);
         Bitboard d2_pins =
             (bishop_pins[2] | bishop_pins[3] | queen_pins[6] | queen_pins[7]);
-        Bitboard hv_pins = h_pins | v_pins;
         Bitboard d12_pins = d1_pins | d2_pins;
-        Bitboard all_pins = hv_pins | d12_pins;
+        Bitboard all_pins = h_pins | v_pins | d12_pins;
 
         // Filters
         Bitboard knight_filter = ~friends & checkmask;
