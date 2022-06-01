@@ -852,7 +852,11 @@ namespace brainiac {
                 if (!piece.is_empty()) {
                     std::cout << piece.get_icon() << " ";
                 } else {
-                    std::cout << "- ";
+                    if (rank % 2 == file % 2) {
+                        std::cout << "- ";
+                    } else {
+                        std::cout << "+ ";
+                    }
                 }
             }
             std::cout << "\n";
