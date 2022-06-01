@@ -855,7 +855,7 @@ namespace brainiac {
                     if (rank % 2 == file % 2) {
                         std::cout << "- ";
                     } else {
-                        std::cout << "+ ";
+                        std::cout << ". ";
                     }
                 }
             }
