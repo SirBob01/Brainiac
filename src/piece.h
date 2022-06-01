@@ -54,22 +54,39 @@ namespace brainiac {
      * @brief A piece on the board
      *
      */
-    struct Piece {
-        PieceType type = PieceType::NPieces;
-        Color color = Color::Empty;
+    class Piece {
+        uint16_t _bitfield;
 
-        constexpr Piece() : type(PieceType::NPieces), color(Color::Empty){};
-        constexpr Piece(PieceType _type, Color _color) :
-            type(_type), color(_color){};
+      public:
+        constexpr Piece(PieceType type, Color color) :
+            _bitfield(((color * PieceType::NPieces + type) << 8) |
+                      (color << 4) | type){};
+        constexpr Piece() : Piece(PieceType::NPieces, Color::Empty){};
+
+        /**
+         * @brief Get the type of the piece
+         *
+         * @return constexpr PieceType
+         */
+        constexpr inline PieceType get_type() const {
+            return static_cast<PieceType>(_bitfield & 0xF);
+        };
+
+        /**
+         * @brief Get the color of the piece
+         *
+         * @return constexpr Color
+         */
+        constexpr inline Color get_color() const {
+            return static_cast<Color>((_bitfield >> 4) & 0xF);
+        };
 
         /**
          * @brief Get the index of this piece
          *
          * @return constexpr int
          */
-        constexpr inline int get_index() const {
-            return color * PieceType::NPieces + type;
-        };
+        constexpr inline int get_index() const { return _bitfield >> 8; };
 
         /**
          * @brief Get the icon of this piece
@@ -91,7 +108,9 @@ namespace brainiac {
          * @return true
          * @return false
          */
-        constexpr inline bool is_empty() const { return color == Color::Empty; }
+        constexpr inline bool is_empty() const {
+            return get_color() == Color::Empty;
+        }
     };
 } // namespace brainiac
 

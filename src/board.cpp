@@ -656,7 +656,7 @@ namespace brainiac {
 
         CastlingFlagSet castle_flags = k_castle | q_castle;
         if (state._castling_rights & castle_flags) {
-            if (piece.type == PieceType::King) {
+            if (piece.get_type() == PieceType::King) {
                 if (state._castling_rights & k_castle) {
                     state._hash ^= castling_bitstrings[find_lsb(k_castle)];
                 }
@@ -664,7 +664,7 @@ namespace brainiac {
                     state._hash ^= castling_bitstrings[find_lsb(q_castle)];
                 }
                 state._castling_rights &= ~castle_flags;
-            } else if (piece.type == PieceType::Rook) {
+            } else if (piece.get_type() == PieceType::Rook) {
                 Bitboard mask = get_square_mask(from);
                 Bitboard rank = castling_ranks[_turn];
                 if (mask & fileA & rank) {
@@ -682,7 +682,7 @@ namespace brainiac {
         }
 
         // Unset castling opponent flags if pieces were captured
-        if (target.type == PieceType::Rook) {
+        if (target.get_type() == PieceType::Rook) {
             Bitboard mask = get_square_mask(to);
             Bitboard rank = castling_ranks[opp];
             if (mask & fileA & rank) {
