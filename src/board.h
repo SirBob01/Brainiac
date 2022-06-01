@@ -176,7 +176,7 @@ namespace brainiac {
         inline void set_at(const Square sq, const Piece &piece) {
             BoardState &state = _states[_current_state];
             Bitboard mask = get_square_mask(sq);
-            state._bitboards[PieceType::NPieces2 + piece.color] |= mask;
+            state._bitboards[PieceType::NPieces2 + piece.get_color()] |= mask;
             state._bitboards[piece.get_index()] |= mask;
         }
 
@@ -210,7 +210,7 @@ namespace brainiac {
         inline void clear_at(const Square sq, const Piece &piece) {
             BoardState &state = _states[_current_state];
             Bitboard mask = ~get_square_mask(sq);
-            state._bitboards[PieceType::NPieces2 + piece.color] &= mask;
+            state._bitboards[PieceType::NPieces2 + piece.get_color()] &= mask;
             state._bitboards[piece.get_index()] &= mask;
         }
 

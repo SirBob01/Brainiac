@@ -379,8 +379,8 @@ namespace brainiac {
         Piece attacker = board.get_at(move.get_from());
         Piece victim = board.get_at(move.get_to());
 
-        float mvv = piece_weights[victim.type];
-        float lva = piece_weights[attacker.type];
+        float mvv = piece_weights[victim.get_type()];
+        float lva = piece_weights[attacker.get_type()];
         return mvv - lva;
     }
 
