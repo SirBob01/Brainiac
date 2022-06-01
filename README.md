@@ -19,7 +19,7 @@ To build the engine executable, run
 
 - Dynamic thinking time for live games
 - Add MoveList to transposition table hash to prevent recomputing legal moves
-- Add heuristic for "protected pieces"
+- Add heuristics for "protected pieces" and "hanging pieces" (penalty)
 - Optimize slow heuristic functions
   - SEE
 - Mate distance pruning

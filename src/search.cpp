@@ -278,7 +278,7 @@ namespace brainiac {
         float pawns_passed = passed_pawn_score(board);
         float bishop_pair = bishop_pair_score(board);
 
-        return 1.75 * material + 0.05 * placement + 0.1 * control +
+        return 1.75 * material + 0.15 * placement + 0.1 * control +
                0.3 * pawns_connected + 0.5 * bishop_pair + 0.4 * pawns_passed;
     }
 

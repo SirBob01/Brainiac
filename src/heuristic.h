@@ -69,7 +69,7 @@ namespace brainiac {
         0,  0,  0,   0,   0,  0, 0, 0, 
         5,  5,  5,   5,   5,  5, 5, 5,
         1,  1,  2,   3,   3,  2, 1, 1, 
-        5,  5,  1,   7,   7,  1, 5, 5,
+        5,  5,  1,  10,  10,  1, 5, 5,
         0,  0,  0, 2.5, 2.5,  0, 0, 0, 
         5, -5, -1,   0,   0, -1,-5, 5,
         5,  1,  1,-2.5,-2.5,  1, 1, 5, 
@@ -119,8 +119,7 @@ namespace brainiac {
         Bitboard enemies = board.get_bitboard(turn);
         Bitboard all = friends | enemies;
 
-        Bitboard o_king = board.get_bitboard(PieceType::King, opp);
-
+        // Current turn pieces
         Bitboard pawns = board.get_bitboard(PieceType::Pawn, turn);
         Bitboard knights = board.get_bitboard(PieceType::Knight, turn);
         Bitboard bishops = board.get_bitboard(PieceType::Bishop, turn);
@@ -128,11 +127,13 @@ namespace brainiac {
         Bitboard queens = board.get_bitboard(PieceType::Queen, turn);
         Bitboard king = board.get_bitboard(PieceType::King, turn);
 
+        Bitboard o_king = board.get_bitboard(PieceType::King, opp);
+
         Bitboard bishops_or_queens = bishops | queens;
         Bitboard rooks_or_queens = rooks | queens;
         Bitboard all_nking = all & ~o_king;
 
-        // Opponent moves
+        // Current turn moves
         Bitboard pawns_moves = get_pawn_capture_mask(pawns, turn);
         Bitboard knights_moves = get_knight_mask(knights);
         Bitboard king_moves = get_king_mask(king);
