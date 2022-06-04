@@ -194,10 +194,8 @@ namespace brainiac {
         Bitboard o_queens_d2_clear =
             ordinal_queens_masks[1] | ordinal_queens_masks[3] | o_queens;
 
-        get_cardinal_masks(king, 0, o_rooks, cardinal_masks);
-        get_ordinal_masks(king, 0, o_bishops, ordinal_masks);
-        get_cardinal_masks(king, 0, o_queens, cardinal_queens_masks);
-        get_ordinal_masks(king, 0, o_queens, ordinal_queens_masks);
+        get_cardinal_masks(king, 0, o_rooks_or_queens, cardinal_masks);
+        get_ordinal_masks(king, 0, o_bishops_or_queens, ordinal_masks);
 
         Bitboard rook_pins[4] = {
             // N
@@ -221,21 +219,21 @@ namespace brainiac {
         };
         Bitboard queen_pins[8] = {
             // N
-            (cardinal_queens_masks[0] & o_queens_v_clear),
+            (cardinal_masks[0] & o_queens_v_clear),
             // S
-            (cardinal_queens_masks[1] & o_queens_v_clear),
+            (cardinal_masks[1] & o_queens_v_clear),
             // E
-            (cardinal_queens_masks[2] & o_queens_h_clear),
+            (cardinal_masks[2] & o_queens_h_clear),
             // W
-            (cardinal_queens_masks[3] & o_queens_h_clear),
+            (cardinal_masks[3] & o_queens_h_clear),
             // NE
-            (ordinal_queens_masks[0] & o_queens_d1_clear),
+            (ordinal_masks[0] & o_queens_d1_clear),
             // SW
-            (ordinal_queens_masks[2] & o_queens_d1_clear),
+            (ordinal_masks[2] & o_queens_d1_clear),
             // NW
-            (ordinal_queens_masks[3] & o_queens_d2_clear),
+            (ordinal_masks[3] & o_queens_d2_clear),
             // SE
-            (ordinal_queens_masks[1] & o_queens_d2_clear),
+            (ordinal_masks[1] & o_queens_d2_clear),
         };
         for (int i = 0; i < 4; i++) {
             if (pop_lsb(rook_pins[i] & friends) ||
