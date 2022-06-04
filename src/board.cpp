@@ -170,58 +170,35 @@ namespace brainiac {
         }
 
         // Calculate pin masks for each slider
-        get_cardinal_masks(o_rooks, king, 0, cardinal_masks);
-        get_ordinal_masks(o_bishops, king, 0, ordinal_masks);
-        get_cardinal_masks(o_queens, king, 0, cardinal_queens_masks);
-        get_ordinal_masks(o_queens, king, 0, ordinal_queens_masks);
-
-        Bitboard o_rooks_v_clear =
-            cardinal_masks[0] | cardinal_masks[1] | o_rooks;
-        Bitboard o_rooks_h_clear =
-            cardinal_masks[2] | cardinal_masks[3] | o_rooks;
-
-        Bitboard o_bishops_d1_clear =
-            ordinal_masks[0] | ordinal_masks[2] | o_bishops;
-        Bitboard o_bishops_d2_clear =
-            ordinal_masks[1] | ordinal_masks[3] | o_bishops;
-
-        Bitboard o_queens_v_clear =
-            cardinal_queens_masks[0] | cardinal_queens_masks[1] | o_queens;
-        Bitboard o_queens_h_clear =
-            cardinal_queens_masks[2] | cardinal_queens_masks[3] | o_queens;
-        Bitboard o_queens_d1_clear =
-            ordinal_queens_masks[0] | ordinal_queens_masks[2] | o_queens;
-        Bitboard o_queens_d2_clear =
-            ordinal_queens_masks[1] | ordinal_queens_masks[3] | o_queens;
-
         get_cardinal_masks(king, 0, o_rooks_or_queens, cardinal_masks);
         get_ordinal_masks(king, 0, o_bishops_or_queens, ordinal_masks);
-
-        Bitboard clear_v = o_rooks_v_clear | o_queens_v_clear;
-        Bitboard clear_h = o_rooks_h_clear | o_queens_h_clear;
-        Bitboard clear_d1 = o_bishops_d1_clear | o_queens_d1_clear;
-        Bitboard clear_d2 = o_bishops_d2_clear | o_queens_d2_clear;
-
         Bitboard pins[8] = {
             // N
-            (cardinal_masks[0] & clear_v),
+            cardinal_masks[0],
             // S
-            (cardinal_masks[1] & clear_v),
+            cardinal_masks[1],
             // E
-            (cardinal_masks[2] & clear_h),
+            cardinal_masks[2],
             // W
-            (cardinal_masks[3] & clear_h),
+            cardinal_masks[3],
             // NE
-            (ordinal_masks[0] & clear_d1),
+            ordinal_masks[0],
             // SW
-            (ordinal_masks[2] & clear_d1),
+            ordinal_masks[2],
             // NW
-            (ordinal_masks[3] & clear_d2),
+            ordinal_masks[3],
             // SE
-            (ordinal_masks[1] & clear_d2),
+            ordinal_masks[1],
         };
-        for (int i = 0; i < 8; i++) {
-            if (pop_lsb(pins[i] & friends) || pop_lsb(pins[i] & enemies)) {
+        for (int i = 0; i < 4; i++) {
+            if (!(pins[i] & o_rooks_or_queens) || pop_lsb(pins[i] & friends) ||
+                pop_lsb(pins[i] & enemies)) {
+                pins[i] = 0;
+            }
+        }
+        for (int i = 4; i < 8; i++) {
+            if (!(pins[i] & o_bishops_or_queens) ||
+                pop_lsb(pins[i] & friends) || pop_lsb(pins[i] & enemies)) {
                 pins[i] = 0;
             }
         }
