@@ -170,8 +170,8 @@ namespace brainiac {
         }
 
         // Calculate pin masks for each slider
-        get_cardinal_masks(king, 0, o_rooks_or_queens, cardinal_masks);
-        get_ordinal_masks(king, 0, o_bishops_or_queens, ordinal_masks);
+        get_cardinal_masks(king, 0, enemies, cardinal_masks);
+        get_ordinal_masks(king, 0, enemies, ordinal_masks);
         Bitboard pins[8] = {
             // N
             cardinal_masks[0],
@@ -191,14 +191,13 @@ namespace brainiac {
             ordinal_masks[1],
         };
         for (int i = 0; i < 4; i++) {
-            if (!(pins[i] & o_rooks_or_queens) || pop_lsb(pins[i] & friends) ||
-                pop_lsb(pins[i] & enemies)) {
+            if (!(pins[i] & o_rooks_or_queens) || pop_lsb(pins[i] & friends)) {
                 pins[i] = 0;
             }
         }
         for (int i = 4; i < 8; i++) {
             if (!(pins[i] & o_bishops_or_queens) ||
-                pop_lsb(pins[i] & friends) || pop_lsb(pins[i] & enemies)) {
+                pop_lsb(pins[i] & friends)) {
                 pins[i] = 0;
             }
         }
