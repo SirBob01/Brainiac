@@ -43,7 +43,7 @@ namespace brainiac {
         -1, 0,  1,  1,  1,  1,  0,  -1, 
         -1, 1,  1,  1,  1,  1,  1,  -1,
         -1, 5,  0,  0,  0,  0,  5,  -1, 
-        -2, -1, -4, -1, -1, -4, -1, -2,
+        -2, -1, -5, -1, -1, -5, -1, -2,
     };
     const float knight_matrix[64] = {
         -5, -4, -3,  -3,  -3,  -3,  -4, -5, 
@@ -53,7 +53,7 @@ namespace brainiac {
         -3, 0,  1.5, 2,   2,   1.5, 0,  -3, 
         -3, 5,  1,   1.5, 1.5, 1,   5,  -3,
         -4, -2, 0,   5,   5,   0,   -2, -4, 
-        -5, -4, -2,  -3,  -3,  -2,  -4, -5,
+        -5, -5, -2,  -3,  -3,  -2,  -5, -5,
     };
     const float rook_matrix[64] = {
         0,  0, 0, 0, 0, 0, 0, 0,  
@@ -67,7 +67,7 @@ namespace brainiac {
     };
     const float pawn_matrix[64] = {
         0,  0,  0,   0,   0,  0, 0, 0, 
-        5,  5,  5,   5,   5,  5, 5, 5,
+        7,  7,  7,   7,   7,  7, 7, 7,
         1,  1,  2,   3,   3,  2, 1, 1, 
         5,  5,  1,  10,  10,  1, 5, 5,
         0,  0,  0, 2.5, 2.5,  0, 0, 0, 
@@ -292,7 +292,7 @@ namespace brainiac {
      * @return float
      */
     inline float passed_pawn_score(Board &board) {
-        Bitboard temp;
+        Bitboard bits;
         Bitboard white_pawns =
             board.get_bitboard(PieceType::Pawn, Color::White);
         Bitboard black_pawns =
@@ -301,9 +301,9 @@ namespace brainiac {
         float passed = 0;
 
         // Calculate passed pawns for white
-        temp = white_pawns;
-        while (temp) {
-            int shift = find_lsb(temp);
+        bits = white_pawns;
+        while (bits) {
+            int shift = find_lsb(bits);
             int rank = shift / 8;
             int file = shift % 8;
 
@@ -317,13 +317,13 @@ namespace brainiac {
             if (count_set_bits(mask & black_pawns) == 0) {
                 passed++;
             }
-            temp = pop_lsb(temp);
+            bits = pop_lsb(bits);
         }
 
         // Calculate passed pawns for black
-        temp = black_pawns;
-        while (temp) {
-            int shift = find_lsb(temp);
+        bits = black_pawns;
+        while (bits) {
+            int shift = find_lsb(bits);
             int rank = shift / 8;
             int file = shift % 8;
 
@@ -337,7 +337,7 @@ namespace brainiac {
             if (count_set_bits(mask & white_pawns) == 0) {
                 passed--;
             }
-            temp = pop_lsb(temp);
+            bits = pop_lsb(bits);
         }
         return passed;
     }

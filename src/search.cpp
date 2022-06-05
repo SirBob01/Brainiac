@@ -247,25 +247,26 @@ namespace brainiac {
             score += history._h_score / history._b_score;
         }
 
-        // Evaluate captures based on MVV-LVA heuristic
-        if (flags & MoveFlag::Capture) {
-            score += mvv_lva_heuristic(board, move) * 100;
-        }
+        // Prioritize exploring caslting moves
+        if (flags & MoveFlag::Castling) {
+            score += 100;
+        } else {
+            // Evaluate captures based on MVV-LVA heuristic
+            if (flags & MoveFlag::Capture) {
+                score += mvv_lva_heuristic(board, move) * 100;
+            }
 
-        // Prioritize promotions
-        if (flags & MoveFlag::QueenPromo) {
-            score += piece_weights[PieceType::Queen] * 10;
+            // Prioritize promotions
+            if (flags & MoveFlag::QueenPromo) {
+                score += piece_weights[PieceType::Queen] * 100;
+            } else if (flags & MoveFlag::BishopPromo) {
+                score += piece_weights[PieceType::Bishop] * 100;
+            } else if (flags & MoveFlag::RookPromo) {
+                score += piece_weights[PieceType::Rook] * 100;
+            } else if (flags & MoveFlag::KnightPromo) {
+                score += piece_weights[PieceType::Knight] * 100;
+            }
         }
-        if (flags & MoveFlag::BishopPromo) {
-            score += piece_weights[PieceType::Bishop] * 10;
-        }
-        if (flags & MoveFlag::RookPromo) {
-            score += piece_weights[PieceType::Rook] * 10;
-        }
-        if (flags & MoveFlag::KnightPromo) {
-            score += piece_weights[PieceType::Knight] * 10;
-        }
-
         return score;
     }
 
@@ -277,8 +278,8 @@ namespace brainiac {
         float pawns_passed = passed_pawn_score(board);
         float bishop_pair = bishop_pair_score(board);
 
-        return 1.75 * material + 0.15 * placement + 0.1 * control +
-               0.3 * pawns_connected + 0.5 * bishop_pair + 0.4 * pawns_passed;
+        return 2 * material + 0.3 * placement + 0.1 * control +
+               0.3 * pawns_connected + 1 * bishop_pair + 0.5 * pawns_passed;
     }
 
     Move Search::move(Board &board) {
@@ -289,6 +290,7 @@ namespace brainiac {
         float best_value = -INFINITY;
 
         _visited = 0;
+        std::memset(_history_heuristic, 0, 64 * 64 * sizeof(HistoryHeuristic));
         for (auto &move : moves) {
             // Get the value making this move
             // Search will return the value from the opponent's POV
