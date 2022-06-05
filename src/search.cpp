@@ -105,9 +105,8 @@ namespace brainiac {
                 bool check_move = board.is_check();
                 board.undo_move();
 
-                if ((depth == 1 || depth == 2) &&
-                    !(flags & VOLATILE_MOVE_FLAGS) && !check_move &&
-                    !board.is_check()) {
+                if ((depth > 0 && depth < 3) &&
+                    !(flags & VOLATILE_MOVE_FLAGS) && !check_move) {
                     // Futility pruning - static evaluation is so poor, it's
                     // not worth looking into
                     float score = evaluate(board);
