@@ -74,7 +74,7 @@ namespace brainiac {
         double _iterative_timeout_ns;
 
         // Index by [piece type][to]
-        HistoryHeuristic _history_heuristic[64][64] = {};
+        HistoryHeuristic _history_heuristic[2][64][64] = {};
 
         // Index by depth
         Move _killer_moves[MAX_DEPTH + 1];
@@ -122,7 +122,10 @@ namespace brainiac {
          * @param depth
          * @return float
          */
-        float ordering_heuristic(Board &board, const Move &move, int depth);
+        float ordering_heuristic(Board &board,
+                                 const Move &move,
+                                 Color turn,
+                                 int depth);
 
       public:
         Search();

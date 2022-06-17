@@ -80,7 +80,7 @@ namespace brainiac {
         MoveScore move_scores[moves.size()];
         for (int i = 0; i < n; i++) {
             move_scores[i] = {moves[i],
-                              ordering_heuristic(board, moves[i], depth)};
+                              ordering_heuristic(board, moves[i], turn, depth)};
         }
 
         // Prioritize better moves to optimize pruning with selection sort
@@ -161,14 +161,16 @@ namespace brainiac {
                 if (!(flags & VOLATILE_MOVE_FLAGS)) {
                     Square from = move.get_from();
                     Square to = move.get_to();
-                    _history_heuristic[from][to]._b_score += depth * depth;
+                    _history_heuristic[turn][from][to]._b_score +=
+                        depth * depth;
                 }
                 if (alpha >= beta) {
                     // Update history heuristic and killer move
                     if (!(flags & VOLATILE_MOVE_FLAGS)) {
                         Square from = move.get_from();
                         Square to = move.get_to();
-                        _history_heuristic[from][to]._h_score += depth * depth;
+                        _history_heuristic[turn][from][to]._b_score +=
+                            depth * depth;
                     }
                     if (depth >= 0) {
                         _killer_moves[depth] = move;
@@ -223,11 +225,11 @@ namespace brainiac {
         return value;
     }
 
-    float
-    Search::ordering_heuristic(Board &board, const Move &move, int depth) {
+    float Search::ordering_heuristic(Board &board,
+                                     const Move &move,
+                                     Color turn,
+                                     int depth) {
         float score = 0;
-        Square from = move.get_from();
-        Square to = move.get_to();
         MoveFlagSet flags = move.get_flags();
 
         // Hashed move
@@ -243,7 +245,9 @@ namespace brainiac {
 
         // History heuristic
         if (!(flags & VOLATILE_MOVE_FLAGS)) {
-            HistoryHeuristic &history = _history_heuristic[from][to];
+            Square from = move.get_from();
+            Square to = move.get_to();
+            HistoryHeuristic &history = _history_heuristic[turn][from][to];
             score += history._h_score / history._b_score;
         }
 
@@ -290,7 +294,9 @@ namespace brainiac {
         float best_value = -INFINITY;
 
         _visited = 0;
-        std::memset(_history_heuristic, 0, 64 * 64 * sizeof(HistoryHeuristic));
+        std::memset(_history_heuristic,
+                    0,
+                    2 * 64 * 64 * sizeof(HistoryHeuristic));
         for (auto &move : moves) {
             // Get the value making this move
             // Search will return the value from the opponent's POV
