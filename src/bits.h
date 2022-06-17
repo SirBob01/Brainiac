@@ -538,9 +538,9 @@ namespace brainiac {
      * @param bitboard
      * @param friends
      * @param enemies
-     * @return constexpr uint64_t
+     * @return uint64_t
      */
-    constexpr inline uint64_t
+    inline uint64_t
     get_rook_mask(uint64_t bitboard, uint64_t friends, uint64_t enemies) {
         uint64_t mask = 0;
 
@@ -564,9 +564,9 @@ namespace brainiac {
      * @param bitboard
      * @param friends
      * @param enemies
-     * @return constexpr uint64_t
+     * @return uint64_t
      */
-    constexpr inline uint64_t
+    inline uint64_t
     get_bishop_mask(uint64_t bitboard, uint64_t friends, uint64_t enemies) {
         uint64_t mask = 0;
 
@@ -591,9 +591,9 @@ namespace brainiac {
      * @param bitboard
      * @param friends
      * @param enemies
-     * @return constexpr uint64_t
+     * @return uint64_t
      */
-    constexpr inline uint64_t
+    inline uint64_t
     get_queen_mask(uint64_t bitboard, uint64_t friends, uint64_t enemies) {
         uint64_t mask = 0;
 
@@ -628,9 +628,9 @@ namespace brainiac {
      * @param bitboard
      * @param friends
      * @param enemies
-     * @return constexpr uint64_t
+     * @return uint64_t
      */
-    constexpr inline uint64_t
+    inline uint64_t
     get_horizontal_mask(uint64_t bitboard, uint64_t friends, uint64_t enemies) {
         uint64_t mask = 0;
 
@@ -654,9 +654,9 @@ namespace brainiac {
      * @param bitboard
      * @param friends
      * @param enemies
-     * @return constexpr uint64_t
+     * @return uint64_t
      */
-    constexpr inline uint64_t
+    inline uint64_t
     get_vertical_mask(uint64_t bitboard, uint64_t friends, uint64_t enemies) {
         uint64_t mask = 0;
 
@@ -680,9 +680,9 @@ namespace brainiac {
      * @param bitboard
      * @param friends
      * @param enemies
-     * @return constexpr uint64_t
+     * @return uint64_t
      */
-    constexpr inline uint64_t
+    inline uint64_t
     get_diagonal_mask(uint64_t bitboard, uint64_t friends, uint64_t enemies) {
         uint64_t mask = 0;
 
@@ -706,9 +706,9 @@ namespace brainiac {
      * @param bitboard
      * @param friends
      * @param enemies
-     * @return constexpr uint64_t
+     * @return uint64_t
      */
-    constexpr inline uint64_t
+    inline uint64_t
     get_antidiag_mask(uint64_t bitboard, uint64_t friends, uint64_t enemies) {
         uint64_t mask = 0;
 
@@ -734,10 +734,10 @@ namespace brainiac {
      * @param enemies
      * @param dest
      */
-    constexpr void get_cardinal_masks(uint64_t bitboard,
-                                      uint64_t friends,
-                                      uint64_t enemies,
-                                      uint64_t dest[4]) {
+    inline void get_cardinal_masks(uint64_t bitboard,
+                                   uint64_t friends,
+                                   uint64_t enemies,
+                                   uint64_t dest[4]) {
         memset(dest, 0, 4 * sizeof(uint64_t));
         while (bitboard) {
             const int square = find_lsb(bitboard);
@@ -771,10 +771,10 @@ namespace brainiac {
      * @param enemies
      * @param dest
      */
-    constexpr void get_ordinal_masks(uint64_t bitboard,
-                                     uint64_t friends,
-                                     uint64_t enemies,
-                                     uint64_t dest[4]) {
+    inline void get_ordinal_masks(uint64_t bitboard,
+                                  uint64_t friends,
+                                  uint64_t enemies,
+                                  uint64_t dest[4]) {
         memset(dest, 0, 4 * sizeof(uint64_t));
         while (bitboard) {
             const int square = find_lsb(bitboard);
