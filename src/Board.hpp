@@ -4,7 +4,6 @@
 
 #include "Bitboard.hpp"
 #include "Move.hpp"
-#include "MoveList.hpp"
 #include "Piece.hpp"
 
 namespace Brainiac {
@@ -43,22 +42,12 @@ namespace Brainiac {
         void set(Square sq, Piece piece);
 
         /**
-         * @brief Get the piece at a rank and file.
+         * @brief Clear the piece at a given square.
          *
-         * @param rank
-         * @param file
-         * @return Piece
-         */
-        Piece get(uint8_t rank, uint8_t file) const;
-
-        /**
-         * @brief Set the piece at a rank and file.
-         *
-         * @param rank
-         * @param file
+         * @param sq
          * @param piece
          */
-        void set(uint8_t rank, uint8_t file, Piece piece);
+        void clear(Square sq);
 
         /**
          * @brief Pretty print the board pieces.

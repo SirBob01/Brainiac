@@ -35,9 +35,28 @@ static char *test_board_get() {
     return 0;
 }
 
+static char *test_board_clear() {
+    Board board;
+    Square sq = Square::D4;
+    Piece white_king(PieceType::King, Color::White);
+
+    board.set(sq, white_king);
+    board.clear(sq);
+
+    Bitboard mask = get_square_mask(sq);
+    mu_assert("Piece bitboard clear",
+              !(board._bitboards[white_king.index()] & mask));
+    mu_assert(
+        "Color bitboard clear",
+        !(board._bitboards[12 + static_cast<uint8_t>(Color::White)] & mask));
+    mu_assert("Piece list clear", board._pieces[sq].type() == PieceType::Empty);
+    return 0;
+}
+
 static char *all_tests() {
     mu_run_test(test_board_set);
     mu_run_test(test_board_get);
+    mu_run_test(test_board_clear);
     return 0;
 }
 
