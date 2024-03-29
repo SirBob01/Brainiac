@@ -16,11 +16,12 @@ static char *test_board_set() {
     board.set(sq, white_king);
 
     Bitboard mask = get_square_mask(sq);
-    mu_assert("Piece bitboard set",
-              board._bitboards[white_king.index()] & mask);
+    std::array<Bitboard, 14> bitboards = board.bitboards();
+    std::array<Piece, 64> pieces = board.pieces();
+    mu_assert("Piece bitboard set", bitboards[white_king.index()] & mask);
     mu_assert("Color bitboard set",
-              board._bitboards[12 + static_cast<uint8_t>(Color::White)] & mask);
-    mu_assert("Piece list set", board._pieces[sq] == white_king);
+              bitboards[12 + static_cast<uint8_t>(Color::White)] & mask);
+    mu_assert("Piece list set", pieces[sq] == white_king);
     return 0;
 }
 
@@ -44,12 +45,12 @@ static char *test_board_clear() {
     board.clear(sq);
 
     Bitboard mask = get_square_mask(sq);
-    mu_assert("Piece bitboard clear",
-              !(board._bitboards[white_king.index()] & mask));
-    mu_assert(
-        "Color bitboard clear",
-        !(board._bitboards[12 + static_cast<uint8_t>(Color::White)] & mask));
-    mu_assert("Piece list clear", board._pieces[sq].type() == PieceType::Empty);
+    std::array<Bitboard, 14> bitboards = board.bitboards();
+    std::array<Piece, 64> pieces = board.pieces();
+    mu_assert("Piece bitboard clear", !(bitboards[white_king.index()] & mask));
+    mu_assert("Color bitboard clear",
+              !(bitboards[12 + static_cast<uint8_t>(Color::White)] & mask));
+    mu_assert("Piece list clear", pieces[sq].type() == PieceType::Empty);
     return 0;
 }
 

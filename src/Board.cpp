@@ -1,6 +1,12 @@
 #include "Board.hpp"
 
 namespace Brainiac {
+    const std::array<Bitboard, 14> &Board::bitboards() const {
+        return _bitboards;
+    }
+
+    const std::array<Piece, 64> &Board::pieces() const { return _pieces; }
+
     Piece Board::get(Square sq) const { return _pieces[sq]; }
 
     void Board::set(Square sq, Piece piece) {
