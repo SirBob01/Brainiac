@@ -5,7 +5,7 @@ namespace Brainiac {
         _bitfield(static_cast<uint8_t>(type) << 1 |
                   static_cast<uint8_t>(color)){};
 
-    Piece::Piece() : Piece(PieceType::Empty, Color::Empty){};
+    Piece::Piece() : Piece(PieceType::Empty, Color::White){};
 
     PieceType Piece::type() const { return PieceType(_bitfield >> 1); }
 

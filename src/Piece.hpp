@@ -50,7 +50,6 @@ namespace Brainiac {
     enum class Color : uint8_t {
         White,
         Black,
-        Empty,
     };
 
     /**
