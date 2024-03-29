@@ -103,5 +103,14 @@ namespace Brainiac {
          * @return const std::string
          */
         const std::string icon() const;
+
+        /**
+         * @brief Test equality with another piece.
+         *
+         * @param other
+         * @return true
+         * @return false
+         */
+        bool operator==(const Piece &other) const;
     };
 } // namespace Brainiac
