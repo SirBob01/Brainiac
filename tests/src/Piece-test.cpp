@@ -10,17 +10,17 @@ int tests_run = 0;
 
 static char *test_piece_create() {
     Piece piece(PieceType::Pawn, Color::Black);
-    mu_assert("Piece Type", piece.type() == PieceType::Pawn);
-    mu_assert("Piece Color", piece.color() == Color::Black);
+    mu_assert("Piece type", piece.type() == PieceType::Pawn);
+    mu_assert("Piece color", piece.color() == Color::Black);
     mu_assert("Piece index", piece.index() == 7);
     mu_assert("Piece character", piece.character() == 'p');
-    mu_assert("Piece character", piece.icon() == "\u265F");
+    mu_assert("Piece icon", piece.icon() == "\u265F");
     return 0;
 }
 
 static char *test_piece_empty() {
     Piece piece;
-    mu_assert("Piece Color", piece.type() == PieceType::Empty);
+    mu_assert("Piece type", piece.type() == PieceType::Empty);
     return 0;
 }
 
