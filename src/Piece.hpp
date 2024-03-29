@@ -33,23 +33,24 @@ namespace Brainiac {
      * @brief Piece types.
      *
      */
-    enum PieceType : uint8_t {
-        Empty,
+    enum class PieceType : uint8_t {
         King,
         Pawn,
         Rook,
         Knight,
         Bishop,
         Queen,
+        Empty,
     };
 
     /**
      * @brief Piece colors.
      *
      */
-    enum Color : uint8_t {
+    enum class Color : uint8_t {
         White,
         Black,
+        Empty,
     };
 
     /**
