@@ -54,10 +54,24 @@ static char *test_board_clear() {
     return 0;
 }
 
+static char *test_board_copy() {
+    Board board;
+    Square sq = Square::D4;
+    Piece white_king(PieceType::King, Color::White);
+
+    board.set(sq, white_king);
+
+    Board b = board;
+
+    mu_assert("Board copy set", b.get(sq) == white_king);
+    return 0;
+}
+
 static char *all_tests() {
     mu_run_test(test_board_set);
     mu_run_test(test_board_get);
     mu_run_test(test_board_clear);
+    mu_run_test(test_board_copy);
     return 0;
 }
 
