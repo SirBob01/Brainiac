@@ -55,9 +55,10 @@ static char *test_move_list_iterator() {
     mu_assert("list.begin()->type()",
               list.begin()->type() == MoveType::Capture);
 
-    mu_assert("list.end()->from()", (list.end() - 1)->from() == Square::B1);
-    mu_assert("list.end()->to()", (list.end() - 1)->to() == Square::G8);
-    mu_assert("list.end()->type()",
+    mu_assert("list.(end() - 1)->from()",
+              (list.end() - 1)->from() == Square::B1);
+    mu_assert("list.(end() - 1)->to()", (list.end() - 1)->to() == Square::G8);
+    mu_assert("list.(end() - 1)->type()",
               (list.end() - 1)->type() == MoveType::EnPassant);
 
     return 0;
