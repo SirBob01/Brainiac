@@ -18,4 +18,8 @@ namespace Brainiac {
     const char Piece::character() const { return PIECE_CHARS[index()]; }
 
     const std::string Piece::icon() const { return PIECE_ICONS[index()]; }
+
+    bool Piece::operator==(const Piece &other) const {
+        return _bitfield == other._bitfield;
+    }
 } // namespace Brainiac
