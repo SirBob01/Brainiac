@@ -1,6 +1,9 @@
 #pragma once
 
+#include <bitset>
 #include <cstdint>
+#include <iostream>
+#include <stack>
 
 namespace Brainiac {
     /**
@@ -24,4 +27,11 @@ namespace Brainiac {
      * @return Bitboard
      */
     Bitboard pop_lsb_bitboard(Bitboard bitboard);
+
+    /**
+     * @brief Print a bitboard for visualization purposes.
+     *
+     * @param bitboard
+     */
+    void print_bitboard(Bitboard bitboard);
 } // namespace Brainiac
