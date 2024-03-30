@@ -68,6 +68,8 @@ namespace Brainiac {
         /**
          * @brief Pretty print the board pieces.
          *
+         * Set code page to display UTF16 characters (chcp 65001 on Powershell).
+         *
          */
         void print() const;
     };
