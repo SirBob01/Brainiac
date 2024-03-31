@@ -60,6 +60,8 @@ namespace Brainiac {
         /**
          * @brief Set the piece at a given square.
          *
+         * Do not set 'Piece::Empty', use clear() instead.
+         *
          * @param sq
          * @param piece
          */
