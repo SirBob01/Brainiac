@@ -40,12 +40,14 @@ static char *test_board_set_overwrite() {
 
 static char *test_board_get() {
     Board board;
-    Square sq = Square::D4;
+    Square sq0 = Square::D4;
+    Square sq1 = Square::D6;
     Piece piece = Piece::WhiteKing;
 
-    board.set(sq, piece);
+    board.set(sq0, piece);
 
-    mu_assert("Board get", board.get(sq) == piece);
+    mu_assert("Board get", board.get(sq0) == piece);
+    mu_assert("Board get (empty)", board.get(sq1) == Piece::Empty);
     return 0;
 }
 
