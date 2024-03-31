@@ -1,29 +1,32 @@
 #include "Board.hpp"
 
 namespace Brainiac {
-    const std::array<Bitboard, 14> &Board::bitboards() const {
-        return _bitboards;
+    Bitboard Board::bitboard(Color color) const {
+        return _bitboards[18 + static_cast<uint8_t>(color)];
     }
 
-    const std::array<Piece, 64> &Board::pieces() const { return _pieces; }
+    Bitboard Board::bitboard(Piece piece) const {
+        return _bitboards[static_cast<uint8_t>(piece.color()) * 6 +
+                          static_cast<uint8_t>(piece.type())];
+    }
 
     Piece Board::get(Square sq) const { return _pieces[sq]; }
 
     void Board::set(Square sq, Piece piece) {
-        Bitboard mask = get_square_mask(sq);
-        _bitboards[12 + static_cast<uint8_t>(piece.color())] |= mask;
-        _bitboards[piece.index()] |= mask;
-        _pieces[sq] = piece;
-    }
+        Piece prev_piece = get(sq);
+        Bitboard set_mask = get_square_mask(sq);
+        Bitboard clear_mask = ~set_mask;
 
-    void Board::clear(Square sq) {
-        Piece piece = get(sq);
-        if (piece.type() != PieceType::Empty) {
-            Bitboard mask = ~get_square_mask(sq);
-            _bitboards[12 + static_cast<uint8_t>(piece.color())] &= mask;
-            _bitboards[piece.index()] &= mask;
-            _pieces[sq] = Piece();
-        }
+        // Clear previous piece bitboards
+        _bitboards[18 + static_cast<uint8_t>(prev_piece.color())] &= clear_mask;
+        _bitboards[prev_piece.index()] &= clear_mask;
+
+        // Set new piece bitboards
+        _bitboards[18 + static_cast<uint8_t>(piece.color())] |= set_mask;
+        _bitboards[piece.index()] |= set_mask;
+
+        // Update mailbox
+        _pieces[sq] = piece;
     }
 
     void Board::print() const {
@@ -32,7 +35,7 @@ namespace Brainiac {
             std::cout << rank + 1 << " ";
             for (int file = 0; file < 8; file++) {
                 Piece piece = get(Square(rank * 8 + file));
-                if (piece.type() != PieceType::Empty) {
+                if (!piece.empty()) {
                     std::cout << piece.icon() << " ";
                 } else {
                     if (rank % 2 == file % 2) {

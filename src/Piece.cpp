@@ -1,15 +1,12 @@
 #include "Piece.hpp"
 
 namespace Brainiac {
-    Piece::Piece(PieceType type, Color color) :
-        _bitfield(static_cast<uint8_t>(type) << 1 |
-                  static_cast<uint8_t>(color)){};
+    Piece::Piece(PieceType type, Color color) : _type(type), _color(color) {}
+    Piece::Piece() : _type(PieceType::King), _color(Color::Empty) {}
 
-    Piece::Piece() : Piece(PieceType::Empty, Color::White){};
+    PieceType Piece::type() const { return _type; }
 
-    PieceType Piece::type() const { return PieceType(_bitfield >> 1); }
-
-    Color Piece::color() const { return Color(_bitfield & 1); }
+    Color Piece::color() const { return _color; }
 
     unsigned Piece::index() const {
         return static_cast<uint8_t>(color()) * 6 + static_cast<uint8_t>(type());
@@ -19,7 +16,9 @@ namespace Brainiac {
 
     const std::string Piece::icon() const { return PIECE_ICONS[index()]; }
 
+    bool Piece::empty() const { return _color == Color::Empty; }
+
     bool Piece::operator==(const Piece &other) const {
-        return _bitfield == other._bitfield;
+        return _type == other._type && _color == other._color;
     }
 } // namespace Brainiac
