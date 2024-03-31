@@ -73,7 +73,36 @@ static char *test_board_clear() {
     board.clear(sq);
 
     Bitboard mask = get_square_mask(sq);
-    mu_assert("Piece bitboard clear", !(board.bitboard(white_king) & mask));
+    for (uint8_t i = 0; i < 6; i++) {
+        for (uint8_t j = 0; j < 2; j++) {
+            PieceType type = static_cast<PieceType>(i);
+            Color color = static_cast<Color>(j);
+            Piece piece(type, color);
+
+            mu_assert("Piece bitboard clear", !(board.bitboard(piece) & mask));
+        }
+    }
+    mu_assert("Color bitboard clear", !(board.bitboard(Color::White) & mask));
+    mu_assert("Piece list clear", board.get(sq).empty());
+    return 0;
+}
+
+static char *test_board_clear_empty() {
+    Board board;
+    Square sq = Square::D4;
+
+    board.clear(sq);
+
+    Bitboard mask = get_square_mask(sq);
+    for (uint8_t i = 0; i < 6; i++) {
+        for (uint8_t j = 0; j < 2; j++) {
+            PieceType type = static_cast<PieceType>(i);
+            Color color = static_cast<Color>(j);
+            Piece piece(type, color);
+
+            mu_assert("Piece bitboard clear", !(board.bitboard(piece) & mask));
+        }
+    }
     mu_assert("Color bitboard clear", !(board.bitboard(Color::White) & mask));
     mu_assert("Piece list clear", board.get(sq).empty());
     return 0;
@@ -84,6 +113,7 @@ static char *all_tests() {
     mu_run_test(test_board_set_overwrite);
     mu_run_test(test_board_get);
     mu_run_test(test_board_clear);
+    mu_run_test(test_board_clear_empty);
     mu_run_test(test_board_copy);
     return 0;
 }
