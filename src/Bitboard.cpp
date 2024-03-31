@@ -1,6 +1,15 @@
 #include "Bitboard.hpp"
 
 namespace Brainiac {
+    unsigned find_lsb_bitboard(Bitboard bitboard) {
+        unsigned count = 0;
+        while (!(bitboard & 1)) {
+            bitboard >>= 1;
+            count++;
+        }
+        return count;
+    }
+
     unsigned count_set_bitboard(Bitboard bitboard) {
         unsigned count = 0;
         while (bitboard) {
@@ -12,6 +21,14 @@ namespace Brainiac {
 
     Bitboard pop_lsb_bitboard(Bitboard bitboard) {
         return bitboard & (bitboard - 1);
+    }
+
+    Bitboard get_king_moves(Bitboard bitboard) {
+        return KING_MOVE_MASKS[find_lsb_bitboard(bitboard)];
+    }
+
+    Bitboard get_knight_moves(Bitboard bitboard) {
+        return KNIGHT_MOVE_MASKS[find_lsb_bitboard(bitboard)];
     }
 
     void print_bitboard(Bitboard bitboard) {
