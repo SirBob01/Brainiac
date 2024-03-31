@@ -1,14 +1,16 @@
 #include "Board.hpp"
 
 namespace Brainiac {
-    Bitboard Board::bitboard(Color color) const {
-        return _bitboards[18 + static_cast<uint8_t>(color)];
+    Board::Board() {
+        std::fill(_bitboards.begin(), _bitboards.end(), 0);
+        std::fill(_pieces.begin(), _pieces.end(), Piece::Empty);
     }
 
-    Bitboard Board::bitboard(Piece piece) const {
-        return _bitboards[static_cast<uint8_t>(piece.color()) * 6 +
-                          static_cast<uint8_t>(piece.type())];
+    Bitboard Board::bitboard(Color color) const {
+        return _bitboards[13 + color];
     }
+
+    Bitboard Board::bitboard(Piece piece) const { return _bitboards[piece]; }
 
     Piece Board::get(Square sq) const { return _pieces[sq]; }
 
@@ -18,12 +20,12 @@ namespace Brainiac {
         Bitboard clear_mask = ~set_mask;
 
         // Clear previous piece bitboards
-        _bitboards[18 + static_cast<uint8_t>(prev_piece.color())] &= clear_mask;
-        _bitboards[prev_piece.index()] &= clear_mask;
+        _bitboards[13 + (prev_piece >= 6)] &= clear_mask;
+        _bitboards[prev_piece] &= clear_mask;
 
         // Set new piece bitboards
-        _bitboards[18 + static_cast<uint8_t>(piece.color())] |= set_mask;
-        _bitboards[piece.index()] |= set_mask;
+        _bitboards[13 + (piece >= 6)] |= set_mask;
+        _bitboards[piece] |= set_mask;
 
         // Update mailbox
         _pieces[sq] = piece;
@@ -33,10 +35,10 @@ namespace Brainiac {
         Piece piece = get(sq);
         Bitboard mask = ~get_square_mask(sq);
 
-        _bitboards[18 + static_cast<uint8_t>(piece.color())] &= mask;
-        _bitboards[piece.index()] &= mask;
+        _bitboards[13 + (piece >= 6)] &= mask;
+        _bitboards[piece] &= mask;
 
-        _pieces[sq] = Piece();
+        _pieces[sq] = Piece::Empty;
     }
 
     void Board::print() const {
@@ -45,8 +47,8 @@ namespace Brainiac {
             std::cout << rank + 1 << " ";
             for (int file = 0; file < 8; file++) {
                 Piece piece = get(Square(rank * 8 + file));
-                if (!piece.empty()) {
-                    std::cout << piece.icon() << " ";
+                if (piece != Piece::Empty) {
+                    std::cout << PIECE_ICONS[piece] << " ";
                 } else {
                     if (rank % 2 == file % 2) {
                         std::cout << "- ";

@@ -8,25 +8,18 @@ using namespace Brainiac;
 
 int tests_run = 0;
 
-static char *test_piece_create() {
-    Piece piece(PieceType::Pawn, Color::Black);
-    mu_assert("Piece type", piece.type() == PieceType::Pawn);
-    mu_assert("Piece color", piece.color() == Color::Black);
-    mu_assert("Piece index", piece.index() == 7);
-    mu_assert("Piece character", piece.character() == 'p');
-    mu_assert("Piece icon", piece.icon() == "\u265F");
-    return 0;
-}
-
-static char *test_piece_empty() {
-    Piece piece;
-    mu_assert("Piece empty check", piece.empty());
+static char *test_piece_index() {
+    Piece piece = Piece::BlackPawn;
+    mu_assert("Piece index", static_cast<uint8_t>(piece) == 7);
+    mu_assert("Piece character",
+              PIECE_CHARS[static_cast<uint8_t>(piece)] == 'p');
+    mu_assert("Piece icon",
+              PIECE_ICONS[static_cast<uint8_t>(piece)] == "\u265F");
     return 0;
 }
 
 static char *all_tests() {
-    mu_run_test(test_piece_create);
-    mu_run_test(test_piece_empty);
+    mu_run_test(test_piece_index);
     return 0;
 }
 
