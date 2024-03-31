@@ -15,10 +15,10 @@ namespace Brainiac {
     class Board {
         /**
          * @brief Positions of each of the 12 pieces on the board + 2 for black
-         * and white pieces in general.
+         * and white pieces in general. Final bitboard is for the "empty" type.
          *
          */
-        std::array<Bitboard, 20> _bitboards;
+        std::array<Bitboard, 15> _bitboards;
 
         /**
          * @brief Mailbox for fast piece lookup.
@@ -27,6 +27,12 @@ namespace Brainiac {
         std::array<Piece, 64> _pieces;
 
       public:
+        /**
+         * @brief Construct a Board.
+         *
+         */
+        Board();
+
         /**
          * @brief Get the bitboard of a color.
          *

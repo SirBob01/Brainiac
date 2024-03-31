@@ -33,93 +33,30 @@ namespace Brainiac {
      * @brief Piece types.
      *
      */
-    enum class PieceType : uint8_t {
-        King,
-        Pawn,
-        Rook,
-        Knight,
-        Bishop,
-        Queen,
+    enum Piece : uint8_t {
+        WhiteKing,
+        WhitePawn,
+        WhiteRook,
+        WhiteKnight,
+        WhiteBishop,
+        WhiteQueen,
+
+        BlackKing,
+        BlackPawn,
+        BlackRook,
+        BlackKnight,
+        BlackBishop,
+        BlackQueen,
+
+        Empty,
     };
 
     /**
      * @brief Piece colors.
      *
      */
-    enum class Color : uint8_t {
+    enum Color : uint8_t {
         White,
         Black,
-        Empty,
-    };
-
-    /**
-     * @brief Piece representation.
-     *
-     */
-    class Piece {
-        PieceType _type;
-        Color _color;
-
-      public:
-        /**
-         * @brief Construct a new Piece.
-         *
-         * @param type
-         * @param color
-         */
-        Piece(PieceType type, Color color);
-        Piece();
-
-        /**
-         * @brief Get the piece type.
-         *
-         * @return PieceType
-         */
-        PieceType type() const;
-
-        /**
-         * @brief Get the piece color.
-         *
-         * @return Color
-         */
-        Color color() const;
-
-        /**
-         * @brief Get the piece index.
-         *
-         * @return unsigned
-         */
-        unsigned index() const;
-
-        /**
-         * @brief Get the character representation.
-         *
-         * @return const char
-         */
-        const char character() const;
-
-        /**
-         * @brief Get the Unicode icon representation.
-         *
-         * @return const std::string
-         */
-        const std::string icon() const;
-
-        /**
-         * @brief Test if the piece is empty.
-         *
-         * @return true
-         * @return false
-         */
-        bool empty() const;
-
-        /**
-         * @brief Test equality with another piece.
-         *
-         * @param other
-         * @return true
-         * @return false
-         */
-        bool operator==(const Piece &other) const;
     };
 } // namespace Brainiac
