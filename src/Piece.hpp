@@ -40,7 +40,6 @@ namespace Brainiac {
         Knight,
         Bishop,
         Queen,
-        Empty,
     };
 
     /**
@@ -50,6 +49,7 @@ namespace Brainiac {
     enum class Color : uint8_t {
         White,
         Black,
+        Empty,
     };
 
     /**
@@ -57,7 +57,8 @@ namespace Brainiac {
      *
      */
     class Piece {
-        uint8_t _bitfield;
+        PieceType _type;
+        Color _color;
 
       public:
         /**
@@ -103,6 +104,14 @@ namespace Brainiac {
          * @return const std::string
          */
         const std::string icon() const;
+
+        /**
+         * @brief Test if the piece is empty.
+         *
+         * @return true
+         * @return false
+         */
+        bool empty() const;
 
         /**
          * @brief Test equality with another piece.

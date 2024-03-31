@@ -18,7 +18,7 @@ namespace Brainiac {
          * and white pieces in general.
          *
          */
-        std::array<Bitboard, 14> _bitboards;
+        std::array<Bitboard, 20> _bitboards;
 
         /**
          * @brief Mailbox for fast piece lookup.
@@ -28,18 +28,20 @@ namespace Brainiac {
 
       public:
         /**
-         * @brief Get the bitboard array.
+         * @brief Get the bitboard of a color.
          *
-         * @return const std::array<Bitboard, 14>&
+         * @param color
+         * @return Bitboard
          */
-        const std::array<Bitboard, 14> &bitboards() const;
+        Bitboard bitboard(Color color) const;
 
         /**
-         * @brief Get the mailbox array of piecess.
+         * @brief Get the bitboard of a piece.
          *
-         * @return const std::array<Piece, 64>&
+         * @param piece
+         * @return Bitboard
          */
-        const std::array<Piece, 64> &pieces() const;
+        Bitboard bitboard(Piece piece) const;
 
         /**
          * @brief Get the piece at a given square.
@@ -56,14 +58,6 @@ namespace Brainiac {
          * @param piece
          */
         void set(Square sq, Piece piece);
-
-        /**
-         * @brief Clear the piece at a given square.
-         *
-         * @param sq
-         * @param piece
-         */
-        void clear(Square sq);
 
         /**
          * @brief Pretty print the board pieces.

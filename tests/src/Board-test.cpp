@@ -16,12 +16,25 @@ static char *test_board_set() {
     board.set(sq, white_king);
 
     Bitboard mask = get_square_mask(sq);
-    std::array<Bitboard, 14> bitboards = board.bitboards();
-    std::array<Piece, 64> pieces = board.pieces();
-    mu_assert("Piece bitboard set", bitboards[white_king.index()] & mask);
-    mu_assert("Color bitboard set",
-              bitboards[12 + static_cast<uint8_t>(Color::White)] & mask);
-    mu_assert("Piece list set", pieces[sq] == white_king);
+    mu_assert("Piece bitboard set", board.bitboard(white_king) & mask);
+    mu_assert("Color bitboard set", board.bitboard(Color::White) & mask);
+    mu_assert("Piece list set", board.get(sq) == white_king);
+    return 0;
+}
+
+static char *test_board_set_overwrite() {
+    Board board;
+    Square sq = Square::D4;
+    Piece black_rook(PieceType::Rook, Color::Black);
+    Piece white_king(PieceType::King, Color::White);
+
+    board.set(sq, black_rook);
+    board.set(sq, white_king);
+
+    Bitboard mask = get_square_mask(sq);
+    mu_assert("Piece bitboard set", board.bitboard(white_king) & mask);
+    mu_assert("Color bitboard set", board.bitboard(Color::White) & mask);
+    mu_assert("Piece list set", board.get(sq) == white_king);
     return 0;
 }
 
@@ -36,24 +49,6 @@ static char *test_board_get() {
     return 0;
 }
 
-static char *test_board_clear() {
-    Board board;
-    Square sq = Square::D4;
-    Piece white_king(PieceType::King, Color::White);
-
-    board.set(sq, white_king);
-    board.clear(sq);
-
-    Bitboard mask = get_square_mask(sq);
-    std::array<Bitboard, 14> bitboards = board.bitboards();
-    std::array<Piece, 64> pieces = board.pieces();
-    mu_assert("Piece bitboard clear", !(bitboards[white_king.index()] & mask));
-    mu_assert("Color bitboard clear",
-              !(bitboards[12 + static_cast<uint8_t>(Color::White)] & mask));
-    mu_assert("Piece list clear", pieces[sq].type() == PieceType::Empty);
-    return 0;
-}
-
 static char *test_board_copy() {
     Board board;
     Square sq = Square::D4;
@@ -61,16 +56,18 @@ static char *test_board_copy() {
 
     board.set(sq, white_king);
 
-    Board b = board;
-
-    mu_assert("Board copy set", b.get(sq) == white_king);
+    Board copy = board;
+    Bitboard mask = get_square_mask(sq);
+    mu_assert("Piece bitboard set", copy.bitboard(white_king) & mask);
+    mu_assert("Color bitboard set", copy.bitboard(Color::White) & mask);
+    mu_assert("Board copy set", copy.get(sq) == white_king);
     return 0;
 }
 
 static char *all_tests() {
     mu_run_test(test_board_set);
+    mu_run_test(test_board_set_overwrite);
     mu_run_test(test_board_get);
-    mu_run_test(test_board_clear);
     mu_run_test(test_board_copy);
     return 0;
 }

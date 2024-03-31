@@ -20,7 +20,7 @@ static char *test_piece_create() {
 
 static char *test_piece_empty() {
     Piece piece;
-    mu_assert("Piece type", piece.type() == PieceType::Empty);
+    mu_assert("Piece empty check", piece.empty());
     return 0;
 }
 

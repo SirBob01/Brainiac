@@ -3,6 +3,7 @@
 #include "Brainiac.hpp"
 
 int main() {
-    std::cout << "Hello, world\n";
+    Brainiac::Game game;
+    game.print();
     return 0;
 }
