@@ -64,10 +64,26 @@ static char *test_board_copy() {
     return 0;
 }
 
+static char *test_board_clear() {
+    Board board;
+    Square sq = Square::D4;
+    Piece white_king(PieceType::King, Color::White);
+
+    board.set(sq, white_king);
+    board.clear(sq);
+
+    Bitboard mask = get_square_mask(sq);
+    mu_assert("Piece bitboard clear", !(board.bitboard(white_king) & mask));
+    mu_assert("Color bitboard clear", !(board.bitboard(Color::White) & mask));
+    mu_assert("Piece list clear", board.get(sq).empty());
+    return 0;
+}
+
 static char *all_tests() {
     mu_run_test(test_board_set);
     mu_run_test(test_board_set_overwrite);
     mu_run_test(test_board_get);
+    mu_run_test(test_board_clear);
     mu_run_test(test_board_copy);
     return 0;
 }

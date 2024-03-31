@@ -60,6 +60,13 @@ namespace Brainiac {
         void set(Square sq, Piece piece);
 
         /**
+         * @brief Clear the piece at a square.
+         *
+         * @param sq
+         */
+        void clear(Square sq);
+
+        /**
          * @brief Pretty print the board pieces.
          *
          * Set code page to display UTF16 characters (chcp 65001 on Powershell).

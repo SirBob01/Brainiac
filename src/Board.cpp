@@ -29,6 +29,16 @@ namespace Brainiac {
         _pieces[sq] = piece;
     }
 
+    void Board::clear(Square sq) {
+        Piece piece = get(sq);
+        Bitboard mask = ~get_square_mask(sq);
+
+        _bitboards[18 + static_cast<uint8_t>(piece.color())] &= mask;
+        _bitboards[piece.index()] &= mask;
+
+        _pieces[sq] = Piece();
+    }
+
     void Board::print() const {
         std::string files = "ABCDEFGH";
         for (int rank = 7; rank >= 0; rank--) {
