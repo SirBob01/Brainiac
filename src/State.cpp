@@ -37,8 +37,6 @@ namespace Brainiac {
         fullmoves = stoi(fields[5]);
     }
 
-    State::State() {}
-
     std::string State::fen() const {
         std::string fen = "";
         for (int row = 7; row >= 0; row--) {
