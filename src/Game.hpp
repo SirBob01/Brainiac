@@ -20,19 +20,6 @@ namespace Brainiac {
         unsigned _index;
         uint64_t _zobrist;
 
-        /**
-         * @brief Clone and push the current board state for the next turn.
-         *
-         * @return State&
-         */
-        State &push_state();
-
-        /**
-         * @brief Generate moves for the current state.
-         *
-         */
-        void generate_moves();
-
       public:
         Game(std::string fen = DEFAULT_BOARD_FEN);
 

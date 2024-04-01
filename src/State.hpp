@@ -89,7 +89,6 @@ namespace Brainiac {
          * @param fen
          */
         State(std::string fen);
-        State();
 
         /**
          * @brief Get the Fen string of the board.

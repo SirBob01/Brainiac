@@ -11,16 +11,6 @@ namespace Brainiac {
         _states[_index].generate_moves();
     }
 
-    State &Game::push_state() {
-        _states.resize(_index + 1);
-        _states.emplace_back(_states[_index]);
-        _index++;
-
-        State &state = _states[_index];
-        state.halfmoves++;
-        return state;
-    }
-
     std::string Game::fen() const { return _states[_index].fen(); }
 
     uint64_t Game::zobrist() const { return _zobrist; }
