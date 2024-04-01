@@ -112,22 +112,6 @@ namespace Brainiac {
     Bitboard pop_lsb_bitboard(Bitboard bitboard);
 
     /**
-     * @brief Get bitboard of all king moves.
-     *
-     * @param bitboard
-     * @return Bitboard
-     */
-    Bitboard get_king_moves(Bitboard bitboard);
-
-    /**
-     * @brief Get bitboard of all knight moves.
-     *
-     * @param bitboard
-     * @return Bitboard
-     */
-    Bitboard get_knight_moves(Bitboard bitboard);
-
-    /**
      * @brief Print a bitboard for visualization purposes.
      *
      * @param bitboard
