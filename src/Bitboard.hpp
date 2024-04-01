@@ -88,6 +88,22 @@ namespace Brainiac {
     unsigned count_set_bitboard(Bitboard bitboard);
 
     /**
+     * @brief Flip a bitboard vertically.
+     *
+     * @param bitboard
+     * @return Bitboard
+     */
+    Bitboard flip_vertical_bitboard(Bitboard bitboard);
+
+    /**
+     * @brief Get the least significant bit.
+     *
+     * @param bitboard
+     * @return Bitboard
+     */
+    Bitboard get_lsb_bitboard(Bitboard bitboard);
+
+    /**
      * @brief Pop the least significant bit.
      *
      * @param bitboard
