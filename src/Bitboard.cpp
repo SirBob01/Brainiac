@@ -2,21 +2,19 @@
 
 namespace Brainiac {
     unsigned find_lsb_bitboard(Bitboard bitboard) {
-        unsigned count = 0;
-        while (!(bitboard & 1)) {
-            bitboard >>= 1;
-            count++;
-        }
-        return count;
+        return __builtin_ctzll(bitboard);
     }
 
     unsigned count_set_bitboard(Bitboard bitboard) {
-        unsigned count = 0;
-        while (bitboard) {
-            bitboard = pop_lsb_bitboard(bitboard);
-            count++;
-        }
-        return count;
+        return __builtin_popcountll(bitboard);
+    }
+
+    Bitboard flip_vertical_bitboard(Bitboard bitboard) {
+        return __builtin_bswap64(bitboard);
+    }
+
+    Bitboard get_lsb_bitboard(Bitboard bitboard) {
+        return bitboard & (-bitboard);
     }
 
     Bitboard pop_lsb_bitboard(Bitboard bitboard) {
