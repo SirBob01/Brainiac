@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "State.hpp"
-#include "Utils.hpp"
 
 namespace Brainiac {
     static std::string DEFAULT_BOARD_FEN =
