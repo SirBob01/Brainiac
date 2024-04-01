@@ -1,6 +1,44 @@
 #include "State.hpp"
 
 namespace Brainiac {
+    State::State(std::string fen) {
+        std::vector<std::string> fields = tokenize(fen, ' ');
+        int row = 7;
+        int col = 0;
+        for (auto &c : fields[0]) {
+            if (c == '/') {
+                row--;
+                col = 0;
+            } else if (c <= '9' && c >= '0') {
+                col += c - '0';
+            } else {
+                int char_idx = 0;
+                while (PIECE_CHARS[char_idx] != c) {
+                    char_idx++;
+                }
+                board.set(Square(row * 8 + col),
+                          Piece((char_idx / 6) * 6 + (char_idx % 6)));
+                col++;
+            }
+        }
+
+        castling = 0;
+        for (auto &c : fields[2]) {
+            if (c == 'K') castling |= CastlingRights::WK;
+            else if (c == 'Q') castling |= CastlingRights::WQ;
+            else if (c == 'k') castling |= CastlingRights::BK;
+            else if (c == 'q') castling |= CastlingRights::BQ;
+        }
+
+        ep_target = fields[3].length() == 2 ? string_to_square(fields[3])
+                                            : Square::Null;
+        turn = (fields[1][0] == 'w') ? Color::White : Color::Black;
+        halfmoves = stoi(fields[4]);
+        fullmoves = stoi(fields[5]);
+    }
+
+    State::State() {}
+
     std::string State::fen() const {
         std::string fen = "";
         for (int row = 7; row >= 0; row--) {

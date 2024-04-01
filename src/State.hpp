@@ -5,6 +5,7 @@
 #include "Board.hpp"
 #include "MoveList.hpp"
 #include "Piece.hpp"
+#include "Utils.hpp"
 
 namespace Brainiac {
     /**
@@ -81,6 +82,14 @@ namespace Brainiac {
          *
          */
         MoveList moves;
+
+        /**
+         * @brief Initialize state from a FEN string.
+         *
+         * @param fen
+         */
+        State(std::string fen);
+        State();
 
         /**
          * @brief Get the Fen string of the board.
