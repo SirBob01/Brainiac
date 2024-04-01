@@ -61,13 +61,13 @@ namespace Brainiac {
         return state;
     }
 
-    std::string Game::generate_fen() const {
+    std::string Game::fen() const {
         const State &state = _states[_state_index];
         std::string fen = "";
         for (int row = 7; row >= 0; row--) {
             int counter = 0;
             for (int col = 0; col < 8; col++) {
-                Piece piece = state.board.get(Square(row * 6 + col));
+                Piece piece = state.board.get(Square(row * 8 + col));
                 if (piece != Piece::Empty) {
                     if (counter) {
                         fen += counter + '0';
@@ -107,9 +107,17 @@ namespace Brainiac {
         return fen;
     }
 
-    bool Game::is_in_check() const { return _states[_state_index].check; }
-
     const MoveList &Game::moves() const { return _states[_state_index].moves; }
+
+    bool Game::is_check() const { return _states[_state_index].check; }
+
+    bool Game::is_checkmate() const {
+        return is_check() && moves().size() == 0;
+    }
+
+    bool Game::is_statelmate() const {
+        return !is_check() && moves().size() == 0;
+    }
 
     void Game::make_move(Move move) {
         // TODO

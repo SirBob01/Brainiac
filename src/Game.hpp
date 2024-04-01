@@ -43,15 +43,7 @@ namespace Brainiac {
          *
          * @return std::string
          */
-        std::string generate_fen() const;
-
-        /**
-         * @brief Check if the king is in check for the current turn.
-         *
-         * @return true
-         * @return false
-         */
-        bool is_in_check() const;
+        std::string fen() const;
 
         /**
          * @brief Get the move list for the current turn.
@@ -59,6 +51,30 @@ namespace Brainiac {
          * @return const MoveList&
          */
         const MoveList &moves() const;
+
+        /**
+         * @brief Test if the king is in check for the current turn.
+         *
+         * @return true
+         * @return false
+         */
+        bool is_check() const;
+
+        /**
+         * @brief Test if the king is in checkmate for the current turn.
+         *
+         * @return true
+         * @return false
+         */
+        bool is_checkmate() const;
+
+        /**
+         * @brief Test if the game is a stalemate.
+         *
+         * @return true
+         * @return false
+         */
+        bool is_statelmate() const;
 
         /**
          * @brief Make a move. This assumes moves are legal.
