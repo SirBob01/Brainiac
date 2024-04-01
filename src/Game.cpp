@@ -7,9 +7,7 @@ namespace Brainiac {
 
         std::vector<std::string> fields = tokenize(fen, ' ');
 
-        _state_index = 0;
-        _fullmoves = stoi(fields[5]);
-        _turn = (fields[1][0] == 'w') ? Color::White : Color::Black;
+        _index = 0;
 
         int row = 7;
         int col = 0;
@@ -24,92 +22,51 @@ namespace Brainiac {
                 while (PIECE_CHARS[char_idx] != c) {
                     char_idx++;
                 }
-                _states[_state_index].board.set(
+                _states[_index].board.set(
                     Square(row * 8 + col),
                     Piece((char_idx / 6) * 6 + (char_idx % 6)));
                 col++;
             }
         }
 
-        _states[_state_index].castling = 0;
+        _states[_index].castling = 0;
         for (auto &c : fields[2]) {
-            if (c == 'K') _states[_state_index].castling |= CastlingRights::WK;
-            else if (c == 'Q')
-                _states[_state_index].castling |= CastlingRights::WQ;
-            else if (c == 'k')
-                _states[_state_index].castling |= CastlingRights::BK;
-            else if (c == 'q')
-                _states[_state_index].castling |= CastlingRights::BQ;
+            if (c == 'K') _states[_index].castling |= CastlingRights::WK;
+            else if (c == 'Q') _states[_index].castling |= CastlingRights::WQ;
+            else if (c == 'k') _states[_index].castling |= CastlingRights::BK;
+            else if (c == 'q') _states[_index].castling |= CastlingRights::BQ;
         }
 
-        _states[_state_index].ep_target = fields[3].length() == 2
-                                              ? string_to_square(fields[3])
-                                              : Square::Null;
-        _states[_state_index].halfmoves = stoi(fields[4]);
+        _states[_index].ep_target = fields[3].length() == 2
+                                        ? string_to_square(fields[3])
+                                        : Square::Null;
+        _states[_index].turn =
+            (fields[1][0] == 'w') ? Color::White : Color::Black;
+        _states[_index].halfmoves = stoi(fields[4]);
+        _states[_index].fullmoves = stoi(fields[5]);
 
-        _states[_state_index].generate_moves(_turn);
-        _states[_state_index].compute_hash();
+        // Compute the zobrist hash
+        _zobrist = _states[_index].compute_hash();
+        _states[_index].generate_moves();
     }
 
     State &Game::push_state() {
-        _states.resize(_state_index + 1);
-        _states.emplace_back(_states[_state_index]);
-        _state_index++;
+        _states.resize(_index + 1);
+        _states.emplace_back(_states[_index]);
+        _index++;
 
-        State &state = _states[_state_index];
+        State &state = _states[_index];
         state.halfmoves++;
         return state;
     }
 
-    std::string Game::fen() const {
-        const State &state = _states[_state_index];
-        std::string fen = "";
-        for (int row = 7; row >= 0; row--) {
-            int counter = 0;
-            for (int col = 0; col < 8; col++) {
-                Piece piece = state.board.get(Square(row * 8 + col));
-                if (piece != Piece::Empty) {
-                    if (counter) {
-                        fen += counter + '0';
-                        counter = 0;
-                    }
-                    fen += PIECE_CHARS[piece];
-                } else {
-                    counter += 1;
-                }
-            }
-            if (counter) fen += counter + '0';
-            if (row) fen += '/';
-        }
-        fen += " ";
-        fen += _turn == Color::White ? "w" : "b";
+    std::string Game::fen() const { return _states[_index].fen(); }
 
-        std::string castling_rights = "";
+    uint64_t Game::zobrist() const { return _zobrist; }
 
-        if (state.castling & CastlingRights::WK) castling_rights += 'K';
-        if (state.castling & CastlingRights::WQ) castling_rights += 'Q';
-        if (state.castling & CastlingRights::BK) castling_rights += 'k';
-        if (state.castling & CastlingRights::BQ) castling_rights += 'q';
-        if (castling_rights.length() == 0) castling_rights = "-";
-        fen += " " + castling_rights;
+    const MoveList &Game::moves() const { return _states[_index].moves; }
 
-        if (state.ep_target == Square::Null) {
-            fen += " -";
-        } else {
-            fen += " ";
-            fen += square_to_string(state.ep_target);
-        }
-
-        fen += " ";
-        fen += std::to_string(state.halfmoves);
-        fen += " ";
-        fen += std::to_string(_fullmoves);
-        return fen;
-    }
-
-    const MoveList &Game::moves() const { return _states[_state_index].moves; }
-
-    bool Game::is_check() const { return _states[_state_index].check; }
+    bool Game::is_check() const { return _states[_index].check; }
 
     bool Game::is_checkmate() const {
         return is_check() && moves().size() == 0;
@@ -131,10 +88,5 @@ namespace Brainiac {
         // TODO
     }
 
-    void Game::print() const {
-        const State &current_state = _states[_state_index];
-        if (_turn == Color::White) std::cout << "White's turn.\n";
-        else std::cout << "Black's turn.\n";
-        current_state.board.print();
-    }
+    void Game::print() const { _states[_index].print(); }
 } // namespace Brainiac
