@@ -21,14 +21,6 @@ namespace Brainiac {
         return bitboard & (bitboard - 1);
     }
 
-    Bitboard get_king_moves(Bitboard bitboard) {
-        return KING_MOVE_MASKS[find_lsb_bitboard(bitboard)];
-    }
-
-    Bitboard get_knight_moves(Bitboard bitboard) {
-        return KNIGHT_MOVE_MASKS[find_lsb_bitboard(bitboard)];
-    }
-
     void print_bitboard(Bitboard bitboard) {
         std::bitset<64> bitarray(bitboard);
         std::stack<std::string> bytes;
