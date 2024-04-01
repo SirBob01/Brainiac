@@ -52,11 +52,23 @@ namespace Brainiac {
         Square ep_target;
 
         /**
+         * @brief Current turn.
+         *
+         */
+        Color turn;
+
+        /**
          * @brief Half-moves depend on the board state (pawn advances or
          * captures reset it)
          *
          */
         unsigned halfmoves;
+
+        /**
+         * @brief Fullmove counter.
+         *
+         */
+        unsigned fullmoves;
 
         /**
          * @brief Is king in check?
@@ -71,22 +83,27 @@ namespace Brainiac {
         MoveList moves;
 
         /**
-         * @brief Zobrist hash value.
+         * @brief Get the Fen string of the board.
          *
          */
-        uint64_t hash;
+        std::string fen() const;
 
         /**
          * @brief Force compute Zobrist hash value.
          *
          */
-        void compute_hash();
+        uint64_t compute_hash() const;
 
         /**
          * @brief Move generator for the specified turn.
          *
-         * @param turn
          */
-        void generate_moves(Color turn);
+        void generate_moves();
+
+        /**
+         * @brief Pretty print the state.
+         *
+         */
+        void print() const;
     };
 } // namespace Brainiac

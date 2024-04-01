@@ -18,9 +18,8 @@ namespace Brainiac {
      */
     class Game {
         std::vector<State> _states;
-        unsigned _state_index;
-        unsigned _fullmoves;
-        Color _turn;
+        unsigned _index;
+        uint64_t _zobrist;
 
         /**
          * @brief Clone and push the current board state for the next turn.
@@ -39,11 +38,18 @@ namespace Brainiac {
         Game(std::string fen = DEFAULT_BOARD_FEN);
 
         /**
-         * @brief Get the fen string of the current board state.
+         * @brief Get the fen string of the current game state.
          *
          * @return std::string
          */
         std::string fen() const;
+
+        /**
+         * @brief Get the Zobrist hash of the current game state.
+         *
+         * @return uint64_t
+         */
+        uint64_t zobrist() const;
 
         /**
          * @brief Get the move list for the current turn.
@@ -96,7 +102,7 @@ namespace Brainiac {
         void skip_move();
 
         /**
-         * @brief Pretty print the current board state.
+         * @brief Pretty print the current game state.
          *
          */
         void print() const;
