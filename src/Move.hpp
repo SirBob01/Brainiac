@@ -8,6 +8,23 @@
 
 namespace Brainiac {
     /**
+     * @brief Underlying bitfield for castling rights.
+     *
+     */
+    using CastlingFlagSet = uint8_t;
+
+    /**
+     * @brief Castling rights.
+     *
+     */
+    enum CastlingRights : CastlingFlagSet {
+        WK = 1,
+        WQ = 1 << 1,
+        BK = 1 << 2,
+        BQ = 1 << 3,
+    };
+
+    /**
      * @brief Enum of all squares.
      *
      */
