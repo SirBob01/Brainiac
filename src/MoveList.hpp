@@ -44,11 +44,11 @@ namespace Brainiac {
         /**
          * @brief Add a new move to the list
          *
-         * @param from
-         * @param to
+         * @param src
+         * @param dst
          * @param type
          */
-        void add(Square from, Square to, MoveType type);
+        void add(Square src, Square dst, MoveType type);
 
         /**
          * @brief Get the pointer to the first move in the list

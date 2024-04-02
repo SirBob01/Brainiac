@@ -31,12 +31,12 @@ static char *test_move_list_access() {
     list.add(Square::A1, Square::H8, MoveType::Capture);
     list.add(Square::B1, Square::G8, MoveType::EnPassant);
 
-    mu_assert("list[0].from()", list[0].from() == Square::A1);
-    mu_assert("list[0].to()", list[0].to() == Square::H8);
+    mu_assert("list[0].src()", list[0].src() == Square::A1);
+    mu_assert("list[0].dst()", list[0].dst() == Square::H8);
     mu_assert("list[0].type()", list[0].type() == MoveType::Capture);
 
-    mu_assert("list[1].from()", list[1].from() == Square::B1);
-    mu_assert("list[1].to()", list[1].to() == Square::G8);
+    mu_assert("list[1].src()", list[1].src() == Square::B1);
+    mu_assert("list[1].dst()", list[1].dst() == Square::G8);
     mu_assert("list[1].type()", list[1].type() == MoveType::EnPassant);
 
     return 0;
@@ -50,14 +50,13 @@ static char *test_move_list_iterator() {
 
     mu_assert("List size", list.size() == 3);
 
-    mu_assert("list.begin()->from()", list.begin()->from() == Square::A1);
-    mu_assert("list.begin()->to()", list.begin()->to() == Square::H8);
+    mu_assert("list.begin()->src()", list.begin()->src() == Square::A1);
+    mu_assert("list.begin()->dst()", list.begin()->dst() == Square::H8);
     mu_assert("list.begin()->type()",
               list.begin()->type() == MoveType::Capture);
 
-    mu_assert("list.(end() - 1)->from()",
-              (list.end() - 1)->from() == Square::B1);
-    mu_assert("list.(end() - 1)->to()", (list.end() - 1)->to() == Square::G8);
+    mu_assert("list.(end() - 1)->src()", (list.end() - 1)->src() == Square::B1);
+    mu_assert("list.(end() - 1)->dst()", (list.end() - 1)->dst() == Square::G8);
     mu_assert("list.(end() - 1)->type()",
               (list.end() - 1)->type() == MoveType::EnPassant);
 

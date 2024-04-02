@@ -95,6 +95,7 @@ namespace Brainiac {
 
     void State::generate_moves() {
         moves.clear();
+        check = false;
 
         // TODO: Fast legal move generator
     }
