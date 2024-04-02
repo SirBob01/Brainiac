@@ -13,6 +13,16 @@ namespace Brainiac {
         return __builtin_bswap64(bitboard);
     }
 
+    Bitboard flip_horizontal_bitboard(Bitboard bitboard) {
+        constexpr Bitboard hk_0 = 0x5555555555555555;
+        constexpr Bitboard hk_1 = 0x3333333333333333;
+        constexpr Bitboard hk_2 = 0x0f0f0f0f0f0f0f0f;
+        bitboard = ((bitboard >> 1) & hk_0) + 2 * (bitboard & hk_0);
+        bitboard = ((bitboard >> 2) & hk_1) + 4 * (bitboard & hk_1);
+        bitboard = ((bitboard >> 4) & hk_2) + 16 * (bitboard & hk_2);
+        return bitboard;
+    }
+
     Bitboard get_lsb_bitboard(Bitboard bitboard) {
         return bitboard & (-bitboard);
     }
