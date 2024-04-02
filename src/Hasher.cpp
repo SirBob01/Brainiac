@@ -14,8 +14,8 @@ namespace Brainiac {
         return _bitstrings[square * 13 + piece];
     }
 
-    Hash Hasher::bitstring(Square ep_target) const {
-        return _bitstrings[ep_target * 13 + (Piece::BlackQueen + 1)];
+    Hash Hasher::bitstring(Square ep_dst) const {
+        return _bitstrings[ep_dst * 13 + (Piece::BlackQueen + 1)];
     }
 
     Hash Hasher::bitstring(Color turn) const {
@@ -29,13 +29,13 @@ namespace Brainiac {
     Hash Hasher::operator()(Board &board,
                             CastlingFlagSet castling,
                             Color turn,
-                            Square ep_target) {
+                            Square ep_dst) {
         Hash hash = 0;
         if (turn == Color::Black) {
             hash ^= bitstring(turn);
         }
-        if (ep_target != Square::Null) {
-            hash ^= bitstring(ep_target);
+        if (ep_dst != Square::Null) {
+            hash ^= bitstring(ep_dst);
         }
         for (unsigned i = 0; i < 64; i++) {
             Square square = Square(i);

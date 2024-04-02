@@ -32,13 +32,13 @@ namespace Brainiac {
             else if (c == 'q') castling |= (1 << CastlingRight::BQ);
         }
 
-        ep_target = fields[3].length() == 2 ? string_to_square(fields[3])
-                                            : Square::Null;
+        ep_dst = fields[3].length() == 2 ? string_to_square(fields[3])
+                                         : Square::Null;
         turn = (fields[1][0] == 'w') ? Color::White : Color::Black;
         halfmoves = stoi(fields[4]);
         fullmoves = stoi(fields[5]);
 
-        hash = hasher(board, castling, turn, ep_target);
+        hash = hasher(board, castling, turn, ep_dst);
         generate_moves();
     }
 
@@ -73,11 +73,11 @@ namespace Brainiac {
         if (castling_rights.length() == 0) castling_rights = "-";
         fen += " " + castling_rights;
 
-        if (ep_target == Square::Null) {
+        if (ep_dst == Square::Null) {
             fen += " -";
         } else {
             fen += " ";
-            fen += square_to_string(ep_target);
+            fen += square_to_string(ep_dst);
         }
 
         fen += " ";
