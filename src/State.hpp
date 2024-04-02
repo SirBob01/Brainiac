@@ -33,10 +33,10 @@ namespace Brainiac {
         CastlingFlagSet castling;
 
         /**
-         * @brief En-passant target square.
+         * @brief En-passant destination square.
          *
          */
-        Square ep_target;
+        Square ep_dst;
 
         /**
          * @brief Current turn.

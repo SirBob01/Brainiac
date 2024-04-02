@@ -51,10 +51,10 @@ namespace Brainiac {
         /**
          * @brief Get the bitstring for an en passant target square.
          *
-         * @param ep_target
+         * @param ep_dst
          * @return Hash
          */
-        Hash bitstring(Square ep_target) const;
+        Hash bitstring(Square ep_dst) const;
 
         /**
          * @brief Get the bitstring for the current color turn.
@@ -78,12 +78,12 @@ namespace Brainiac {
          * @param board
          * @param castling
          * @param turn
-         * @param ep_target
+         * @param ep_dst
          * @return Hash
          */
         Hash operator()(Board &board,
                         CastlingFlagSet castling,
                         Color turn,
-                        Square ep_target);
+                        Square ep_dst);
     };
 } // namespace Brainiac
