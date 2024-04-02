@@ -22,7 +22,8 @@ namespace Brainiac {
         Hasher _hasher;
 
         /**
-         * @brief Push a new state onto the array.
+         * @brief Push a new state onto the array, overwriting any states ahead
+         * of the curernt index for the `undo` case.
          *
          * @return State&
          */
