@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <random>
+#include <vector>
 
 #include "Board.hpp"
 #include "MoveList.hpp"
@@ -8,6 +10,12 @@
 #include "Utils.hpp"
 
 namespace Brainiac {
+    /**
+     * @brief State hash bitfield.
+     *
+     */
+    using StateHash = uint64_t;
+
     /**
      * @brief Underlying bitfield for castling rights.
      *
@@ -24,6 +32,12 @@ namespace Brainiac {
         BK = 1 << 2,
         BQ = 1 << 3,
     };
+
+    /**
+     * @brief Initial random bitstrings for Zobrist hashing.
+     *
+     */
+    static std::vector<StateHash> ZOBRIST_BITSTRINGS;
 
     /**
      * @brief Represents discrete chronological game state. This allows forward
@@ -97,21 +111,21 @@ namespace Brainiac {
         std::string fen() const;
 
         /**
-         * @brief Force compute Zobrist hash value.
+         * @brief Compute the Zobrist hash value.
          *
          */
-        uint64_t compute_hash() const;
-
-        /**
-         * @brief Move generator for the specified turn.
-         *
-         */
-        void generate_moves();
+        StateHash hash() const;
 
         /**
          * @brief Pretty print the state.
          *
          */
         void print() const;
+
+        /**
+         * @brief Generate the moves for the specified turn.
+         *
+         */
+        void generate_moves();
     };
 } // namespace Brainiac

@@ -8,7 +8,7 @@
 #include "State.hpp"
 
 namespace Brainiac {
-    static std::string DEFAULT_BOARD_FEN =
+    static const std::string DEFAULT_BOARD_FEN =
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     /**
@@ -18,7 +18,7 @@ namespace Brainiac {
     class Game {
         std::vector<State> _states;
         unsigned _index;
-        uint64_t _zobrist;
+        StateHash _hash;
 
       public:
         Game(std::string fen = DEFAULT_BOARD_FEN);
@@ -31,11 +31,11 @@ namespace Brainiac {
         std::string fen() const;
 
         /**
-         * @brief Get the Zobrist hash of the current game state.
+         * @brief Get the hash of the current game state.
          *
-         * @return uint64_t
+         * @return StateHash
          */
-        uint64_t zobrist() const;
+        StateHash hash() const;
 
         /**
          * @brief Get the move list for the current turn.
@@ -73,19 +73,19 @@ namespace Brainiac {
          *
          * @param move
          */
-        void make_move(Move move);
+        void make(Move move);
 
         /**
          * @brief Undo the last move made.
          *
          */
-        void undo_move();
+        void undo();
 
         /**
          * @brief Skip the current turn.
          *
          */
-        void skip_move();
+        void skip();
 
         /**
          * @brief Pretty print the current game state.
