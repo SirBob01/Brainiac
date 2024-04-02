@@ -1,7 +1,9 @@
 #include "State.hpp"
 
 namespace Brainiac {
-    State::State(std::string fen) {
+    State::State() {}
+
+    State::State(std::string fen, Hasher &hasher) {
         std::vector<std::string> fields = tokenize(fen, ' ');
         int row = 7;
         int col = 0;
@@ -35,6 +37,9 @@ namespace Brainiac {
         turn = (fields[1][0] == 'w') ? Color::White : Color::Black;
         halfmoves = stoi(fields[4]);
         fullmoves = stoi(fields[5]);
+
+        hash = hasher(board, castling, turn, ep_target);
+        generate_moves();
     }
 
     std::string State::fen() const {
@@ -89,6 +94,8 @@ namespace Brainiac {
     }
 
     void State::generate_moves() {
+        moves.clear();
+
         // TODO: Fast legal move generator
     }
 } // namespace Brainiac
