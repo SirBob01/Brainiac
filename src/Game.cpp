@@ -6,14 +6,14 @@ namespace Brainiac {
         _states.emplace_back(fen);
         _index = 0;
 
-        // Compute the zobrist hash of initial state
-        _zobrist = _states[_index].compute_hash();
+        // Compute the initial zobrist hash to be updated on move
+        _hash = _states[_index].hash();
         _states[_index].generate_moves();
     }
 
     std::string Game::fen() const { return _states[_index].fen(); }
 
-    uint64_t Game::zobrist() const { return _zobrist; }
+    StateHash Game::hash() const { return _hash; }
 
     const MoveList &Game::moves() const { return _states[_index].moves; }
 
@@ -27,15 +27,15 @@ namespace Brainiac {
         return !is_check() && moves().size() == 0;
     }
 
-    void Game::make_move(Move move) {
+    void Game::make(Move move) {
         // TODO
     }
 
-    void Game::undo_move() {
+    void Game::undo() {
         // TODO
     }
 
-    void Game::skip_move() {
+    void Game::skip() {
         // TODO
     }
 

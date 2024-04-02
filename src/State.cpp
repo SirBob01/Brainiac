@@ -82,18 +82,43 @@ namespace Brainiac {
         return fen;
     }
 
-    uint64_t State::compute_hash() const {
-        // TODO: Algorithm to compute the initial zobrist hash
-        return 0;
-    }
+    StateHash State::hash() const {
+        unsigned bitstring_n = (64 * 12) + 1 + 4;
+        if (!ZOBRIST_BITSTRINGS.size()) {
+            unsigned seed = time(0); // 123456;
+            std::default_random_engine rng{seed};
+            std::uniform_real_distribution<double> uniform(0, UINT64_MAX);
 
-    void State::generate_moves() {
-        // TODO: Fast legal move generator
+            for (unsigned i = 0; i < bitstring_n; i++) {
+                ZOBRIST_BITSTRINGS.push_back(uniform(rng));
+            }
+        }
+
+        StateHash hash = 0;
+        if (turn == Color::Black) {
+            hash ^= ZOBRIST_BITSTRINGS[bitstring_n - 1];
+        }
+        for (uint8_t c = 0; c < 4; c++) {
+            if (castling & (1 << c)) {
+                hash ^= ZOBRIST_BITSTRINGS[bitstring_n - 1 - c];
+            }
+        }
+        for (uint8_t sq = 0; sq < 64; sq++) {
+            Piece piece = board.get(Square(sq));
+            if (piece != Piece::Empty) {
+                hash ^= ZOBRIST_BITSTRINGS[sq * 12 + piece];
+            }
+        }
+        return hash;
     }
 
     void State::print() const {
         if (turn == Color::White) std::cout << "White's turn.\n";
         else std::cout << "Black's turn.\n";
         board.print();
+    }
+
+    void State::generate_moves() {
+        // TODO: Fast legal move generator
     }
 } // namespace Brainiac
