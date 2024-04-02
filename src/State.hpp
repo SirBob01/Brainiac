@@ -1,44 +1,15 @@
 #pragma once
 
 #include <cstdint>
-#include <random>
 #include <vector>
 
 #include "Board.hpp"
+#include "Move.hpp"
 #include "MoveList.hpp"
 #include "Piece.hpp"
 #include "Utils.hpp"
 
 namespace Brainiac {
-    /**
-     * @brief State hash bitfield.
-     *
-     */
-    using StateHash = uint64_t;
-
-    /**
-     * @brief Underlying bitfield for castling rights.
-     *
-     */
-    using CastlingFlagSet = uint8_t;
-
-    /**
-     * @brief Castling rights.
-     *
-     */
-    enum CastlingRights : CastlingFlagSet {
-        WK = 1,
-        WQ = 1 << 1,
-        BK = 1 << 2,
-        BQ = 1 << 3,
-    };
-
-    /**
-     * @brief Initial random bitstrings for Zobrist hashing.
-     *
-     */
-    static std::vector<StateHash> ZOBRIST_BITSTRINGS;
-
     /**
      * @brief Represents discrete chronological game state. This allows forward
      * and backward movement in time (undo/redo moves).
@@ -109,24 +80,6 @@ namespace Brainiac {
          *
          */
         std::string fen() const;
-
-        /**
-         * @brief Compute the Zobrist hash value.
-         *
-         */
-
-        /**
-         * @brief Compute the Zobrist hash value with a given seed for the
-         * initialization of random bitstrings.
-         *
-         * Note that the seed is universal and will only be used once.
-         * Subsequent calls to hash() for any state will not re-initialize the
-         * table.
-         *
-         * @param seed
-         * @return StateHash
-         */
-        StateHash hash(unsigned seed = time(0)) const;
 
         /**
          * @brief Pretty print the state.

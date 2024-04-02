@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "Hasher.hpp"
 #include "State.hpp"
 
 namespace Brainiac {
@@ -18,10 +19,11 @@ namespace Brainiac {
     class Game {
         std::vector<State> _states;
         unsigned _index;
-        StateHash _hash;
+        Hasher _hasher;
+        Hash _hash;
 
       public:
-        Game(std::string fen = DEFAULT_BOARD_FEN);
+        Game(std::string fen = DEFAULT_BOARD_FEN, Hasher hasher = Hasher());
 
         /**
          * @brief Get the fen string of the current game state.
@@ -35,7 +37,7 @@ namespace Brainiac {
          *
          * @return StateHash
          */
-        StateHash hash() const;
+        Hash hash() const;
 
         /**
          * @brief Get the move list for the current turn.
