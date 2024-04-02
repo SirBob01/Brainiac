@@ -83,7 +83,7 @@ namespace Brainiac {
     }
 
     StateHash State::hash() const {
-        unsigned bitstring_n = (64 * 12) + 1 + 4;
+        unsigned bitstring_n = (64 * 12) + 1 + 4 + 1;
         if (!ZOBRIST_BITSTRINGS.size()) {
             unsigned seed = time(0); // 123456;
             std::default_random_engine rng{seed};
@@ -98,9 +98,12 @@ namespace Brainiac {
         if (turn == Color::Black) {
             hash ^= ZOBRIST_BITSTRINGS[bitstring_n - 1];
         }
+        if (ep_target != Square::Null) {
+            hash ^= ZOBRIST_BITSTRINGS[bitstring_n - 2];
+        }
         for (uint8_t c = 0; c < 4; c++) {
             if (castling & (1 << c)) {
-                hash ^= ZOBRIST_BITSTRINGS[bitstring_n - 1 - c];
+                hash ^= ZOBRIST_BITSTRINGS[bitstring_n - 3 - c];
             }
         }
         for (uint8_t sq = 0; sq < 64; sq++) {
