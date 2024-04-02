@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "Board.hpp"
+#include "Hasher.hpp"
 #include "Move.hpp"
 #include "MoveList.hpp"
 #include "Piece.hpp"
@@ -69,11 +70,24 @@ namespace Brainiac {
         MoveList moves;
 
         /**
+         * @brief Hash value.
+         *
+         */
+        Hash hash;
+
+        /**
+         * @brief Initialize an empty state.
+         *
+         */
+        State();
+
+        /**
          * @brief Initialize state from a FEN string.
          *
          * @param fen
+         * @param hasher
          */
-        State(std::string fen);
+        State(std::string fen, Hasher &hasher);
 
         /**
          * @brief Get the Fen string of the board.

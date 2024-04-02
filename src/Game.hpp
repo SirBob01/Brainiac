@@ -20,7 +20,13 @@ namespace Brainiac {
         std::vector<State> _states;
         unsigned _index;
         Hasher _hasher;
-        Hash _hash;
+
+        /**
+         * @brief Push a new state onto the array.
+         *
+         * @return State&
+         */
+        State &push_state();
 
       public:
         Game(std::string fen = DEFAULT_BOARD_FEN, Hasher hasher = Hasher());
