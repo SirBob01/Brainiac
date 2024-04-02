@@ -17,11 +17,11 @@ namespace Brainiac {
      * @brief Castling rights.
      *
      */
-    enum CastlingRights : CastlingFlagSet {
-        WK = 1,
-        WQ = 1 << 1,
-        BK = 1 << 2,
-        BQ = 1 << 3,
+    enum CastlingRight : CastlingFlagSet {
+        WK,
+        WQ,
+        BK,
+        BQ,
     };
 
     /**

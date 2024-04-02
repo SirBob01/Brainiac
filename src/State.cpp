@@ -24,10 +24,10 @@ namespace Brainiac {
 
         castling = 0;
         for (auto &c : fields[2]) {
-            if (c == 'K') castling |= CastlingRights::WK;
-            else if (c == 'Q') castling |= CastlingRights::WQ;
-            else if (c == 'k') castling |= CastlingRights::BK;
-            else if (c == 'q') castling |= CastlingRights::BQ;
+            if (c == 'K') castling |= (1 << CastlingRight::WK);
+            else if (c == 'Q') castling |= (1 << CastlingRight::WQ);
+            else if (c == 'k') castling |= (1 << CastlingRight::BK);
+            else if (c == 'q') castling |= (1 << CastlingRight::BQ);
         }
 
         ep_target = fields[3].length() == 2 ? string_to_square(fields[3])
@@ -61,10 +61,10 @@ namespace Brainiac {
 
         std::string castling_rights = "";
 
-        if (castling & CastlingRights::WK) castling_rights += 'K';
-        if (castling & CastlingRights::WQ) castling_rights += 'Q';
-        if (castling & CastlingRights::BK) castling_rights += 'k';
-        if (castling & CastlingRights::BQ) castling_rights += 'q';
+        if (castling & (1 << CastlingRight::WK)) castling_rights += 'K';
+        if (castling & (1 << CastlingRight::WQ)) castling_rights += 'Q';
+        if (castling & (1 << CastlingRight::BK)) castling_rights += 'k';
+        if (castling & (1 << CastlingRight::BQ)) castling_rights += 'q';
         if (castling_rights.length() == 0) castling_rights = "-";
         fen += " " + castling_rights;
 

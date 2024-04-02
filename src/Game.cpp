@@ -8,10 +8,10 @@ namespace Brainiac {
 
         // Compute the initial zobrist hash to be updated on move
         _hasher = hasher;
-        _hash = _hasher.hash(_states[_index].board,
-                             _states[_index].castling,
-                             _states[_index].turn,
-                             _states[_index].ep_target);
+        _hash = _hasher(_states[_index].board,
+                        _states[_index].castling,
+                        _states[_index].turn,
+                        _states[_index].ep_target);
         _states[_index].generate_moves();
     }
 

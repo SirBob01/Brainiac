@@ -17,16 +17,21 @@ namespace Brainiac {
     /**
      * @brief Number of bitstrings.
      *
-     */
-    const unsigned BITSTRING_COUNT = (64 * 12) + 1 + 4 + 1;
-
-    /**
-     * @brief Zobrist hasher function.
+     * 12 piece types (6 per color) and en-passant target for the 64 squares.
+     * Current turn state.
+     * 4 castling flags.
      *
      */
-    struct Hasher {
-        std::vector<Hash> bitstrings;
+    const unsigned BITSTRING_COUNT = (64 * 13) + 1 + 4;
 
+    /**
+     * @brief Zobrist hasher functor.
+     *
+     */
+    class Hasher {
+        std::array<Hash, BITSTRING_COUNT> _bitstrings;
+
+      public:
         /**
          * @brief Initialize the hasher with a random seed.
          *
@@ -35,7 +40,40 @@ namespace Brainiac {
         Hasher(unsigned seed = time(0));
 
         /**
-         * @brief Hash some game state.
+         * @brief Get the bitstring for a square / piece combination.
+         *
+         * @param square
+         * @param piece
+         * @return Hash
+         */
+        Hash bitstring(Square square, Piece piece) const;
+
+        /**
+         * @brief Get the bitstring for an en passant target square.
+         *
+         * @param ep_target
+         * @return Hash
+         */
+        Hash bitstring(Square ep_target) const;
+
+        /**
+         * @brief Get the bitstring for the current color turn.
+         *
+         * @param turn
+         * @return Hash
+         */
+        Hash bitstring(Color turn) const;
+
+        /**
+         * @brief Get the bitstring for a castling right.
+         *
+         * @param right
+         * @return Hash
+         */
+        Hash bitstring(CastlingRight right) const;
+
+        /**
+         * @brief State hashing function.
          *
          * @param board
          * @param castling
@@ -43,9 +81,9 @@ namespace Brainiac {
          * @param ep_target
          * @return Hash
          */
-        Hash hash(Board &board,
-                  CastlingFlagSet castling,
-                  Color turn,
-                  Square ep_target);
+        Hash operator()(Board &board,
+                        CastlingFlagSet castling,
+                        Color turn,
+                        Square ep_target);
     };
 } // namespace Brainiac
