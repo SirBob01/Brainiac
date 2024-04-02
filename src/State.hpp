@@ -114,7 +114,19 @@ namespace Brainiac {
          * @brief Compute the Zobrist hash value.
          *
          */
-        StateHash hash() const;
+
+        /**
+         * @brief Compute the Zobrist hash value with a given seed for the
+         * initialization of random bitstrings.
+         *
+         * Note that the seed is universal and will only be used once.
+         * Subsequent calls to hash() for any state will not re-initialize the
+         * table.
+         *
+         * @param seed
+         * @return StateHash
+         */
+        StateHash hash(unsigned seed = time(0)) const;
 
         /**
          * @brief Pretty print the state.
