@@ -82,10 +82,9 @@ namespace Brainiac {
         return fen;
     }
 
-    StateHash State::hash() const {
+    StateHash State::hash(unsigned seed) const {
         unsigned bitstring_n = (64 * 12) + 1 + 4 + 1;
         if (!ZOBRIST_BITSTRINGS.size()) {
-            unsigned seed = time(0); // 123456;
             std::default_random_engine rng{seed};
             std::uniform_real_distribution<double> uniform(0, UINT64_MAX);
 
