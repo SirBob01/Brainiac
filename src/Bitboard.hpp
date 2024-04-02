@@ -14,10 +14,52 @@ namespace Brainiac {
     using Bitboard = uint64_t;
 
     /**
+     * @brief Rank masks.
+     *
+     */
+    constexpr const std::array<Bitboard, 8> RANKS = {
+        0x00000000000000FF,
+        0x000000000000FF00,
+        0x0000000000FF0000,
+        0x00000000FF000000,
+        0x000000FF00000000,
+        0x0000FF0000000000,
+        0x00FF000000000000,
+        0xFF00000000000000,
+    };
+
+    /**
+     * @brief File masks.
+     *
+     */
+    constexpr const std::array<Bitboard, 8> FILES = {
+        0x0101010101010101,
+        0x0202020202020202,
+        0x0404040404040404,
+        0x0808080808080808,
+        0x1010101010101010,
+        0x2020202020202020,
+        0x4040404040404040,
+        0x8080808080808080,
+    };
+
+    /**
+     * @brief Diagonal mask.
+     *
+     */
+    constexpr Bitboard MAIN_DIAGONAL = 0x8040201008040201;
+
+    /**
+     * @brief Anti-diagonal mask.
+     *
+     */
+    constexpr Bitboard ANTI_DIAGONAL = 0x0102040810204080;
+
+    /**
      * @brief Table of king moves by bit index.
      *
      */
-    constexpr inline const std::array<Bitboard, 64> KING_MOVE_MASKS = {
+    constexpr const std::array<Bitboard, 64> KING_MOVE_MASKS = {
         0x0000000000000302, 0x0000000000000705, 0x0000000000000e0a,
         0x0000000000001c14, 0x0000000000003828, 0x0000000000007050,
         0x000000000000e0a0, 0x000000000000c040, 0x0000000000030203,
@@ -46,7 +88,7 @@ namespace Brainiac {
      * @brief Table of knight moves by bit index.
      *
      */
-    constexpr inline const std::array<Bitboard, 64> KNIGHT_MOVE_MASKS = {
+    constexpr const std::array<Bitboard, 64> KNIGHT_MOVE_MASKS = {
         0x0000000000020400, 0x0000000000050800, 0x00000000000a1100,
         0x0000000000142200, 0x0000000000284400, 0x0000000000508800,
         0x0000000000a01000, 0x0000000000402000, 0x0000000002040004,
@@ -94,6 +136,14 @@ namespace Brainiac {
      * @return Bitboard
      */
     Bitboard flip_vertical_bitboard(Bitboard bitboard);
+
+    /**
+     * @brief Flip a bitboard horizontally.
+     *
+     * @param bitboard
+     * @return Bitboard
+     */
+    Bitboard flip_horizontal_bitboard(Bitboard bitboard);
 
     /**
      * @brief Get the least significant bit.
