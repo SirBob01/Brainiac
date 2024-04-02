@@ -30,7 +30,7 @@ namespace Brainiac {
     };
 
     /**
-     * @brief Piece types.
+     * @brief All piece types for all colors.
      *
      */
     enum Piece : uint8_t {
@@ -52,6 +52,19 @@ namespace Brainiac {
     };
 
     /**
+     * @brief Piece types.
+     *
+     */
+    enum PieceType : uint8_t {
+        King,
+        Pawn,
+        Rook,
+        Knight,
+        Bishop,
+        Queen,
+    };
+
+    /**
      * @brief Piece colors.
      *
      */
@@ -59,4 +72,13 @@ namespace Brainiac {
         White,
         Black,
     };
+
+    /**
+     * @brief Create a Piece given a type and color.
+     *
+     * @param type
+     * @param color
+     * @return Piece
+     */
+    Piece create_piece(PieceType type, Color color);
 } // namespace Brainiac

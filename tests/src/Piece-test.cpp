@@ -18,8 +18,18 @@ static char *test_piece_index() {
     return 0;
 }
 
+static char *test_create_piece() {
+    mu_assert("Create BlackKnight",
+              create_piece(PieceType::Knight, Color::Black) ==
+                  Piece::BlackKnight);
+    mu_assert("Create WhiteRook",
+              create_piece(PieceType::Rook, Color::White) == Piece::WhiteRook);
+    return 0;
+}
+
 static char *all_tests() {
     mu_run_test(test_piece_index);
+    mu_run_test(test_create_piece);
     return 0;
 }
 
