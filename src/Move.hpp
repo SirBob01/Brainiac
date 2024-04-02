@@ -86,7 +86,7 @@ namespace Brainiac {
     Square string_to_square(std::string standard_notation);
 
     /**
-     * @brief Chess move representation for the `from` and `to` squares, as well
+     * @brief Chess move representation for the `src` and `dst` squares, as well
      * as the move type. This is stored compactly as a single 16-bit
      * integer.
      *
@@ -98,26 +98,26 @@ namespace Brainiac {
         /**
          * @brief Create a Move.
          *
-         * @param from
-         * @param to
+         * @param src
+         * @param dst
          * @param type
          */
-        Move(Square from, Square to, MoveType type);
+        Move(Square src, Square dst, MoveType type);
         Move();
 
         /**
          * @brief Get the starting square of this move.
          *
-         * @return Square From square
+         * @return Square
          */
-        Square from() const;
+        Square src() const;
 
         /**
          * @brief Get the ending square of this move.
          *
-         * @return Square To square
+         * @return Square
          */
-        Square to() const;
+        Square dst() const;
 
         /**
          * @brief Get the type of this move.

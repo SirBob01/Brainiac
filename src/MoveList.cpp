@@ -7,8 +7,8 @@ namespace Brainiac {
 
     void MoveList::clear() { _count = 0; };
 
-    void MoveList::add(Square from, Square to, MoveType type) {
-        _list[_count++] = Move(from, to, type);
+    void MoveList::add(Square src, Square dst, MoveType type) {
+        _list[_count++] = Move(src, dst, type);
     };
 
     Move *MoveList::begin() { return _list.data(); };

@@ -18,13 +18,13 @@ namespace Brainiac {
         return Square(row * 8 + col);
     }
 
-    Move::Move(Square from, Square to, MoveType flags) :
-        _bitfield(to | (from << 6) | (flags << 12)){};
+    Move::Move(Square src, Square dst, MoveType flags) :
+        _bitfield(dst | (src << 6) | (flags << 12)){};
     Move::Move() : _bitfield(0){};
 
-    Square Move::from() const { return Square((_bitfield >> 6) & 0x3F); }
+    Square Move::src() const { return Square((_bitfield >> 6) & 0x3F); }
 
-    Square Move::to() const { return Square(_bitfield & 0x3F); }
+    Square Move::dst() const { return Square(_bitfield & 0x3F); }
 
     MoveType Move::type() const { return MoveType(_bitfield >> 12); }
 
@@ -33,7 +33,7 @@ namespace Brainiac {
     }
 
     std::string Move::standard_notation() const {
-        std::string s = square_to_string(from()) + square_to_string(to());
+        std::string s = square_to_string(src()) + square_to_string(dst());
         MoveType move_type = type();
         if (move_type == MoveType::RookPromo ||
             move_type == MoveType::RookPromoCapture)

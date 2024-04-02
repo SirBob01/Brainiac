@@ -31,8 +31,8 @@ static char *test_string_to_square() {
 
 static char *test_move_quiet() {
     Move move(Square::A1, Square::H8, MoveType::Quiet);
-    mu_assert("Move from - A1", move.from() == Square::A1);
-    mu_assert("Move to - H8", move.to() == Square::H8);
+    mu_assert("Move src - A1", move.src() == Square::A1);
+    mu_assert("Move dst - H8", move.dst() == Square::H8);
     mu_assert("Move type - Quiet", move.type() == MoveType::Quiet);
     mu_assert("Move string", move.standard_notation() == "a1h8");
     return 0;
