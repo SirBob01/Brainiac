@@ -6,30 +6,48 @@ namespace Brainiac {
         std::uniform_real_distribution<double> uniform(0, UINT64_MAX);
 
         for (unsigned i = 0; i < BITSTRING_COUNT; i++) {
-            bitstrings.push_back(uniform(rng));
+            _bitstrings[i] = uniform(rng);
         }
     }
 
-    Hash Hasher::hash(Board &board,
-                      CastlingFlagSet castling,
-                      Color turn,
-                      Square ep_target) {
+    Hash Hasher::bitstring(Square square, Piece piece) const {
+        return _bitstrings[square * 13 + piece];
+    }
+
+    Hash Hasher::bitstring(Square ep_target) const {
+        return _bitstrings[ep_target * 13 + (Piece::BlackQueen + 1)];
+    }
+
+    Hash Hasher::bitstring(Color turn) const {
+        return _bitstrings[64 * 13 + 1];
+    }
+
+    Hash Hasher::bitstring(CastlingRight right) const {
+        return _bitstrings[64 * 13 + 1 + right];
+    }
+
+    Hash Hasher::operator()(Board &board,
+                            CastlingFlagSet castling,
+                            Color turn,
+                            Square ep_target) {
         Hash hash = 0;
         if (turn == Color::Black) {
-            hash ^= bitstrings[BITSTRING_COUNT - 1];
+            hash ^= bitstring(turn);
         }
         if (ep_target != Square::Null) {
-            hash ^= bitstrings[BITSTRING_COUNT - 2];
+            hash ^= bitstring(ep_target);
         }
-        for (uint8_t c = 0; c < 4; c++) {
-            if (castling & (1 << c)) {
-                hash ^= bitstrings[BITSTRING_COUNT - 3 - c];
+        for (unsigned i = 0; i < 64; i++) {
+            Square square = Square(i);
+            Piece piece = board.get(square);
+            if (piece != Piece::Empty) {
+                hash ^= bitstring(square, piece);
             }
         }
-        for (uint8_t sq = 0; sq < 64; sq++) {
-            Piece piece = board.get(Square(sq));
-            if (piece != Piece::Empty) {
-                hash ^= bitstrings[sq * 12 + piece];
+        for (unsigned c = 0; c < 4; c++) {
+            CastlingRight right = CastlingRight(c);
+            if (castling & (1 << right)) {
+                hash ^= bitstring(right);
             }
         }
         return hash;
