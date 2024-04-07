@@ -2,6 +2,7 @@
 #include "Board.hpp"
 #include "Game.hpp"
 #include "Move.hpp"
+#include "MoveGen.hpp"
 #include "MoveList.hpp"
 #include "Piece.hpp"
 #include "State.hpp"
