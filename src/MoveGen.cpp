@@ -26,6 +26,16 @@ namespace Brainiac {
         return mask & ~all;
     }
 
+    Bitboard MoveGen::get_pawn_captures(Bitboard pawn) {
+        Bitboard mask = 0;
+        if (turn == Color::White) {
+            mask = ((pawn << 9) | (pawn << 7));
+        } else {
+            mask = ((pawn >> 9) | (pawn >> 7));
+        }
+        return mask & enemies;
+    }
+
     Bitboard MoveGen::get_knight_attacks(Bitboard knight) {
         return KNIGHT_MOVE_MASKS[find_lsb_bitboard(knight)] & ~friends;
     }
@@ -71,16 +81,54 @@ namespace Brainiac {
         bool check = false;
 
         Bitboard pawns = f_pawn;
+        Bitboard promote_ranks = RANKS[0] | RANKS[7];
         while (pawns) {
             Bitboard pawn = get_lsb_bitboard(pawns);
-            Bitboard targets = get_pawn_advances(pawn) | get_pawn_doubles(pawn);
+            Bitboard advance = get_pawn_advances(pawn) | get_pawn_doubles(pawn);
+            Bitboard capture = get_pawn_captures(pawn);
             Square src_sq = static_cast<Square>(find_lsb_bitboard(pawn));
 
             // Quiet pawn movement
-            while (targets) {
-                Square dst_sq = static_cast<Square>(find_lsb_bitboard(targets));
+            Bitboard quiet = advance & ~promote_ranks;
+            Bitboard promote = advance & promote_ranks;
+            while (quiet) {
+                Square dst_sq = static_cast<Square>(find_lsb_bitboard(quiet));
                 moves.add(src_sq, dst_sq, MoveType::Quiet);
-                targets = pop_lsb_bitboard(targets);
+                quiet = pop_lsb_bitboard(quiet);
+            }
+            while (promote) {
+                Square dst_sq = static_cast<Square>(find_lsb_bitboard(promote));
+                moves.add(src_sq, dst_sq, MoveType::KnightPromo);
+                moves.add(src_sq, dst_sq, MoveType::RookPromo);
+                moves.add(src_sq, dst_sq, MoveType::BishopPromo);
+                moves.add(src_sq, dst_sq, MoveType::QueenPromo);
+                promote = pop_lsb_bitboard(promote);
+            }
+
+            // Capture pawn movement
+            Bitboard quiet_capture = capture & ~promote_ranks & ~ep;
+            Bitboard promote_capture = capture & promote_ranks & ~ep;
+            Bitboard ep_capture = capture & ep;
+            while (quiet_capture) {
+                Square dst_sq =
+                    static_cast<Square>(find_lsb_bitboard(quiet_capture));
+                moves.add(src_sq, dst_sq, MoveType::Capture);
+                quiet_capture = pop_lsb_bitboard(quiet_capture);
+            }
+            while (promote_capture) {
+                Square dst_sq =
+                    static_cast<Square>(find_lsb_bitboard(promote_capture));
+                moves.add(src_sq, dst_sq, MoveType::KnightPromo);
+                moves.add(src_sq, dst_sq, MoveType::RookPromo);
+                moves.add(src_sq, dst_sq, MoveType::BishopPromo);
+                moves.add(src_sq, dst_sq, MoveType::QueenPromo);
+                promote_capture = pop_lsb_bitboard(promote_capture);
+            }
+            while (ep_capture) {
+                Square dst_sq =
+                    static_cast<Square>(find_lsb_bitboard(ep_capture));
+                moves.add(src_sq, dst_sq, MoveType::EnPassant);
+                ep_capture = pop_lsb_bitboard(ep_capture);
             }
 
             pawns = pop_lsb_bitboard(pawns);
