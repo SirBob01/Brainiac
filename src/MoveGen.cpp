@@ -27,13 +27,8 @@ namespace Brainiac {
     }
 
     Bitboard MoveGen::get_pawn_captures(Bitboard pawn) {
-        Bitboard mask = 0;
-        if (turn == Color::White) {
-            mask = ((pawn << 9) | (pawn << 7));
-        } else {
-            mask = ((pawn >> 9) | (pawn >> 7));
-        }
-        return mask & enemies;
+        unsigned sq = find_lsb_bitboard(pawn);
+        return PAWN_CAPTURE_MASKS[64 * turn + sq] & enemies;
     }
 
     Bitboard MoveGen::get_knight_attacks(Bitboard knight) {
