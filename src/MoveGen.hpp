@@ -203,6 +203,138 @@ namespace Brainiac {
         0x80000000000000,
     };
 
+    constexpr std::array<Bitboard, 128> PAWN_DOUBLE_MASKS = {
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0x1000000,
+        0x2000000,
+        0x4000000,
+        0x8000000,
+        0x10000000,
+        0x20000000,
+        0x40000000,
+        0x80000000,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0x100000000,
+        0x200000000,
+        0x400000000,
+        0x800000000,
+        0x1000000000,
+        0x2000000000,
+        0x4000000000,
+        0x8000000000,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+    };
+
     /**
      * @brief Pawn capture masks. The first 64 entries are for white, remaining
      * 64 are for black.
@@ -340,52 +472,76 @@ namespace Brainiac {
         0x40000000000000,
     };
 
-    struct MoveGen {
-        Bitboard friends;
-        Bitboard enemies;
-        Bitboard all;
+    /**
+     * @brief Compute king attack mask.
+     *
+     * @param sq
+     * @return Bitboard
+     */
+    Bitboard king_attacks(Square sq);
 
-        Bitboard f_king;
-        Bitboard f_pawn;
-        Bitboard f_rook;
-        Bitboard f_knight;
-        Bitboard f_bishop;
-        Bitboard f_queen;
+    /**
+     * @brief Compute pawn advance mask.
+     *
+     * @param sq
+     * @param turn
+     * @return Bitboard
+     */
+    Bitboard pawn_advances(Square sq, Color turn);
 
-        Bitboard o_king;
-        Bitboard o_pawn;
-        Bitboard o_rook;
-        Bitboard o_knight;
-        Bitboard o_bishop;
-        Bitboard o_queen;
+    /**
+     * @brief Compute pawn double mask.
+     *
+     * @param sq
+     * @param turn
+     * @return Bitboard
+     */
+    Bitboard pawn_doubles(Square sq, Color turn);
 
-        Bitboard ep;
-        Color turn;
+    /**
+     * @brief Compute pawn capture mask.
+     *
+     * @param sq
+     * @param turn
+     * @return Bitboard
+     */
+    Bitboard pawn_captures(Square sq, Color turn);
 
-        Bitboard king_attacks(Square sq);
-        Bitboard pawn_advances(Square sq);
-        Bitboard pawn_doubles(Square sq);
-        Bitboard pawn_captures(Square sq);
-        Bitboard knight_attacks(Square sq);
-        Bitboard rook_attacks(Square sq);
-        Bitboard bishop_attacks(Square sq);
-        Bitboard queen_attacks(Square sq);
+    /**
+     * @brief Compute knight attack mask.
+     *
+     * @param sq
+     * @return Bitboard
+     */
+    Bitboard knight_attacks(Square sq);
 
-        void generate_pawn_moves(MoveList &moves);
-        void generate_knight_moves(MoveList &moves);
-        void generate_rook_moves(MoveList &moves);
-        void generate_bishop_moves(MoveList &moves);
-        void generate_queen_moves(MoveList &moves);
-        void generate_king_moves(MoveList &moves);
+    /**
+     * @brief Compute rook attack mask.
+     *
+     * @param sq
+     * @param friends
+     * @param enemies
+     * @return Bitboard
+     */
+    Bitboard rook_attacks(Square sq, Bitboard friends, Bitboard enemies);
 
-        /**
-         * @brief Generate moves onto a move list. Returns true if the friendly
-         * king is in check.
-         *
-         * @param moves
-         * @return true
-         * @return false
-         */
-        bool generate(MoveList &moves);
-    };
+    /**
+     * @brief Compute bishop attack mask.
+     *
+     * @param sq
+     * @param friends
+     * @param enemies
+     * @return Bitboard
+     */
+    Bitboard bishop_attacks(Square sq, Bitboard friends, Bitboard enemies);
+
+    /**
+     * @brief Compute queen attack mask.
+     *
+     * @param sq
+     * @param friends
+     * @param enemies
+     * @return Bitboard
+     */
+    Bitboard queen_attacks(Square sq, Bitboard friends, Bitboard enemies);
 } // namespace Brainiac
