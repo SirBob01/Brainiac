@@ -6,6 +6,8 @@
 #include <iostream>
 #include <stack>
 
+#include "Square.hpp"
+
 namespace Brainiac {
     /**
      * @brief Represent the 8x8 board occupancy as a 64 bit integer.
@@ -281,20 +283,20 @@ namespace Brainiac {
      * @brief Find the index of the least significant bit.
      *
      * @param bitboard
-     * @return constexpr unsigned
+     * @return constexpr Square
      */
-    constexpr unsigned find_lsb_bitboard(Bitboard bitboard) {
-        return __builtin_ctzll(bitboard);
+    constexpr Square find_lsb_bitboard(Bitboard bitboard) {
+        return static_cast<Square>(__builtin_ctzll(bitboard));
     }
 
     /**
      * @brief Count the number of set bits.
      *
      * @param bitboard
-     * @return constexpr unsigned
+     * @return constexpr Square
      */
-    constexpr unsigned count_set_bitboard(Bitboard bitboard) {
-        return __builtin_popcountll(bitboard);
+    constexpr Square count_set_bitboard(Bitboard bitboard) {
+        return static_cast<Square>(__builtin_popcountll(bitboard));
     }
 
     /**

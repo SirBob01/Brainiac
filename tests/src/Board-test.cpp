@@ -15,7 +15,7 @@ static char *test_board_set() {
 
     board.set(sq, piece);
 
-    Bitboard mask = get_square_mask(sq);
+    Bitboard mask = 1ULL << sq;
     mu_assert("Piece bitboard set", board.bitboard(piece) & mask);
     mu_assert("Color bitboard set", board.bitboard(Color::White) & mask);
     mu_assert("Color bitboard clear", !(board.bitboard(Color::Black) & mask));
@@ -32,7 +32,7 @@ static char *test_board_set_overwrite() {
     board.set(sq, piece0);
     board.set(sq, piece1);
 
-    Bitboard mask = get_square_mask(sq);
+    Bitboard mask = 1ULL << sq;
     mu_assert("Piece bitboard set", board.bitboard(piece1) & mask);
     mu_assert("Color bitboard set", board.bitboard(Color::White) & mask);
     mu_assert("Color bitboard clear", !(board.bitboard(Color::Black) & mask));
@@ -61,7 +61,7 @@ static char *test_board_copy() {
     board.set(sq, piece);
 
     Board copy = board;
-    Bitboard mask = get_square_mask(sq);
+    Bitboard mask = 1ULL << sq;
     mu_assert("Piece bitboard set", copy.bitboard(piece) & mask);
     mu_assert("Color bitboard set", copy.bitboard(Color::White) & mask);
     mu_assert("Color bitboard clear", !(copy.bitboard(Color::Black) & mask));
@@ -77,7 +77,7 @@ static char *test_board_clear() {
     board.set(sq, piece);
     board.clear(sq);
 
-    Bitboard mask = get_square_mask(sq);
+    Bitboard mask = 1ULL << sq;
     for (uint8_t i = 0; i < 12; i++) {
         Piece piece = static_cast<Piece>(i);
         mu_assert("Piece bitboard clear", !(board.bitboard(piece) & mask));
@@ -94,7 +94,7 @@ static char *test_board_clear_empty() {
 
     board.clear(sq);
 
-    Bitboard mask = get_square_mask(sq);
+    Bitboard mask = 1ULL << sq;
     for (uint8_t i = 0; i < 12; i++) {
         Piece piece = static_cast<Piece>(i);
         mu_assert("Piece bitboard clear", !(board.bitboard(piece) & mask));
