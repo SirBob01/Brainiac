@@ -7,6 +7,7 @@
 #include "Board.hpp"
 #include "Hasher.hpp"
 #include "Move.hpp"
+#include "MoveGen.hpp"
 #include "MoveList.hpp"
 #include "Piece.hpp"
 #include "Sliders.hpp"
