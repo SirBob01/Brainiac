@@ -3,11 +3,13 @@
 #include <cstdint>
 #include <vector>
 
+#include "Bitboard.hpp"
 #include "Board.hpp"
 #include "Hasher.hpp"
 #include "Move.hpp"
 #include "MoveList.hpp"
 #include "Piece.hpp"
+#include "Sliders.hpp"
 #include "Utils.hpp"
 
 namespace Brainiac {
