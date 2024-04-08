@@ -94,13 +94,7 @@ namespace Brainiac {
     }
 
     void State::generate_moves() {
-        moves.clear();
-        check = false;
-
-        // TODO: Fast legal move generator
         Color op = static_cast<Color>(!turn);
-        Bitboard friends = board.bitboard(turn);
-        Bitboard enemies = board.bitboard(op);
 
         Piece f_king = create_piece(PieceType::King, turn);
         Piece f_pawn = create_piece(PieceType::Pawn, turn);
@@ -116,18 +110,28 @@ namespace Brainiac {
         Piece o_bishop = create_piece(PieceType::Bishop, op);
         Piece o_queen = create_piece(PieceType::Queen, op);
 
-        Bitboard f_king_board = board.bitboard(f_king);
-        Bitboard f_pawn_board = board.bitboard(f_pawn);
-        Bitboard f_rook_board = board.bitboard(f_rook);
-        Bitboard f_knight_board = board.bitboard(f_knight);
-        Bitboard f_bishop_board = board.bitboard(f_bishop);
-        Bitboard f_queen_board = board.bitboard(f_queen);
+        MoveGen generator;
+        generator.friends = board.bitboard(turn);
+        generator.enemies = board.bitboard(op);
+        generator.all = generator.friends | generator.enemies;
 
-        Bitboard o_king_board = board.bitboard(o_king);
-        Bitboard o_pawn_board = board.bitboard(o_pawn);
-        Bitboard o_rook_board = board.bitboard(o_rook);
-        Bitboard o_knight_board = board.bitboard(o_knight);
-        Bitboard o_bishop_board = board.bitboard(o_bishop);
-        Bitboard o_queen_board = board.bitboard(o_queen);
+        generator.f_king = board.bitboard(f_king);
+        generator.f_pawn = board.bitboard(f_pawn);
+        generator.f_rook = board.bitboard(f_rook);
+        generator.f_knight = board.bitboard(f_knight);
+        generator.f_bishop = board.bitboard(f_bishop);
+        generator.f_queen = board.bitboard(f_queen);
+
+        generator.o_king = board.bitboard(o_king);
+        generator.o_pawn = board.bitboard(o_pawn);
+        generator.o_rook = board.bitboard(o_rook);
+        generator.o_knight = board.bitboard(o_knight);
+        generator.o_bishop = board.bitboard(o_bishop);
+        generator.o_queen = board.bitboard(o_queen);
+
+        generator.turn = turn;
+
+        moves.clear();
+        check = generator.generate(moves);
     }
 } // namespace Brainiac

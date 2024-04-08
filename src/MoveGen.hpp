@@ -3,6 +3,9 @@
 #include <array>
 
 #include "Bitboard.hpp"
+#include "Move.hpp"
+#include "MoveList.hpp"
+#include "Sliders.hpp"
 
 namespace Brainiac {
     /**
@@ -63,4 +66,49 @@ namespace Brainiac {
         0x0020400000000000,
     };
 
+    struct MoveGen {
+        Bitboard friends;
+        Bitboard enemies;
+        Bitboard all;
+
+        Bitboard f_king;
+        Bitboard f_pawn;
+        Bitboard f_rook;
+        Bitboard f_knight;
+        Bitboard f_bishop;
+        Bitboard f_queen;
+
+        Bitboard o_king;
+        Bitboard o_pawn;
+        Bitboard o_rook;
+        Bitboard o_knight;
+        Bitboard o_bishop;
+        Bitboard o_queen;
+
+        Color turn;
+
+        Bitboard get_king_attacks();
+
+        Bitboard get_pawn_advances();
+
+        Bitboard get_pawn_doubles();
+
+        Bitboard get_knight_attacks();
+
+        Bitboard get_rook_attacks();
+
+        Bitboard bishop_attacks();
+
+        Bitboard get_queen_attacks();
+
+        /**
+         * @brief Generate moves onto a move list. Returns true if the friendly
+         * king is in check.
+         *
+         * @param moves
+         * @return true
+         * @return false
+         */
+        bool generate(MoveList &moves);
+    };
 } // namespace Brainiac
