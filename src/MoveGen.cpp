@@ -1,5 +1,4 @@
 #include "MoveGen.hpp"
-#include "Bitboard.hpp"
 
 namespace Brainiac {
     Bitboard MoveGen::get_king_attacks(Bitboard king) {
@@ -7,23 +6,14 @@ namespace Brainiac {
     }
 
     Bitboard MoveGen::get_pawn_advances(Bitboard pawn) {
-        Bitboard mask = 0;
-        if (turn == Color::White) {
-            mask = (pawn << 8) & 0xffffffffffffff00;
-        } else {
-            mask = (pawn >> 8) & 0x00ffffffffffffff;
-        }
-        return mask & ~all;
+        unsigned sq = find_lsb_bitboard(pawn);
+        return PAWN_ADVANCE_MASKS[64 * turn + sq] & ~all;
     }
 
     Bitboard MoveGen::get_pawn_doubles(Bitboard pawn) {
-        Bitboard mask = 0;
-        if (turn == Color::White) {
-            mask = (pawn << 16) & RANKS[3];
-        } else {
-            mask = (pawn >> 16) & RANKS[4];
-        }
-        return mask & ~all;
+        unsigned sq = find_lsb_bitboard(pawn);
+        Bitboard advance_mask = PAWN_ADVANCE_MASKS[64 * turn + sq];
+        return get_pawn_advances(advance_mask) & ~all;
     }
 
     Bitboard MoveGen::get_pawn_captures(Bitboard pawn) {
