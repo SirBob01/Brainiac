@@ -53,15 +53,15 @@ namespace Brainiac {
         /**
          * @brief Get the pointer to the first move in the list
          *
-         * @return Move*
+         * @return const Move*
          */
-        Move *begin();
+        const Move *begin() const;
 
         /**
          * @brief Get the pointer to after the end of the list
          *
-         * @return Move*
+         * @return const Move*
          */
-        Move *end();
+        const Move *end() const;
     };
 } // namespace Brainiac

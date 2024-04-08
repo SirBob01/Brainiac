@@ -11,7 +11,7 @@ namespace Brainiac {
         _list[_count++] = Move(src, dst, type);
     };
 
-    Move *MoveList::begin() { return _list.data(); };
+    const Move *MoveList::begin() const { return _list.data(); };
 
-    Move *MoveList::end() { return _list.data() + _count; };
+    const Move *MoveList::end() const { return _list.data() + _count; };
 } // namespace Brainiac
