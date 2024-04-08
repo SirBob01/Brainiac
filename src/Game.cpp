@@ -21,7 +21,19 @@ namespace Brainiac {
 
     Hash Game::hash() const { return _states[_index].hash; }
 
+    const Board Game::board() const { return _states[_index].board; }
+
+    Color Game::turn() const { return _states[_index].turn; }
+
     const MoveList &Game::moves() const { return _states[_index].moves; }
+
+    const CastlingFlagSet Game::castling() const {
+        return _states[_index].castling;
+    }
+
+    unsigned Game::halfmoves() const { return _states[_index].halfmoves; }
+
+    unsigned Game::fullmoves() const { return _states[_index].fullmoves; }
 
     bool Game::is_check() const { return _states[_index].check; }
 

@@ -47,11 +47,46 @@ namespace Brainiac {
         Hash hash() const;
 
         /**
+         * @brief Get the current board state.
+         *
+         * @return const Board
+         */
+        const Board board() const;
+
+        /**
+         * @brief Get the current turn.
+         *
+         * @return Color
+         */
+        Color turn() const;
+
+        /**
          * @brief Get the move list for the current turn.
          *
          * @return const MoveList&
          */
         const MoveList &moves() const;
+
+        /**
+         * @brief Get the current set of castling rights.
+         *
+         * @return const CastlingFlagSet
+         */
+        const CastlingFlagSet castling() const;
+
+        /**
+         * @brief Get the current halfmove clock.
+         *
+         * @return unsigned
+         */
+        unsigned halfmoves() const;
+
+        /**
+         * @brief Get the current fullmove clock.
+         *
+         * @return unsigned
+         */
+        unsigned fullmoves() const;
 
         /**
          * @brief Test if the king is in check for the current turn.
