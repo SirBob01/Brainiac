@@ -141,7 +141,7 @@ namespace Brainiac {
             src_piece = create_piece(PieceType::Queen, state.turn);
             break;
         case MoveType::PawnDouble:
-            state.ep_dst = Square(src_sq + (dst_sq - src_sq) / 2);
+            state.ep_dst = static_cast<Square>(src_sq + (dst_sq - src_sq) / 2);
             break;
         case MoveType::EnPassant: {
             // Map turn Color [0, 1] to Direction [1, -1]
@@ -151,11 +151,20 @@ namespace Brainiac {
             break;
         }
 
-        // TODO: Castling moves
-        case MoveType::KingCastle:
+        case MoveType::KingCastle: {
+            Square rook_sq = static_cast<Square>(state.turn * 56 + 7);
+            Square rook_dst_sq = static_cast<Square>(dst_sq - 1);
+            state.board.set(rook_dst_sq, state.board.get(rook_sq));
+            state.board.clear(rook_sq);
             break;
-        case MoveType::QueenCastle:
+        }
+        case MoveType::QueenCastle: {
+            Square rook_sq = static_cast<Square>(state.turn * Square::A8);
+            Square rook_dst_sq = static_cast<Square>(dst_sq + 1);
+            state.board.set(rook_dst_sq, state.board.get(rook_sq));
+            state.board.clear(rook_sq);
             break;
+        }
 
         default:
             break;
