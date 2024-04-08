@@ -129,6 +129,7 @@ namespace Brainiac {
         generator.o_bishop = board.bitboard(o_bishop);
         generator.o_queen = board.bitboard(o_queen);
 
+        generator.ep = 1ULL << ep_dst;
         generator.turn = turn;
 
         moves.clear();

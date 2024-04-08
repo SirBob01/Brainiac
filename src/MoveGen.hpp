@@ -85,6 +85,7 @@ namespace Brainiac {
         Bitboard o_bishop;
         Bitboard o_queen;
 
+        Bitboard ep;
         Color turn;
 
         Bitboard get_king_attacks(Bitboard king);
@@ -92,6 +93,8 @@ namespace Brainiac {
         Bitboard get_pawn_advances(Bitboard pawn);
 
         Bitboard get_pawn_doubles(Bitboard pawn);
+
+        Bitboard get_pawn_captures(Bitboard pawn);
 
         Bitboard get_knight_attacks(Bitboard knight);
 
