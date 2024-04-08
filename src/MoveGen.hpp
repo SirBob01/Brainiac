@@ -363,20 +363,20 @@ namespace Brainiac {
         Color turn;
 
         Bitboard king_attacks(Square sq);
-
         Bitboard pawn_advances(Square sq);
-
         Bitboard pawn_doubles(Square sq);
-
         Bitboard pawn_captures(Square sq);
-
         Bitboard knight_attacks(Square sq);
-
         Bitboard rook_attacks(Square sq);
-
         Bitboard bishop_attacks(Square sq);
-
         Bitboard queen_attacks(Square sq);
+
+        void generate_pawn_moves(MoveList &moves);
+        void generate_knight_moves(MoveList &moves);
+        void generate_rook_moves(MoveList &moves);
+        void generate_bishop_moves(MoveList &moves);
+        void generate_queen_moves(MoveList &moves);
+        void generate_king_moves(MoveList &moves);
 
         /**
          * @brief Generate moves onto a move list. Returns true if the friendly
