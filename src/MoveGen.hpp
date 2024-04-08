@@ -87,19 +87,19 @@ namespace Brainiac {
 
         Color turn;
 
-        Bitboard get_king_attacks();
+        Bitboard get_king_attacks(Bitboard king);
 
-        Bitboard get_pawn_advances();
+        Bitboard get_pawn_advances(Bitboard pawn);
 
-        Bitboard get_pawn_doubles();
+        Bitboard get_pawn_doubles(Bitboard pawn);
 
-        Bitboard get_knight_attacks();
+        Bitboard get_knight_attacks(Bitboard knight);
 
-        Bitboard get_rook_attacks();
+        Bitboard get_rook_attacks(Bitboard rook);
 
-        Bitboard bishop_attacks();
+        Bitboard get_bishop_attacks(Bitboard bishop);
 
-        Bitboard get_queen_attacks();
+        Bitboard get_queen_attacks(Bitboard queen);
 
         /**
          * @brief Generate moves onto a move list. Returns true if the friendly
