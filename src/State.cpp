@@ -94,45 +94,45 @@ namespace Brainiac {
     }
 
     void State::generate_moves() {
-        // Color op = static_cast<Color>(!turn);
+        Color op = static_cast<Color>(!turn);
 
-        // Piece f_king = create_piece(PieceType::King, turn);
-        // Piece f_pawn = create_piece(PieceType::Pawn, turn);
-        // Piece f_rook = create_piece(PieceType::Rook, turn);
-        // Piece f_knight = create_piece(PieceType::Knight, turn);
-        // Piece f_bishop = create_piece(PieceType::Bishop, turn);
-        // Piece f_queen = create_piece(PieceType::Queen, turn);
+        Piece f_king = create_piece(PieceType::King, turn);
+        Piece f_pawn = create_piece(PieceType::Pawn, turn);
+        Piece f_rook = create_piece(PieceType::Rook, turn);
+        Piece f_knight = create_piece(PieceType::Knight, turn);
+        Piece f_bishop = create_piece(PieceType::Bishop, turn);
+        Piece f_queen = create_piece(PieceType::Queen, turn);
 
-        // Piece o_king = create_piece(PieceType::King, op);
-        // Piece o_pawn = create_piece(PieceType::Pawn, op);
-        // Piece o_rook = create_piece(PieceType::Rook, op);
-        // Piece o_knight = create_piece(PieceType::Knight, op);
-        // Piece o_bishop = create_piece(PieceType::Bishop, op);
-        // Piece o_queen = create_piece(PieceType::Queen, op);
+        Piece o_king = create_piece(PieceType::King, op);
+        Piece o_pawn = create_piece(PieceType::Pawn, op);
+        Piece o_rook = create_piece(PieceType::Rook, op);
+        Piece o_knight = create_piece(PieceType::Knight, op);
+        Piece o_bishop = create_piece(PieceType::Bishop, op);
+        Piece o_queen = create_piece(PieceType::Queen, op);
 
-        // MoveGen generator;
-        // generator.friends = board.bitboard(turn);
-        // generator.enemies = board.bitboard(op);
-        // generator.all = generator.friends | generator.enemies;
+        MoveGen generator;
+        generator.friends = board.bitboard(turn);
+        generator.enemies = board.bitboard(op);
+        generator.all = generator.friends | generator.enemies;
 
-        // generator.f_king = board.bitboard(f_king);
-        // generator.f_pawn = board.bitboard(f_pawn);
-        // generator.f_rook = board.bitboard(f_rook);
-        // generator.f_knight = board.bitboard(f_knight);
-        // generator.f_bishop = board.bitboard(f_bishop);
-        // generator.f_queen = board.bitboard(f_queen);
+        generator.f_king = board.bitboard(f_king);
+        generator.f_pawn = board.bitboard(f_pawn);
+        generator.f_rook = board.bitboard(f_rook);
+        generator.f_knight = board.bitboard(f_knight);
+        generator.f_bishop = board.bitboard(f_bishop);
+        generator.f_queen = board.bitboard(f_queen);
 
-        // generator.o_king = board.bitboard(o_king);
-        // generator.o_pawn = board.bitboard(o_pawn);
-        // generator.o_rook = board.bitboard(o_rook);
-        // generator.o_knight = board.bitboard(o_knight);
-        // generator.o_bishop = board.bitboard(o_bishop);
-        // generator.o_queen = board.bitboard(o_queen);
+        generator.o_king = board.bitboard(o_king);
+        generator.o_pawn = board.bitboard(o_pawn);
+        generator.o_rook = board.bitboard(o_rook);
+        generator.o_knight = board.bitboard(o_knight);
+        generator.o_bishop = board.bitboard(o_bishop);
+        generator.o_queen = board.bitboard(o_queen);
 
-        // generator.ep = 1ULL << ep_dst;
-        // generator.turn = turn;
+        generator.ep = SQUARES[ep_dst];
+        generator.turn = turn;
 
-        // moves.clear();
-        // check = generator.generate(moves);
+        moves.clear();
+        check = generator.generate(moves);
     }
 } // namespace Brainiac

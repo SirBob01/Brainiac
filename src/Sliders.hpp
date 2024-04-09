@@ -105,8 +105,8 @@ namespace Brainiac {
         for (unsigned i = 0; i < bitcount; i++) {
             unsigned shift = find_lsb_bitboard(mask);
             mask &= (mask - 1ULL);
-            if (index & (1ULL << i)) {
-                occupancy |= (1ULL << shift);
+            if (index & (SQUARES[i])) {
+                occupancy |= SQUARES[shift];
             }
         }
         return occupancy;
@@ -180,7 +180,7 @@ namespace Brainiac {
     constexpr std::array<SlidingMoveTable, 64> init_rook_tables() {
         std::array<SlidingMoveTable, 64> result = {};
         for (unsigned i = 0; i < 64; i++) {
-            Bitboard bitboard = 1ULL << i;
+            Bitboard bitboard = SQUARES[i];
 
             Bitboard rank_mask = SQUARE_RANKS[i] & ~(FILES[0] | FILES[7]);
             Bitboard file_mask = SQUARE_FILES[i] & ~(RANKS[0] | RANKS[7]);
@@ -206,7 +206,7 @@ namespace Brainiac {
     constexpr std::array<SlidingMoveTable, 64> init_bishop_tables() {
         std::array<SlidingMoveTable, 64> result = {};
         for (int i = 0; i < 64; i++) {
-            Bitboard bitboard = 1ULL << i;
+            Bitboard bitboard = SQUARES[i];
 
             Bitboard diagonal_mask = SQUARE_DIAGONALS[i];
             Bitboard antidiag_mask = SQUARE_ANTI_DIAGONALS[i];

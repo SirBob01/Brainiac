@@ -544,4 +544,31 @@ namespace Brainiac {
      * @return Bitboard
      */
     Bitboard queen_attacks(Square sq, Bitboard friends, Bitboard enemies);
+
+    struct MoveGen {
+        Bitboard friends;
+        Bitboard enemies;
+        Bitboard all;
+
+        Bitboard f_king;
+        Bitboard f_pawn;
+        Bitboard f_rook;
+        Bitboard f_knight;
+        Bitboard f_bishop;
+        Bitboard f_queen;
+
+        Bitboard o_king;
+        Bitboard o_pawn;
+        Bitboard o_rook;
+        Bitboard o_knight;
+        Bitboard o_bishop;
+        Bitboard o_queen;
+
+        Bitboard ep;
+        Color turn;
+
+        Bitboard attackmask();
+
+        bool generate(MoveList &moves);
+    };
 } // namespace Brainiac

@@ -1,4 +1,5 @@
 #include "MoveGen.hpp"
+#include "Bitboard.hpp"
 
 namespace Brainiac {
     Bitboard king_attacks(Square sq) { return KING_MOVE_MASKS[sq]; }
@@ -48,5 +49,50 @@ namespace Brainiac {
 
         return (r_table.move_masks[r_index] | b_table.move_masks[b_index]) &
                ~friends;
+    }
+
+    Bitboard MoveGen::attackmask() {
+        Bitboard mask = king_attacks(find_lsb_bitboard(o_king));
+
+        Bitboard pawns = o_pawn;
+        while (pawns) {
+            Square sq = find_lsb_bitboard(pawns);
+            mask |= pawn_captures(sq, static_cast<Color>(!turn));
+            pawns = pop_lsb_bitboard(pawns);
+        }
+
+        Bitboard knights = o_knight;
+        while (knights) {
+            Square sq = find_lsb_bitboard(knights);
+            mask |= knight_attacks(sq);
+            knights = pop_lsb_bitboard(knights);
+        }
+
+        Bitboard bishops = o_bishop;
+        while (bishops) {
+            Square sq = find_lsb_bitboard(bishops);
+            mask |= bishop_attacks(sq, enemies, friends);
+            bishops = pop_lsb_bitboard(bishops);
+        }
+
+        Bitboard rooks = o_rook;
+        while (rooks) {
+            Square sq = find_lsb_bitboard(rooks);
+            mask |= rook_attacks(sq, enemies, friends);
+            rooks = pop_lsb_bitboard(rooks);
+        }
+
+        Bitboard queens = o_queen;
+        while (queens) {
+            Square sq = find_lsb_bitboard(queens);
+            mask |= queen_attacks(sq, enemies, friends);
+            queens = pop_lsb_bitboard(queens);
+        }
+        return mask & ~enemies;
+    }
+
+    bool MoveGen::generate(MoveList &list) {
+        Bitboard attacks = attackmask();
+        return attacks & f_king;
     }
 } // namespace Brainiac
