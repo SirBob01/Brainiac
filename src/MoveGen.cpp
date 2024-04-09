@@ -1,4 +1,5 @@
 #include "MoveGen.hpp"
+#include "Bitboard.hpp"
 
 namespace Brainiac {
     Bitboard king_attacks(Square sq) { return KING_MOVE_MASKS[sq]; }
@@ -116,13 +117,11 @@ namespace Brainiac {
 
     Bitboard MoveGen::compute_checkmask() {
         Square sq = find_lsb_bitboard(f_king);
-        Bitboard king_horizontal = SQUARE_RANKS[sq];
-        Bitboard king_vertical = SQUARE_FILES[sq];
-        Bitboard king_diagonal = SQUARE_DIAGONALS[sq];
-        Bitboard king_anti_diagonal = SQUARE_ANTI_DIAGONALS[sq];
-
-        Bitboard king_hv_slider = rook_attacks(sq, friends, enemies);
-        Bitboard king_d12_slider = bishop_attacks(sq, friends, enemies);
+        Bitboard king_slider = queen_attacks(sq, friends, enemies);
+        Bitboard king_h = SQUARE_RANKS[sq];
+        Bitboard king_v = SQUARE_FILES[sq];
+        Bitboard king_d1 = SQUARE_DIAGONALS[sq];
+        Bitboard king_d2 = SQUARE_ANTI_DIAGONALS[sq];
 
         Bitboard h_mask =
             o_rook | o_rook_h_attacks | o_queen | o_queen_h_attacks;
@@ -138,13 +137,14 @@ namespace Brainiac {
             // Knight
             (knight_attacks(sq) & o_knight) |
             // HV sliders
-            (king_hv_slider & king_horizontal & h_mask) |
-            (king_hv_slider & king_vertical & v_mask) |
+            (king_slider & king_h & h_mask) | (king_slider & king_v & v_mask) |
             // D12 sliders
-            (king_d12_slider & king_diagonal & d1_mask) |
-            (king_d12_slider & king_anti_diagonal & d2_mask);
+            (king_slider & king_d1 & d1_mask) |
+            (king_slider & king_d2 & d2_mask);
         return mask;
     }
+
+    Bitboard MoveGen::compute_pinmask() { return 0; }
 
     void MoveGen::generate_king_moves(MoveList &moves, Bitboard checkmask) {}
     void MoveGen::generate_pawn_moves(MoveList &moves, Bitboard checkmask) {}
@@ -155,8 +155,13 @@ namespace Brainiac {
 
     bool MoveGen::generate(MoveList &moves) {
         Bitboard attackmask = compute_attackmask();
+        Bitboard pinmask = compute_pinmask();
+
         bool check = attackmask & f_king;
         Bitboard checkmask = check ? compute_checkmask() : -1;
+        print_bitboard(pinmask);
+        print_bitboard(checkmask);
+        print_bitboard(attackmask);
 
         generate_king_moves(moves, checkmask);
         generate_pawn_moves(moves, checkmask);

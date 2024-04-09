@@ -345,6 +345,13 @@ namespace Brainiac {
          */
         Bitboard compute_checkmask();
 
+        /**
+         * @brief Compute the pinmask.
+         *
+         * @return Bitboard
+         */
+        Bitboard compute_pinmask();
+
         void generate_king_moves(MoveList &moves, Bitboard checkmask);
         void generate_pawn_moves(MoveList &moves, Bitboard checkmask);
         void generate_rook_moves(MoveList &moves, Bitboard checkmask);
