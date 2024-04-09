@@ -312,10 +312,45 @@ namespace Brainiac {
         Bitboard o_bishop;
         Bitboard o_queen;
 
+        Bitboard o_king_attacks;
+        Bitboard o_pawn_attacks;
+        Bitboard o_knight_attacks;
+
+        Bitboard o_rook_h_attacks;
+        Bitboard o_rook_v_attacks;
+
+        Bitboard o_bishop_d1_attacks;
+        Bitboard o_bishop_d2_attacks;
+
+        Bitboard o_queen_h_attacks;
+        Bitboard o_queen_v_attacks;
+        Bitboard o_queen_d1_attacks;
+        Bitboard o_queen_d2_attacks;
+
         Bitboard ep;
         Color turn;
 
-        Bitboard attackmask();
+        /**
+         * @brief Compute the attackmask of the opponent.
+         *
+         * @return Bitboard
+         */
+        Bitboard compute_attackmask();
+
+        /**
+         * @brief Compute the checkmask, which is the path from any opponent
+         * piece to the friendly king.
+         *
+         * @return Bitboard
+         */
+        Bitboard compute_checkmask();
+
+        void generate_king_moves(MoveList &moves, Bitboard checkmask);
+        void generate_pawn_moves(MoveList &moves, Bitboard checkmask);
+        void generate_rook_moves(MoveList &moves, Bitboard checkmask);
+        void generate_knight_moves(MoveList &moves, Bitboard checkmask);
+        void generate_bishop_moves(MoveList &moves, Bitboard checkmask);
+        void generate_queen_moves(MoveList &moves, Bitboard checkmask);
 
         bool generate(MoveList &moves);
     };
