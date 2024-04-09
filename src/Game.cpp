@@ -69,7 +69,7 @@ namespace Brainiac {
             state.castling &= ~(king_side | queen_side);
         }
         case Piece::WhiteRook: {
-            Bitboard rook_mask = SQUARES[src_sq];
+            Bitboard rook_mask = 1ULL << src_sq;
 
             uint8_t king_mask =
                 -static_cast<bool>(rook_mask & FILES[7] & RANKS[0]);
@@ -83,7 +83,7 @@ namespace Brainiac {
             break;
         }
         case Piece::BlackRook: {
-            Bitboard rook_mask = SQUARES[src_sq];
+            Bitboard rook_mask = 1ULL << src_sq;
 
             uint8_t king_mask =
                 -static_cast<bool>(rook_mask & FILES[7] & RANKS[7]);
@@ -103,7 +103,7 @@ namespace Brainiac {
         // Clear opponent castling rights if pieces were captured
         switch (dst_piece) {
         case Piece::WhiteRook: {
-            Bitboard rook_mask = SQUARES[src_sq];
+            Bitboard rook_mask = 1ULL << src_sq;
 
             uint8_t king_mask =
                 -static_cast<bool>(rook_mask & FILES[7] & RANKS[0]);
@@ -117,7 +117,7 @@ namespace Brainiac {
             break;
         }
         case Piece::BlackRook: {
-            Bitboard rook_mask = SQUARES[src_sq];
+            Bitboard rook_mask = 1ULL << src_sq;
 
             uint8_t king_mask =
                 -static_cast<bool>(rook_mask & FILES[7] & RANKS[7]);
