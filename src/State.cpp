@@ -131,6 +131,7 @@ namespace Brainiac {
 
         generator.ep = SQUARES[ep_dst];
         generator.turn = turn;
+        generator.castling = castling;
 
         moves.clear();
         check = generator.generate(moves);

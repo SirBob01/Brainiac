@@ -314,6 +314,7 @@ namespace Brainiac {
 
         Bitboard ep;
         Color turn;
+        CastlingFlagSet castling;
 
         /**
          * @brief Generate the moves and add them to the move list. Returns true
@@ -349,6 +350,8 @@ namespace Brainiac {
         Bitboard pinmask_d2;
         Bitboard pinmask;
 
+        bool check;
+
         /**
          * @brief Compute the attackmask of the opponent.
          *
@@ -365,9 +368,8 @@ namespace Brainiac {
          * @brief Compute the checkmask, which is the path from any opponent
          * piece to the friendly king.
          *
-         * @param check
          */
-        void compute_checkmask(bool check);
+        void compute_checkmask();
 
         /**
          * @brief Generate king moves.
