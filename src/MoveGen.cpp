@@ -116,9 +116,9 @@ namespace Brainiac {
             ~enemies;
     }
 
-    void MoveGen::compute_checkmask() {
+    void MoveGen::compute_checkmask(bool check) {
         checkmask = -1;
-        if (attackmask & f_king) {
+        if (check) {
             Square sq = find_lsb_bitboard(f_king);
             Bitboard king_slider = queen_attacks(sq, friends, enemies);
             Bitboard king_h = SQUARE_RANKS[sq];
@@ -234,7 +234,7 @@ namespace Brainiac {
     }
 
     void MoveGen::generate_pawn_moves(MoveList &moves) {}
-    void MoveGen::generate_rook_moves(MoveList &moves) {}
+
     void MoveGen::generate_knight_moves(MoveList &moves) {
         Bitboard knights = f_knight & ~pinmask;
         while (knights) {
@@ -260,21 +260,28 @@ namespace Brainiac {
             knights = pop_lsb_bitboard(knights);
         }
     }
+
+    void MoveGen::generate_rook_moves(MoveList &moves) {}
+
     void MoveGen::generate_bishop_moves(MoveList &moves) {}
+
     void MoveGen::generate_queen_moves(MoveList &moves) {}
 
     bool MoveGen::generate(MoveList &moves) {
         compute_attackmask();
-        compute_checkmask();
+        bool check = attackmask & f_king;
+        compute_checkmask(check);
         compute_pinmasks();
 
+        // Only generate the remaining moves if not double-checked
         generate_king_moves(moves);
-        generate_pawn_moves(moves);
-        generate_rook_moves(moves);
-        generate_knight_moves(moves);
-        generate_bishop_moves(moves);
-        generate_queen_moves(moves);
-
-        return attackmask & f_king;
+        if (!check || count_set_bitboard(checkmask & enemies) < 2) {
+            generate_pawn_moves(moves);
+            generate_rook_moves(moves);
+            generate_knight_moves(moves);
+            generate_bishop_moves(moves);
+            generate_queen_moves(moves);
+        }
+        return check;
     }
 } // namespace Brainiac
