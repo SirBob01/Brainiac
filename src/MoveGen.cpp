@@ -1,4 +1,5 @@
 #include "MoveGen.hpp"
+#include "Bitboard.hpp"
 
 namespace Brainiac {
     Bitboard king_attacks(Square sq) { return KING_MOVE_MASKS[sq]; }
@@ -147,7 +148,44 @@ namespace Brainiac {
         }
     }
 
-    void MoveGen::compute_pinmask() { pinmask = 0; }
+    void MoveGen::compute_pinmasks() {
+        Square sq = find_lsb_bitboard(f_king);
+        Bitboard king_slider = queen_attacks(sq, 0, enemies);
+        std::array<Bitboard, 8> pinmasks = {
+            SQUARE_NORTH_RAY[sq] & king_slider,
+            SQUARE_SOUTH_RAY[sq] & king_slider,
+            SQUARE_EAST_RAY[sq] & king_slider,
+            SQUARE_WEST_RAY[sq] & king_slider,
+
+            SQUARE_NORTHEAST_RAY[sq] & king_slider,
+            SQUARE_SOUTHWEST_RAY[sq] & king_slider,
+            SQUARE_NORTHWEST_RAY[sq] & king_slider,
+            SQUARE_SOUTHEAST_RAY[sq] & king_slider,
+        };
+
+        Bitboard attacks_hv = o_rook_h_attacks | o_rook_v_attacks |
+                              o_queen_h_attacks | o_queen_v_attacks;
+        Bitboard attacks_d12 = o_bishop_d1_attacks | o_bishop_d2_attacks |
+                               o_queen_d1_attacks | o_queen_d2_attacks;
+
+        for (unsigned i = 0; i < 4; i++) {
+            if (!(pinmasks[i] & attacks_hv) ||
+                pop_lsb_bitboard(pinmasks[i] & friends)) {
+                pinmasks[i] = 0;
+            }
+        }
+        for (unsigned i = 4; i < 8; i++) {
+            if (!(pinmasks[i] & attacks_d12) ||
+                pop_lsb_bitboard(pinmasks[i] & friends)) {
+                pinmasks[i] = 0;
+            }
+        }
+
+        pinmask_h = pinmasks[2] | pinmasks[3];
+        pinmask_v = pinmasks[0] | pinmasks[1];
+        pinmask_d1 = pinmasks[4] | pinmasks[5];
+        pinmask_d2 = pinmasks[6] | pinmasks[7];
+    }
 
     void MoveGen::generate_king_moves(MoveList &moves) {}
     void MoveGen::generate_pawn_moves(MoveList &moves) {}
@@ -158,8 +196,8 @@ namespace Brainiac {
 
     bool MoveGen::generate(MoveList &moves) {
         compute_attackmask();
-        compute_pinmask();
         compute_checkmask();
+        compute_pinmasks();
 
         generate_king_moves(moves);
         generate_pawn_moves(moves);
@@ -167,8 +205,6 @@ namespace Brainiac {
         generate_knight_moves(moves);
         generate_bishop_moves(moves);
         generate_queen_moves(moves);
-
-        print_bitboard(pinmask);
 
         return attackmask & f_king;
     }

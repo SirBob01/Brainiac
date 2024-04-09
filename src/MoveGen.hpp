@@ -342,8 +342,11 @@ namespace Brainiac {
         Bitboard o_queen_d2_attacks;
 
         Bitboard attackmask;
-        Bitboard pinmask;
         Bitboard checkmask;
+        Bitboard pinmask_h;
+        Bitboard pinmask_v;
+        Bitboard pinmask_d1;
+        Bitboard pinmask_d2;
 
         /**
          * @brief Compute the attackmask of the opponent.
@@ -355,7 +358,7 @@ namespace Brainiac {
          * @brief Compute the pinmask.
          *
          */
-        void compute_pinmask();
+        void compute_pinmasks();
 
         /**
          * @brief Compute the checkmask, which is the path from any opponent
