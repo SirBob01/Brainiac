@@ -161,16 +161,14 @@ namespace Brainiac {
         compute_pinmask();
         compute_checkmask();
 
-        print_bitboard(pinmask);
-        print_bitboard(checkmask);
-        print_bitboard(attackmask);
-
         generate_king_moves(moves);
         generate_pawn_moves(moves);
         generate_rook_moves(moves);
         generate_knight_moves(moves);
         generate_bishop_moves(moves);
         generate_queen_moves(moves);
+
+        print_bitboard(pinmask);
 
         return attackmask & f_king;
     }

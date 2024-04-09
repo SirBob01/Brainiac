@@ -315,6 +315,17 @@ namespace Brainiac {
         Bitboard ep;
         Color turn;
 
+        /**
+         * @brief Generate the moves and add them to the move list. Returns true
+         * if king is check.
+         *
+         * @param moves
+         * @return true
+         * @return false
+         */
+        bool generate(MoveList &moves);
+
+      private:
         Bitboard o_king_attacks;
         Bitboard o_pawn_attacks;
         Bitboard o_knight_attacks;
@@ -337,14 +348,12 @@ namespace Brainiac {
         /**
          * @brief Compute the attackmask of the opponent.
          *
-         * @return
          */
         void compute_attackmask();
 
         /**
          * @brief Compute the pinmask.
          *
-         * @return
          */
         void compute_pinmask();
 
@@ -352,17 +361,49 @@ namespace Brainiac {
          * @brief Compute the checkmask, which is the path from any opponent
          * piece to the friendly king.
          *
-         * @return
          */
         void compute_checkmask();
 
+        /**
+         * @brief Generate king moves.
+         *
+         * @param moves
+         */
         void generate_king_moves(MoveList &moves);
-        void generate_pawn_moves(MoveList &moves);
-        void generate_rook_moves(MoveList &moves);
-        void generate_knight_moves(MoveList &moves);
-        void generate_bishop_moves(MoveList &moves);
-        void generate_queen_moves(MoveList &moves);
 
-        bool generate(MoveList &moves);
+        /**
+         * @brief Generate pawn moves.
+         *
+         * @param moves
+         */
+        void generate_pawn_moves(MoveList &moves);
+
+        /**
+         * @brief Generate rook moves.
+         *
+         * @param moves
+         */
+        void generate_rook_moves(MoveList &moves);
+
+        /**
+         * @brief Generate knight moves.
+         *
+         * @param moves
+         */
+        void generate_knight_moves(MoveList &moves);
+
+        /**
+         * @brief Generate bishop moves.
+         *
+         * @param moves
+         */
+        void generate_bishop_moves(MoveList &moves);
+
+        /**
+         * @brief Generate queen moves.
+         *
+         * @param moves
+         */
+        void generate_queen_moves(MoveList &moves);
     };
 } // namespace Brainiac
