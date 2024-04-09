@@ -312,6 +312,9 @@ namespace Brainiac {
         Bitboard o_bishop;
         Bitboard o_queen;
 
+        Bitboard ep;
+        Color turn;
+
         Bitboard o_king_attacks;
         Bitboard o_pawn_attacks;
         Bitboard o_knight_attacks;
@@ -327,37 +330,38 @@ namespace Brainiac {
         Bitboard o_queen_d1_attacks;
         Bitboard o_queen_d2_attacks;
 
-        Bitboard ep;
-        Color turn;
+        Bitboard attackmask;
+        Bitboard pinmask;
+        Bitboard checkmask;
 
         /**
          * @brief Compute the attackmask of the opponent.
          *
-         * @return Bitboard
+         * @return
          */
-        Bitboard compute_attackmask();
+        void compute_attackmask();
+
+        /**
+         * @brief Compute the pinmask.
+         *
+         * @return
+         */
+        void compute_pinmask();
 
         /**
          * @brief Compute the checkmask, which is the path from any opponent
          * piece to the friendly king.
          *
-         * @return Bitboard
+         * @return
          */
-        Bitboard compute_checkmask();
+        void compute_checkmask();
 
-        /**
-         * @brief Compute the pinmask.
-         *
-         * @return Bitboard
-         */
-        Bitboard compute_pinmask();
-
-        void generate_king_moves(MoveList &moves, Bitboard checkmask);
-        void generate_pawn_moves(MoveList &moves, Bitboard checkmask);
-        void generate_rook_moves(MoveList &moves, Bitboard checkmask);
-        void generate_knight_moves(MoveList &moves, Bitboard checkmask);
-        void generate_bishop_moves(MoveList &moves, Bitboard checkmask);
-        void generate_queen_moves(MoveList &moves, Bitboard checkmask);
+        void generate_king_moves(MoveList &moves);
+        void generate_pawn_moves(MoveList &moves);
+        void generate_rook_moves(MoveList &moves);
+        void generate_knight_moves(MoveList &moves);
+        void generate_bishop_moves(MoveList &moves);
+        void generate_queen_moves(MoveList &moves);
 
         bool generate(MoveList &moves);
     };

@@ -1,5 +1,4 @@
 #include "MoveGen.hpp"
-#include "Bitboard.hpp"
 
 namespace Brainiac {
     Bitboard king_attacks(Square sq) { return KING_MOVE_MASKS[sq]; }
@@ -51,7 +50,7 @@ namespace Brainiac {
                ~friends;
     }
 
-    Bitboard MoveGen::compute_attackmask() {
+    void MoveGen::compute_attackmask() {
         Color op = static_cast<Color>(!turn);
         o_king_attacks = king_attacks(find_lsb_bitboard(o_king));
 
@@ -108,68 +107,71 @@ namespace Brainiac {
             queens = pop_lsb_bitboard(queens);
         }
 
-        return (o_king_attacks | o_pawn_attacks | o_knight_attacks |
-                o_rook_h_attacks | o_rook_v_attacks | o_bishop_d1_attacks |
-                o_bishop_d2_attacks | o_queen_h_attacks | o_queen_v_attacks |
-                o_queen_d1_attacks | o_queen_d2_attacks) &
-               ~enemies;
+        attackmask =
+            (o_king_attacks | o_pawn_attacks | o_knight_attacks |
+             o_rook_h_attacks | o_rook_v_attacks | o_bishop_d1_attacks |
+             o_bishop_d2_attacks | o_queen_h_attacks | o_queen_v_attacks |
+             o_queen_d1_attacks | o_queen_d2_attacks) &
+            ~enemies;
     }
 
-    Bitboard MoveGen::compute_checkmask() {
-        Square sq = find_lsb_bitboard(f_king);
-        Bitboard king_slider = queen_attacks(sq, friends, enemies);
-        Bitboard king_h = SQUARE_RANKS[sq];
-        Bitboard king_v = SQUARE_FILES[sq];
-        Bitboard king_d1 = SQUARE_DIAGONALS[sq];
-        Bitboard king_d2 = SQUARE_ANTI_DIAGONALS[sq];
+    void MoveGen::compute_checkmask() {
+        checkmask = -1;
+        if (attackmask & f_king) {
+            Square sq = find_lsb_bitboard(f_king);
+            Bitboard king_slider = queen_attacks(sq, friends, enemies);
+            Bitboard king_h = SQUARE_RANKS[sq];
+            Bitboard king_v = SQUARE_FILES[sq];
+            Bitboard king_d1 = SQUARE_DIAGONALS[sq];
+            Bitboard king_d2 = SQUARE_ANTI_DIAGONALS[sq];
 
-        Bitboard h_mask =
-            o_rook | o_rook_h_attacks | o_queen | o_queen_h_attacks;
-        Bitboard v_mask =
-            o_rook | o_rook_v_attacks | o_queen | o_queen_v_attacks;
-        Bitboard d1_mask =
-            o_bishop | o_bishop_d1_attacks | o_queen | o_queen_d1_attacks;
-        Bitboard d2_mask =
-            o_bishop | o_bishop_d2_attacks | o_queen | o_queen_d2_attacks;
-        Bitboard mask =
-            // Pawn
-            (pawn_captures(sq, turn) & o_pawn) |
-            // Knight
-            (knight_attacks(sq) & o_knight) |
-            // HV sliders
-            (king_slider & king_h & h_mask) | (king_slider & king_v & v_mask) |
-            // D12 sliders
-            (king_slider & king_d1 & d1_mask) |
-            (king_slider & king_d2 & d2_mask);
-        return mask;
+            Bitboard h_mask =
+                o_rook | o_rook_h_attacks | o_queen | o_queen_h_attacks;
+            Bitboard v_mask =
+                o_rook | o_rook_v_attacks | o_queen | o_queen_v_attacks;
+            Bitboard d1_mask =
+                o_bishop | o_bishop_d1_attacks | o_queen | o_queen_d1_attacks;
+            Bitboard d2_mask =
+                o_bishop | o_bishop_d2_attacks | o_queen | o_queen_d2_attacks;
+            checkmask =
+                // Pawn
+                (pawn_captures(sq, turn) & o_pawn) |
+                // Knight
+                (knight_attacks(sq) & o_knight) |
+                // HV sliders
+                (king_slider & king_h & h_mask) |
+                (king_slider & king_v & v_mask) |
+                // D12 sliders
+                (king_slider & king_d1 & d1_mask) |
+                (king_slider & king_d2 & d2_mask);
+        }
     }
 
-    Bitboard MoveGen::compute_pinmask() { return 0; }
+    void MoveGen::compute_pinmask() { pinmask = 0; }
 
-    void MoveGen::generate_king_moves(MoveList &moves, Bitboard checkmask) {}
-    void MoveGen::generate_pawn_moves(MoveList &moves, Bitboard checkmask) {}
-    void MoveGen::generate_rook_moves(MoveList &moves, Bitboard checkmask) {}
-    void MoveGen::generate_knight_moves(MoveList &moves, Bitboard checkmask) {}
-    void MoveGen::generate_bishop_moves(MoveList &moves, Bitboard checkmask) {}
-    void MoveGen::generate_queen_moves(MoveList &moves, Bitboard checkmask) {}
+    void MoveGen::generate_king_moves(MoveList &moves) {}
+    void MoveGen::generate_pawn_moves(MoveList &moves) {}
+    void MoveGen::generate_rook_moves(MoveList &moves) {}
+    void MoveGen::generate_knight_moves(MoveList &moves) {}
+    void MoveGen::generate_bishop_moves(MoveList &moves) {}
+    void MoveGen::generate_queen_moves(MoveList &moves) {}
 
     bool MoveGen::generate(MoveList &moves) {
-        Bitboard attackmask = compute_attackmask();
-        Bitboard pinmask = compute_pinmask();
+        compute_attackmask();
+        compute_pinmask();
+        compute_checkmask();
 
-        bool check = attackmask & f_king;
-        Bitboard checkmask = check ? compute_checkmask() : -1;
         print_bitboard(pinmask);
         print_bitboard(checkmask);
         print_bitboard(attackmask);
 
-        generate_king_moves(moves, checkmask);
-        generate_pawn_moves(moves, checkmask);
-        generate_rook_moves(moves, checkmask);
-        generate_knight_moves(moves, checkmask);
-        generate_bishop_moves(moves, checkmask);
-        generate_queen_moves(moves, checkmask);
+        generate_king_moves(moves);
+        generate_pawn_moves(moves);
+        generate_rook_moves(moves);
+        generate_knight_moves(moves);
+        generate_bishop_moves(moves);
+        generate_queen_moves(moves);
 
-        return check;
+        return attackmask & f_king;
     }
 } // namespace Brainiac
