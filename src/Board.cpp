@@ -16,7 +16,7 @@ namespace Brainiac {
 
     void Board::set(Square sq, Piece piece) {
         Piece prev_piece = get(sq);
-        Bitboard set_mask = 1ULL << sq;
+        Bitboard set_mask = SQUARES[sq];
         Bitboard clear_mask = ~set_mask;
 
         // Clear previous piece bitboards
@@ -33,7 +33,7 @@ namespace Brainiac {
 
     void Board::clear(Square sq) {
         Piece piece = get(sq);
-        Bitboard mask = ~(1ULL << sq);
+        Bitboard mask = ~SQUARES[sq];
 
         _bitboards[13 + (piece >= 6)] &= mask;
         _bitboards[piece] &= mask;
