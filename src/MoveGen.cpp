@@ -163,22 +163,18 @@ namespace Brainiac {
             SQUARE_SOUTHEAST_RAY[sq] & king_slider,
         };
 
-        Bitboard attacks_hv = o_rook_h_attacks | o_rook_v_attacks |
-                              o_queen_h_attacks | o_queen_v_attacks;
-        Bitboard attacks_d12 = o_bishop_d1_attacks | o_bishop_d2_attacks |
-                               o_queen_d1_attacks | o_queen_d2_attacks;
-
+        Bitboard o_hv = o_rook | o_queen;
         for (unsigned i = 0; i < 4; i++) {
-            if (!(pinmasks[i] & attacks_hv) ||
-                pop_lsb_bitboard(pinmasks[i] & friends)) {
-                pinmasks[i] = 0;
-            }
+            bool pin = (pinmasks[i] & o_hv) &&
+                       !pop_lsb_bitboard(pinmasks[i] & friends);
+            pinmasks[i] &= -pin;
         }
+
+        Bitboard o_d12 = o_bishop | o_queen;
         for (unsigned i = 4; i < 8; i++) {
-            if (!(pinmasks[i] & attacks_d12) ||
-                pop_lsb_bitboard(pinmasks[i] & friends)) {
-                pinmasks[i] = 0;
-            }
+            bool pin = (pinmasks[i] & o_d12) &&
+                       !pop_lsb_bitboard(pinmasks[i] & friends);
+            pinmasks[i] &= -pin;
         }
 
         pinmask_h = pinmasks[2] | pinmasks[3];
@@ -231,6 +227,8 @@ namespace Brainiac {
             moves.add(src_sq, dst_sq, MoveType::Capture);
             captures = pop_lsb_bitboard(captures);
         }
+
+        // TODO: Castling
     }
 
     void MoveGen::generate_pawn_moves(MoveList &moves) {}
