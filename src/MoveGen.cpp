@@ -247,7 +247,122 @@ namespace Brainiac {
         }
     }
 
-    void MoveGen::generate_pawn_moves(MoveList &moves) {}
+    void MoveGen::generate_pawn_moves(MoveList &moves) {
+        Bitboard pinmask_d12 = pinmask_d1 | pinmask_d2;
+        Bitboard promo_ranks = RANKS[0] | RANKS[7];
+
+        Bitboard pawns_pinned = f_pawn & pinmask;
+        while (pawns_pinned) {
+            Square src_sq = find_lsb_bitboard(pawns_pinned);
+
+            Bitboard advances =
+                pawn_advances(src_sq, turn) & checkmask & pinmask_v & ~all;
+            Bitboard advances_only = advances & ~promo_ranks;
+            Bitboard advances_promo = advances & promo_ranks;
+            while (advances_only) {
+                Square dst_sq = find_lsb_bitboard(advances_only);
+                moves.add(src_sq, dst_sq, MoveType::Quiet);
+                advances_only = pop_lsb_bitboard(advances_only);
+            }
+            while (advances_promo) {
+                Square dst_sq = find_lsb_bitboard(advances_promo);
+                moves.add(src_sq, dst_sq, MoveType::KnightPromo);
+                moves.add(src_sq, dst_sq, MoveType::RookPromo);
+                moves.add(src_sq, dst_sq, MoveType::BishopPromo);
+                moves.add(src_sq, dst_sq, MoveType::QueenPromo);
+                advances_promo = pop_lsb_bitboard(advances_promo);
+            }
+
+            Bitboard doubles =
+                pawn_doubles(src_sq, turn) & checkmask & pinmask_v & ~all;
+            while (doubles) {
+                Square dst_sq = find_lsb_bitboard(doubles);
+                moves.add(src_sq, dst_sq, MoveType::PawnDouble);
+                doubles = pop_lsb_bitboard(doubles);
+            }
+
+            Bitboard captures =
+                pawn_captures(src_sq, turn) & checkmask & enemies & pinmask_d12;
+            Bitboard captures_only = captures & ~ep & ~promo_ranks;
+            Bitboard captures_ep = captures & ep;
+            Bitboard captures_promo = captures & promo_ranks;
+            while (captures_only) {
+                Square dst_sq = find_lsb_bitboard(captures_only);
+                moves.add(src_sq, dst_sq, MoveType::Capture);
+                captures_only = pop_lsb_bitboard(captures_only);
+            }
+            while (captures_ep) {
+                Square dst_sq = find_lsb_bitboard(captures_ep);
+                moves.add(src_sq, dst_sq, MoveType::EnPassant);
+                captures_ep = pop_lsb_bitboard(captures_ep);
+            }
+            while (captures_promo) {
+                Square dst_sq = find_lsb_bitboard(captures_promo);
+                moves.add(src_sq, dst_sq, MoveType::KnightPromoCapture);
+                moves.add(src_sq, dst_sq, MoveType::RookPromoCapture);
+                moves.add(src_sq, dst_sq, MoveType::BishopPromoCapture);
+                moves.add(src_sq, dst_sq, MoveType::QueenPromoCapture);
+                captures_promo = pop_lsb_bitboard(captures_promo);
+            }
+
+            pawns_pinned = pop_lsb_bitboard(pawns_pinned);
+        }
+
+        Bitboard pawns_unpinned = f_pawn & ~pinmask;
+        while (pawns_unpinned) {
+            Square src_sq = find_lsb_bitboard(pawns_unpinned);
+
+            Bitboard advances = pawn_advances(src_sq, turn) & checkmask & ~all;
+            Bitboard advances_only = advances & ~promo_ranks;
+            Bitboard advances_promo = advances & promo_ranks;
+            while (advances_only) {
+                Square dst_sq = find_lsb_bitboard(advances_only);
+                moves.add(src_sq, dst_sq, MoveType::Quiet);
+                advances_only = pop_lsb_bitboard(advances_only);
+            }
+            while (advances_promo) {
+                Square dst_sq = find_lsb_bitboard(advances_promo);
+                moves.add(src_sq, dst_sq, MoveType::KnightPromo);
+                moves.add(src_sq, dst_sq, MoveType::RookPromo);
+                moves.add(src_sq, dst_sq, MoveType::BishopPromo);
+                moves.add(src_sq, dst_sq, MoveType::QueenPromo);
+                advances_promo = pop_lsb_bitboard(advances_promo);
+            }
+
+            Bitboard doubles = pawn_doubles(src_sq, turn) & checkmask & ~all;
+            while (doubles) {
+                Square dst_sq = find_lsb_bitboard(doubles);
+                moves.add(src_sq, dst_sq, MoveType::PawnDouble);
+                doubles = pop_lsb_bitboard(doubles);
+            }
+
+            Bitboard captures =
+                pawn_captures(src_sq, turn) & enemies & checkmask;
+            Bitboard captures_only = captures & ~ep & ~promo_ranks;
+            Bitboard captures_ep = captures & ep;
+            Bitboard captures_promo = captures & promo_ranks;
+            while (captures_only) {
+                Square dst_sq = find_lsb_bitboard(captures_only);
+                moves.add(src_sq, dst_sq, MoveType::Capture);
+                captures_only = pop_lsb_bitboard(captures_only);
+            }
+            while (captures_ep) {
+                Square dst_sq = find_lsb_bitboard(captures_ep);
+                moves.add(src_sq, dst_sq, MoveType::EnPassant);
+                captures_ep = pop_lsb_bitboard(captures_ep);
+            }
+            while (captures_promo) {
+                Square dst_sq = find_lsb_bitboard(captures_promo);
+                moves.add(src_sq, dst_sq, MoveType::KnightPromoCapture);
+                moves.add(src_sq, dst_sq, MoveType::RookPromoCapture);
+                moves.add(src_sq, dst_sq, MoveType::BishopPromoCapture);
+                moves.add(src_sq, dst_sq, MoveType::QueenPromoCapture);
+                captures_promo = pop_lsb_bitboard(captures_promo);
+            }
+
+            pawns_unpinned = pop_lsb_bitboard(pawns_unpinned);
+        }
+    }
 
     void MoveGen::generate_knight_moves(MoveList &moves) {
         Bitboard knights = f_knight & ~pinmask;
