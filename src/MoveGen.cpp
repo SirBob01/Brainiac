@@ -232,15 +232,17 @@ namespace Brainiac {
         // King castling
         if (!check) {
             CastlingRight king_side = static_cast<CastlingRight>(2 * turn);
-            if ((castling & (1 << king_side)) &&
-                !(SQUARES[src_sq + 1] & attackmask)) {
+            Bitboard king_pass = CASTLING_MASKS[king_side];
+            if (!check && (castling & (1 << king_side)) &&
+                !(king_pass & attackmask) && !(king_pass & all)) {
                 Square dst_sq = static_cast<Square>(src_sq + 2);
                 moves.add(src_sq, dst_sq, MoveType::KingCastle);
             }
 
             CastlingRight queen_side = static_cast<CastlingRight>(2 * turn + 1);
-            if ((castling & (1 << queen_side)) &&
-                !(SQUARES[src_sq - 1] & attackmask)) {
+            Bitboard queen_pass = CASTLING_MASKS[queen_side];
+            if (!check && (castling & (1 << queen_side)) &&
+                !(queen_pass & attackmask) && !(queen_pass & all)) {
                 Square dst_sq = static_cast<Square>(src_sq - 2);
                 moves.add(src_sq, dst_sq, MoveType::QueenCastle);
             }
