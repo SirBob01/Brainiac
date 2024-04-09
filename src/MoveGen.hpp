@@ -221,6 +221,17 @@ namespace Brainiac {
     };
 
     /**
+     * @brief Castling masks.
+     *
+     */
+    constexpr std::array<Bitboard, 4> CASTLING_MASKS = {
+        0x0000000000000060,
+        0x000000000000000E,
+        0x6000000000000000,
+        0x0E00000000000000,
+    };
+
+    /**
      * @brief Compute king attack mask.
      *
      * @param sq
