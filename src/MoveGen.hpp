@@ -365,8 +365,9 @@ namespace Brainiac {
          * @brief Compute the checkmask, which is the path from any opponent
          * piece to the friendly king.
          *
+         * @param check
          */
-        void compute_checkmask();
+        void compute_checkmask(bool check);
 
         /**
          * @brief Generate king moves.
