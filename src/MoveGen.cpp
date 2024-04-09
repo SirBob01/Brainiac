@@ -1,6 +1,5 @@
 #include "MoveGen.hpp"
 #include "Bitboard.hpp"
-#include "Move.hpp"
 
 namespace Brainiac {
     Bitboard king_attacks(Square sq) { return KING_MOVE_MASKS[sq]; }
@@ -190,38 +189,59 @@ namespace Brainiac {
     }
 
     void MoveGen::generate_king_moves(MoveList &moves) {
-        // Square src_sq = find_lsb_bitboard(f_king);
-        // Bitboard all_no_king = friends & ~f_king;
-        // Bitboard o_bishops_king_danger = bishop_attacks()
-        // Bitboard king_dangermask = o_pawn_attacks | o_knight_attacks |
-        //                            o_king_attacks | o_bishops_king_danger |
-        //                            o_rooks_king_danger | o_queen_king_danger;
-        // Bitboard king_moves = king_attacks(src_sq) & ~(friends | attackmask);
+        Bitboard danger = o_pawn_attacks | o_knight_attacks | o_king_attacks;
+        Bitboard no_king = friends & ~f_king;
 
-        // Bitboard captures = king_moves & enemies;
-        // Bitboard quiet = king_moves & ~enemies;
-        // while (quiet) {
-        //     Square dst_sq = find_lsb_bitboard(quiet);
-        //     moves.add(src_sq, dst_sq, MoveType::Quiet);
-        //     quiet = pop_lsb_bitboard(quiet);
-        // }
-        // while (captures) {
-        //     Square dst_sq = find_lsb_bitboard(quiet);
-        //     moves.add(src_sq, dst_sq, MoveType::Capture);
-        //     captures = pop_lsb_bitboard(captures);
-        // }
+        Bitboard bishops = o_bishop;
+        while (bishops) {
+            Square sq = find_lsb_bitboard(bishops);
+            danger |= bishop_attacks(sq, 0, no_king);
+            bishops = pop_lsb_bitboard(bishops);
+        }
+
+        Bitboard rooks = o_rook;
+        while (bishops) {
+            Square sq = find_lsb_bitboard(rooks);
+            danger |= rook_attacks(sq, 0, no_king);
+            rooks = pop_lsb_bitboard(rooks);
+        }
+
+        Bitboard queens = o_queen;
+        while (queens) {
+            Square sq = find_lsb_bitboard(queens);
+            danger |= queen_attacks(sq, 0, no_king);
+            queens = pop_lsb_bitboard(queens);
+        }
+
+        Square src_sq = find_lsb_bitboard(f_king);
+        Bitboard targets = king_attacks(src_sq) & ~(friends | danger);
+
+        // King quiet
+        Bitboard quiet = targets & ~enemies;
+        while (quiet) {
+            Square dst_sq = find_lsb_bitboard(quiet);
+            moves.add(src_sq, dst_sq, MoveType::Quiet);
+            quiet = pop_lsb_bitboard(quiet);
+        }
+
+        // King captures
+        Bitboard captures = targets & enemies;
+        while (captures) {
+            Square dst_sq = find_lsb_bitboard(quiet);
+            moves.add(src_sq, dst_sq, MoveType::Capture);
+            captures = pop_lsb_bitboard(captures);
+        }
     }
 
     void MoveGen::generate_pawn_moves(MoveList &moves) {}
     void MoveGen::generate_rook_moves(MoveList &moves) {}
     void MoveGen::generate_knight_moves(MoveList &moves) {
-        Bitboard target_filter = ~friends & checkmask;
         Bitboard knights = f_knight & ~pinmask;
         while (knights) {
             Square src_sq = find_lsb_bitboard(knights);
-            Bitboard targets = knight_attacks(src_sq) & target_filter;
+            Bitboard targets = knight_attacks(src_sq) & (~friends & checkmask);
 
-            // Knight moves
+            // Knight quiet
             Bitboard quiet = targets & ~enemies;
             while (quiet) {
                 Square dst_sq = find_lsb_bitboard(quiet);
