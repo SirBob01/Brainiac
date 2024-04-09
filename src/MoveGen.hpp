@@ -347,6 +347,7 @@ namespace Brainiac {
         Bitboard pinmask_v;
         Bitboard pinmask_d1;
         Bitboard pinmask_d2;
+        Bitboard pinmask;
 
         /**
          * @brief Compute the attackmask of the opponent.
