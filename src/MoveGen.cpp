@@ -114,9 +114,10 @@ namespace Brainiac {
              o_bishop_d2_attacks | o_queen_h_attacks | o_queen_v_attacks |
              o_queen_d1_attacks | o_queen_d2_attacks) &
             ~enemies;
+        check = attackmask & f_king;
     }
 
-    void MoveGen::compute_checkmask(bool check) {
+    void MoveGen::compute_checkmask() {
         checkmask = -1;
         if (check) {
             Square sq = find_lsb_bitboard(f_king);
@@ -228,7 +229,22 @@ namespace Brainiac {
             captures = pop_lsb_bitboard(captures);
         }
 
-        // TODO: Castling
+        // King castling
+        if (!check) {
+            CastlingRight king_side = static_cast<CastlingRight>(2 * turn);
+            if ((castling & (1 << king_side)) &&
+                !(SQUARES[src_sq + 1] & attackmask)) {
+                Square dst_sq = static_cast<Square>(src_sq + 2);
+                moves.add(src_sq, dst_sq, MoveType::KingCastle);
+            }
+
+            CastlingRight queen_side = static_cast<CastlingRight>(2 * turn + 1);
+            if ((castling & (1 << queen_side)) &&
+                !(SQUARES[src_sq - 1] & attackmask)) {
+                Square dst_sq = static_cast<Square>(src_sq - 2);
+                moves.add(src_sq, dst_sq, MoveType::QueenCastle);
+            }
+        }
     }
 
     void MoveGen::generate_pawn_moves(MoveList &moves) {}
@@ -423,8 +439,7 @@ namespace Brainiac {
 
     bool MoveGen::generate(MoveList &moves) {
         compute_attackmask();
-        bool check = attackmask & f_king;
-        compute_checkmask(check);
+        compute_checkmask();
         compute_pinmasks();
 
         // Only generate the remaining moves if not double-checked
