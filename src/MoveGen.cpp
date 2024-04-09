@@ -261,11 +261,167 @@ namespace Brainiac {
         }
     }
 
-    void MoveGen::generate_rook_moves(MoveList &moves) {}
+    void MoveGen::generate_rook_moves(MoveList &moves) {
+        // Pinned rooks
+        Bitboard rooks_pinned = f_rook & pinmask;
+        while (rooks_pinned) {
+            Square src_sq = find_lsb_bitboard(rooks_pinned);
+            Bitboard targets =
+                rook_attacks(src_sq, friends, enemies) & checkmask & pinmask;
 
-    void MoveGen::generate_bishop_moves(MoveList &moves) {}
+            // Rook quiet
+            Bitboard quiet = targets & ~enemies;
+            while (quiet) {
+                Square dst_sq = find_lsb_bitboard(quiet);
+                moves.add(src_sq, dst_sq, MoveType::Quiet);
+                quiet = pop_lsb_bitboard(quiet);
+            }
 
-    void MoveGen::generate_queen_moves(MoveList &moves) {}
+            // Rook captures
+            Bitboard captures = targets & enemies;
+            while (captures) {
+                Square dst_sq = find_lsb_bitboard(captures);
+                moves.add(src_sq, dst_sq, MoveType::Capture);
+                captures = pop_lsb_bitboard(captures);
+            }
+
+            rooks_pinned = pop_lsb_bitboard(rooks_pinned);
+        }
+
+        // Unpinned rooks
+        Bitboard rooks_unpinned = f_rook & ~pinmask;
+        while (rooks_unpinned) {
+            Square src_sq = find_lsb_bitboard(rooks_unpinned);
+            Bitboard targets =
+                rook_attacks(src_sq, friends, enemies) & checkmask;
+
+            // Rook quiet
+            Bitboard quiet = targets & ~enemies;
+            while (quiet) {
+                Square dst_sq = find_lsb_bitboard(quiet);
+                moves.add(src_sq, dst_sq, MoveType::Quiet);
+                quiet = pop_lsb_bitboard(quiet);
+            }
+
+            // Rook captures
+            Bitboard captures = targets & enemies;
+            while (captures) {
+                Square dst_sq = find_lsb_bitboard(captures);
+                moves.add(src_sq, dst_sq, MoveType::Capture);
+                captures = pop_lsb_bitboard(captures);
+            }
+
+            rooks_unpinned = pop_lsb_bitboard(rooks_unpinned);
+        }
+    }
+
+    void MoveGen::generate_bishop_moves(MoveList &moves) {
+        // Pinned bishops
+        Bitboard bishops_pinned = f_bishop & pinmask;
+        while (bishops_pinned) {
+            Square src_sq = find_lsb_bitboard(bishops_pinned);
+            Bitboard targets =
+                bishop_attacks(src_sq, friends, enemies) & checkmask & pinmask;
+
+            // Bishop quiet
+            Bitboard quiet = targets & ~enemies;
+            while (quiet) {
+                Square dst_sq = find_lsb_bitboard(quiet);
+                moves.add(src_sq, dst_sq, MoveType::Quiet);
+                quiet = pop_lsb_bitboard(quiet);
+            }
+
+            // Bishop captures
+            Bitboard captures = targets & enemies;
+            while (captures) {
+                Square dst_sq = find_lsb_bitboard(captures);
+                moves.add(src_sq, dst_sq, MoveType::Capture);
+                captures = pop_lsb_bitboard(captures);
+            }
+
+            bishops_pinned = pop_lsb_bitboard(bishops_pinned);
+        }
+
+        // Unpinned bishops
+        Bitboard bishops_unpinned = f_bishop & ~pinmask;
+        while (bishops_unpinned) {
+            Square src_sq = find_lsb_bitboard(bishops_unpinned);
+            Bitboard targets =
+                bishop_attacks(src_sq, friends, enemies) & checkmask;
+
+            // Bishop quiet
+            Bitboard quiet = targets & ~enemies;
+            while (quiet) {
+                Square dst_sq = find_lsb_bitboard(quiet);
+                moves.add(src_sq, dst_sq, MoveType::Quiet);
+                quiet = pop_lsb_bitboard(quiet);
+            }
+
+            // Bishop captures
+            Bitboard captures = targets & enemies;
+            while (captures) {
+                Square dst_sq = find_lsb_bitboard(captures);
+                moves.add(src_sq, dst_sq, MoveType::Capture);
+                captures = pop_lsb_bitboard(captures);
+            }
+
+            bishops_unpinned = pop_lsb_bitboard(bishops_unpinned);
+        }
+    }
+
+    void MoveGen::generate_queen_moves(MoveList &moves) {
+        // Pinned queens
+        Bitboard queens_pinned = f_queen & pinmask;
+        while (queens_pinned) {
+            Square src_sq = find_lsb_bitboard(queens_pinned);
+            Bitboard targets =
+                queen_attacks(src_sq, friends, enemies) & checkmask & pinmask;
+
+            // Queen quiet
+            Bitboard quiet = targets & ~enemies;
+            while (quiet) {
+                Square dst_sq = find_lsb_bitboard(quiet);
+                moves.add(src_sq, dst_sq, MoveType::Quiet);
+                quiet = pop_lsb_bitboard(quiet);
+            }
+
+            // Queen captures
+            Bitboard captures = targets & enemies;
+            while (captures) {
+                Square dst_sq = find_lsb_bitboard(captures);
+                moves.add(src_sq, dst_sq, MoveType::Capture);
+                captures = pop_lsb_bitboard(captures);
+            }
+
+            queens_pinned = pop_lsb_bitboard(queens_pinned);
+        }
+
+        // Unpinned queens
+        Bitboard queens_unpinned = f_queen & ~pinmask;
+        while (queens_unpinned) {
+            Square src_sq = find_lsb_bitboard(queens_unpinned);
+            Bitboard targets =
+                queen_attacks(src_sq, friends, enemies) & checkmask;
+
+            // Queen quiet
+            Bitboard quiet = targets & ~enemies;
+            while (quiet) {
+                Square dst_sq = find_lsb_bitboard(quiet);
+                moves.add(src_sq, dst_sq, MoveType::Quiet);
+                quiet = pop_lsb_bitboard(quiet);
+            }
+
+            // Queen captures
+            Bitboard captures = targets & enemies;
+            while (captures) {
+                Square dst_sq = find_lsb_bitboard(captures);
+                moves.add(src_sq, dst_sq, MoveType::Capture);
+                captures = pop_lsb_bitboard(captures);
+            }
+
+            queens_unpinned = pop_lsb_bitboard(queens_unpinned);
+        }
+    }
 
     bool MoveGen::generate(MoveList &moves) {
         compute_attackmask();
