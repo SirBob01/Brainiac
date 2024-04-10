@@ -253,12 +253,18 @@ namespace Brainiac {
         Bitboard pinmask_d12 = pinmask_d1 | pinmask_d2;
         Bitboard promo_ranks = RANKS[0] | RANKS[7];
 
+        // Masks
+        Bitboard advance_unpin = checkmask & ~all;
+        Bitboard capture_unpin = checkmask & enemies;
+        Bitboard advance_pin = advance_unpin & pinmask_v;
+        Bitboard capture_pin = capture_unpin & pinmask_d12;
+
         Bitboard pawns_pinned = f_pawn & pinmask;
         while (pawns_pinned) {
             Square src_sq = find_lsb_bitboard(pawns_pinned);
 
-            Bitboard advances =
-                pawn_advances(src_sq, turn) & checkmask & pinmask_v & ~all;
+            // Pawn advances with promotions
+            Bitboard advances = pawn_advances(src_sq, turn) & advance_pin;
             Bitboard advances_only = advances & ~promo_ranks;
             Bitboard advances_promo = advances & promo_ranks;
             while (advances_only) {
@@ -275,16 +281,17 @@ namespace Brainiac {
                 advances_promo = pop_lsb_bitboard(advances_promo);
             }
 
-            Bitboard doubles =
-                pawn_doubles(src_sq, turn) & checkmask & pinmask_v & ~all;
+            // Pawn double advance
+            Bitboard double_mask = -static_cast<bool>(advances) & advance_pin;
+            Bitboard doubles = pawn_doubles(src_sq, turn) & double_mask;
             while (doubles) {
                 Square dst_sq = find_lsb_bitboard(doubles);
                 moves.add(src_sq, dst_sq, MoveType::PawnDouble);
                 doubles = pop_lsb_bitboard(doubles);
             }
 
-            Bitboard captures =
-                pawn_captures(src_sq, turn) & checkmask & enemies & pinmask_d12;
+            // Pawn captures with promotions and en-passant
+            Bitboard captures = pawn_captures(src_sq, turn) & capture_pin;
             Bitboard captures_only = captures & ~ep & ~promo_ranks;
             Bitboard captures_ep = captures & ep;
             Bitboard captures_promo = captures & promo_ranks;
@@ -314,7 +321,8 @@ namespace Brainiac {
         while (pawns_unpinned) {
             Square src_sq = find_lsb_bitboard(pawns_unpinned);
 
-            Bitboard advances = pawn_advances(src_sq, turn) & checkmask & ~all;
+            // Pawn advances with promotions
+            Bitboard advances = pawn_advances(src_sq, turn) & advance_unpin;
             Bitboard advances_only = advances & ~promo_ranks;
             Bitboard advances_promo = advances & promo_ranks;
             while (advances_only) {
@@ -331,15 +339,17 @@ namespace Brainiac {
                 advances_promo = pop_lsb_bitboard(advances_promo);
             }
 
-            Bitboard doubles = pawn_doubles(src_sq, turn) & checkmask & ~all;
+            // Pawn doubles
+            Bitboard double_mask = -static_cast<bool>(advances) & advance_unpin;
+            Bitboard doubles = pawn_doubles(src_sq, turn) & double_mask;
             while (doubles) {
                 Square dst_sq = find_lsb_bitboard(doubles);
                 moves.add(src_sq, dst_sq, MoveType::PawnDouble);
                 doubles = pop_lsb_bitboard(doubles);
             }
 
-            Bitboard captures =
-                pawn_captures(src_sq, turn) & enemies & checkmask;
+            // Pawn captures with promotions and en-passant
+            Bitboard captures = pawn_captures(src_sq, turn) & capture_unpin;
             Bitboard captures_only = captures & ~ep & ~promo_ranks;
             Bitboard captures_ep = captures & ep;
             Bitboard captures_promo = captures & promo_ranks;

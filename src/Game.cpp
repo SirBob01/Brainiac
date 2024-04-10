@@ -235,5 +235,39 @@ namespace Brainiac {
         state.generate_moves();
     }
 
+    Move
+    Game::find_move(const Square src, const Square dst, char promotion) const {
+        for (const Move &move : moves()) {
+            if (move.src() == src && move.dst() == dst) {
+                if (promotion) {
+                    switch (move.type()) {
+                    case KnightPromo:
+                    case KnightPromoCapture:
+                        if (promotion == 'n') return move;
+                        break;
+                    case BishopPromo:
+                    case BishopPromoCapture:
+                        if (promotion == 'b') return move;
+                        break;
+                    case RookPromo:
+                    case RookPromoCapture:
+                        if (promotion == 'r') return move;
+                        break;
+                    case QueenPromo:
+                    case QueenPromoCapture:
+                        if (promotion == 'q') return move;
+                        break;
+                    default:
+                        return {};
+                        break;
+                    }
+                } else {
+                    return move;
+                }
+            }
+        }
+        return {};
+    }
+
     void Game::print() const { _states[_index].print(); }
 } // namespace Brainiac
