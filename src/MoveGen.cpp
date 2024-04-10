@@ -187,7 +187,7 @@ namespace Brainiac {
 
     void MoveGen::generate_king_moves(MoveList &moves) {
         Bitboard danger = o_pawn_attacks | o_knight_attacks | o_king_attacks;
-        Bitboard no_king = friends & ~f_king;
+        Bitboard no_king = all & ~f_king;
 
         Bitboard bishops = o_bishop;
         while (bishops) {
