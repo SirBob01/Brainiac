@@ -132,6 +132,19 @@ namespace Brainiac {
         void skip();
 
         /**
+         * @brief Find a legal move from given src and dst square pairings.
+         *
+         * Used primarily to validate user-submitted moves.
+         *
+         * @param src
+         * @param dst
+         * @param promotion
+         * @return Move
+         */
+        Move
+        find_move(const Square src, const Square dst, char promotion = 0) const;
+
+        /**
          * @brief Pretty print the current game state.
          *
          */
