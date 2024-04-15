@@ -129,7 +129,7 @@ namespace Brainiac {
         generator.o_bishop = board.bitboard(o_bishop);
         generator.o_queen = board.bitboard(o_queen);
 
-        generator.ep = SQUARES[ep_dst];
+        generator.ep_dst = ep_dst;
         generator.turn = turn;
         generator.castling = castling;
 
