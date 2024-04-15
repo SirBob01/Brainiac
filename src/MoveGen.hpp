@@ -232,6 +232,12 @@ namespace Brainiac {
     };
 
     /**
+     * @brief Promotion rank mask.
+     *
+     */
+    constexpr Bitboard PROMOTION_MASK = RANKS[0] | RANKS[7];
+
+    /**
      * @brief Compute king attack mask.
      *
      * @param sq
@@ -323,7 +329,7 @@ namespace Brainiac {
         Bitboard o_bishop;
         Bitboard o_queen;
 
-        Bitboard ep;
+        Square ep_dst;
         Color turn;
         CastlingFlagSet castling;
 
@@ -355,10 +361,8 @@ namespace Brainiac {
 
         Bitboard attackmask;
         Bitboard checkmask;
-        Bitboard pinmask_h;
-        Bitboard pinmask_v;
-        Bitboard pinmask_d1;
-        Bitboard pinmask_d2;
+        Bitboard pinmask_hv;
+        Bitboard pinmask_d12;
         Bitboard pinmask;
 
         bool check;
