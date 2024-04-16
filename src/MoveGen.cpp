@@ -52,15 +52,11 @@ namespace Brainiac {
 
     void MoveGen::compute_attackmask() {
         Color op = static_cast<Color>(!turn);
-        o_king_attacks = king_attacks(find_lsb_bitboard(o_king));
-
-        o_pawn_attacks = 0;
-        Bitboard pawns = o_pawn;
-        while (pawns) {
-            Square sq = find_lsb_bitboard(pawns);
-            o_pawn_attacks |= pawn_captures(sq, op);
-            pawns = pop_lsb_bitboard(pawns);
-        }
+        Square king_sq = find_lsb_bitboard(o_king);
+        o_king_attacks = king_attacks(king_sq);
+        o_pawn_attacks =
+            (((o_pawn << 7) & ~FILES[7]) | ((o_pawn << 9) & ~FILES[0])) >>
+            (op << 4);
 
         o_knight_attacks = 0;
         Bitboard knights = o_knight;
