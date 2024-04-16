@@ -4,7 +4,7 @@ namespace Brainiac {
     Bitboard king_attacks(Square sq) { return KING_MOVE_MASKS[sq]; }
 
     Bitboard pawn_advances(Square sq, Color turn) {
-        return PAWN_ADVANCE_MASKS[64 * turn + sq];
+        return ((1ULL << sq) << 8) >> (turn << 4);
     }
 
     Bitboard pawn_doubles(Square sq, Color turn) {
@@ -332,9 +332,9 @@ namespace Brainiac {
 
         // Pinned pawns HV
         Bitboard check_pinned_hv = pinmask_hv & checkmask;
-        Bitboard pawns_pinned_hv = f_pawn & pinmask_hv;
-        while (pawns_pinned_hv) {
-            Square src_sq = find_lsb_bitboard(pawns_pinned_hv);
+        Bitboard pawns_hv = f_pawn & pinmask_hv;
+        while (pawns_hv) {
+            Square src_sq = find_lsb_bitboard(pawns_hv);
             Bitboard advances = pawn_advances(src_sq, turn) & ~all;
             Bitboard doubles = pawn_doubles(src_sq, turn) & ~all;
 
@@ -366,13 +366,13 @@ namespace Brainiac {
                 doubles_only = pop_lsb_bitboard(doubles_only);
             }
 
-            pawns_pinned_hv = pop_lsb_bitboard(pawns_pinned_hv);
+            pawns_hv = pop_lsb_bitboard(pawns_hv);
         }
 
         // Pinned pawns D12
-        Bitboard pawns_pinned_d12 = f_pawn & pinmask_d12;
-        while (pawns_pinned_d12) {
-            Square src_sq = find_lsb_bitboard(pawns_pinned_d12);
+        Bitboard pawns_d12 = f_pawn & pinmask_d12;
+        while (pawns_d12) {
+            Square src_sq = find_lsb_bitboard(pawns_d12);
             Bitboard captures = pawn_captures(src_sq, turn);
 
             // Pawn captures with promotions and en-passant
@@ -406,16 +406,16 @@ namespace Brainiac {
                 }
             }
 
-            pawns_pinned_d12 = pop_lsb_bitboard(pawns_pinned_d12);
+            pawns_d12 = pop_lsb_bitboard(pawns_d12);
         }
     }
 
     void MoveGen::generate_knight_moves(MoveList &moves) {
+        Bitboard targetmask = ~friends & checkmask;
         Bitboard knights = f_knight & ~pinmask;
-        Bitboard target_mask = ~friends & checkmask;
         while (knights) {
             Square src_sq = find_lsb_bitboard(knights);
-            Bitboard targets = knight_attacks(src_sq) & target_mask;
+            Bitboard targets = knight_attacks(src_sq) & targetmask;
 
             // Knight quiet
             Bitboard quiet = targets & ~enemies;
@@ -465,11 +465,12 @@ namespace Brainiac {
         }
 
         // Pinned rooks
-        Bitboard rooks_pinned = f_rook & pinmask_hv;
-        while (rooks_pinned) {
-            Square src_sq = find_lsb_bitboard(rooks_pinned);
+        Bitboard targetmask_hv = checkmask & pinmask_hv;
+        Bitboard rooks_hv = f_rook & pinmask_hv;
+        while (rooks_hv) {
+            Square src_sq = find_lsb_bitboard(rooks_hv);
             Bitboard targets =
-                rook_attacks(src_sq, friends, enemies) & checkmask & pinmask_hv;
+                rook_attacks(src_sq, friends, enemies) & targetmask_hv;
 
             // Rook quiet
             Bitboard quiet = targets & ~enemies;
@@ -487,7 +488,7 @@ namespace Brainiac {
                 captures = pop_lsb_bitboard(captures);
             }
 
-            rooks_pinned = pop_lsb_bitboard(rooks_pinned);
+            rooks_hv = pop_lsb_bitboard(rooks_hv);
         }
     }
 
@@ -519,11 +520,12 @@ namespace Brainiac {
         }
 
         // Pinned bishops
-        Bitboard bishops_pinned = f_bishop & pinmask_d12;
-        while (bishops_pinned) {
-            Square src_sq = find_lsb_bitboard(bishops_pinned);
-            Bitboard targets = bishop_attacks(src_sq, friends, enemies) &
-                               checkmask & pinmask_d12;
+        Bitboard targetmask_d12 = checkmask & pinmask_d12;
+        Bitboard bishops_d12 = f_bishop & pinmask_d12;
+        while (bishops_d12) {
+            Square src_sq = find_lsb_bitboard(bishops_d12);
+            Bitboard targets =
+                bishop_attacks(src_sq, friends, enemies) & targetmask_d12;
 
             // Bishop quiet
             Bitboard quiet = targets & ~enemies;
@@ -541,7 +543,7 @@ namespace Brainiac {
                 captures = pop_lsb_bitboard(captures);
             }
 
-            bishops_pinned = pop_lsb_bitboard(bishops_pinned);
+            bishops_d12 = pop_lsb_bitboard(bishops_d12);
         }
     }
 
@@ -573,11 +575,12 @@ namespace Brainiac {
         }
 
         // Pinned queens HV
-        Bitboard queens_pinned_hv = f_queen & pinmask_hv;
-        while (queens_pinned_hv) {
-            Square src_sq = find_lsb_bitboard(queens_pinned_hv);
+        Bitboard targetmask_hv = checkmask & pinmask_hv;
+        Bitboard queens_hv = f_queen & pinmask_hv;
+        while (queens_hv) {
+            Square src_sq = find_lsb_bitboard(queens_hv);
             Bitboard targets =
-                rook_attacks(src_sq, friends, enemies) & checkmask & pinmask_hv;
+                rook_attacks(src_sq, friends, enemies) & targetmask_hv;
 
             // Queen quiet
             Bitboard quiet = targets & ~enemies;
@@ -595,15 +598,16 @@ namespace Brainiac {
                 captures = pop_lsb_bitboard(captures);
             }
 
-            queens_pinned_hv = pop_lsb_bitboard(queens_pinned_hv);
+            queens_hv = pop_lsb_bitboard(queens_hv);
         }
 
         // Pinned queens D12
-        Bitboard queens_pinned_d12 = f_queen & pinmask_d12;
-        while (queens_pinned_d12) {
-            Square src_sq = find_lsb_bitboard(queens_pinned_d12);
-            Bitboard targets = bishop_attacks(src_sq, friends, enemies) &
-                               checkmask & pinmask_d12;
+        Bitboard targetmask_d12 = checkmask & pinmask_d12;
+        Bitboard queens_d12 = f_queen & pinmask_d12;
+        while (queens_d12) {
+            Square src_sq = find_lsb_bitboard(queens_d12);
+            Bitboard targets =
+                bishop_attacks(src_sq, friends, enemies) & targetmask_d12;
 
             // Queen quiet
             Bitboard quiet = targets & ~enemies;
@@ -621,7 +625,7 @@ namespace Brainiac {
                 captures = pop_lsb_bitboard(captures);
             }
 
-            queens_pinned_d12 = pop_lsb_bitboard(queens_pinned_d12);
+            queens_d12 = pop_lsb_bitboard(queens_d12);
         }
     }
 
