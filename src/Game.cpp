@@ -60,13 +60,19 @@ namespace Brainiac {
         case Piece::WhiteKing: {
             CastlingFlagSet king_side = (1 << CastlingRight::WK);
             CastlingFlagSet queen_side = (1 << CastlingRight::WQ);
+
+            state.hash ^= _hasher.bitstring(state.castling);
             state.castling &= ~(king_side | queen_side);
+            state.hash ^= _hasher.bitstring(state.castling);
             break;
         }
         case Piece::BlackKing: {
             CastlingFlagSet king_side = (1 << CastlingRight::BK);
             CastlingFlagSet queen_side = (1 << CastlingRight::BQ);
+
+            state.hash ^= _hasher.bitstring(state.castling);
             state.castling &= ~(king_side | queen_side);
+            state.hash ^= _hasher.bitstring(state.castling);
         }
         case Piece::WhiteRook: {
             Bitboard rook_mask = 1ULL << src_sq;
@@ -79,7 +85,9 @@ namespace Brainiac {
                 -static_cast<bool>(rook_mask & FILES[0] & RANKS[0]);
             CastlingFlagSet queen_side = (1 << CastlingRight::WQ) & queen_mask;
 
+            state.hash ^= _hasher.bitstring(state.castling);
             state.castling &= ~(king_side | queen_side);
+            state.hash ^= _hasher.bitstring(state.castling);
             break;
         }
         case Piece::BlackRook: {
@@ -93,7 +101,9 @@ namespace Brainiac {
                 -static_cast<bool>(rook_mask & FILES[0] & RANKS[7]);
             CastlingFlagSet queen_side = (1 << CastlingRight::BQ) & queen_mask;
 
+            state.hash ^= _hasher.bitstring(state.castling);
             state.castling &= ~(king_side | queen_side);
+            state.hash ^= _hasher.bitstring(state.castling);
             break;
         }
         default:
@@ -113,7 +123,9 @@ namespace Brainiac {
                 -static_cast<bool>(rook_mask & FILES[0] & RANKS[0]);
             CastlingFlagSet queen_side = (1 << CastlingRight::WQ) & queen_mask;
 
+            state.hash ^= _hasher.bitstring(state.castling);
             state.castling &= ~(king_side | queen_side);
+            state.hash ^= _hasher.bitstring(state.castling);
             break;
         }
         case Piece::BlackRook: {
@@ -127,7 +139,9 @@ namespace Brainiac {
                 -static_cast<bool>(rook_mask & FILES[0] & RANKS[7]);
             CastlingFlagSet queen_side = (1 << CastlingRight::BQ) & queen_mask;
 
+            state.hash ^= _hasher.bitstring(state.castling);
             state.castling &= ~(king_side | queen_side);
+            state.hash ^= _hasher.bitstring(state.castling);
             break;
         }
         default:
@@ -153,28 +167,46 @@ namespace Brainiac {
             src_piece = create_piece(PieceType::Queen, state.turn);
             break;
         case MoveType::PawnDouble:
+            state.hash ^= _hasher.bitstring(state.ep_dst) &
+                          -(state.ep_dst != Square::Null);
             state.ep_dst = static_cast<Square>(src_sq + (dst_sq - src_sq) / 2);
+            state.hash ^= _hasher.bitstring(state.ep_dst);
             break;
         case MoveType::EnPassant: {
             // Map turn Color [0, 1] to Direction [1, -1]
             int pawn_dir = ((1 - state.turn) * 2) - 1;
+
             Square target = static_cast<Square>(state.ep_dst - (8 * pawn_dir));
+            Piece target_piece = state.board.get(target);
+
             state.board.clear(target);
+
+            state.hash ^= _hasher.bitstring(target, target_piece);
             break;
         }
 
         case MoveType::KingCastle: {
             Square rook_sq = static_cast<Square>(state.turn * 56 + 7);
             Square rook_dst_sq = static_cast<Square>(dst_sq - 1);
-            state.board.set(rook_dst_sq, state.board.get(rook_sq));
+            Piece rook_piece = state.board.get(rook_sq);
+
+            state.board.set(rook_dst_sq, rook_piece);
             state.board.clear(rook_sq);
+
+            state.hash ^= _hasher.bitstring(rook_sq, rook_piece);
+            state.hash ^= _hasher.bitstring(rook_dst_sq, rook_piece);
             break;
         }
         case MoveType::QueenCastle: {
             Square rook_sq = static_cast<Square>(state.turn * Square::A8);
             Square rook_dst_sq = static_cast<Square>(dst_sq + 1);
-            state.board.set(rook_dst_sq, state.board.get(rook_sq));
+            Piece rook_piece = state.board.get(rook_sq);
+
+            state.board.set(rook_dst_sq, rook_piece);
             state.board.clear(rook_sq);
+
+            state.hash ^= _hasher.bitstring(rook_sq, rook_piece);
+            state.hash ^= _hasher.bitstring(rook_dst_sq, rook_piece);
             break;
         }
 
@@ -187,6 +219,8 @@ namespace Brainiac {
         case MoveType::PawnDouble:
             break;
         default:
+            state.hash ^= _hasher.bitstring(state.ep_dst) &
+                          -(state.ep_dst != Square::Null);
             state.ep_dst = Square::Null;
             break;
         }
@@ -216,10 +250,16 @@ namespace Brainiac {
         state.board.set(dst_sq, src_piece);
         state.board.clear(src_sq);
 
+        state.hash ^= _hasher.bitstring(src_sq, src_piece);
+        state.hash ^= _hasher.bitstring(dst_sq, src_piece);
+        state.hash ^=
+            _hasher.bitstring(dst_sq, dst_piece) & -(dst_piece != Piece::Empty);
+
         // Update turn and fullmove counter
         state.fullmoves += (state.turn == Color::Black);
         state.turn = static_cast<Color>(!state.turn);
         state.hash ^= _hasher.bitstring(state.turn);
+
         state.generate_moves();
     }
 
@@ -232,6 +272,7 @@ namespace Brainiac {
         state.fullmoves += (state.turn == Color::Black);
         state.turn = static_cast<Color>(!state.turn);
         state.hash ^= _hasher.bitstring(state.turn);
+
         state.generate_moves();
     }
 

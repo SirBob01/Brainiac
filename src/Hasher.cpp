@@ -11,19 +11,19 @@ namespace Brainiac {
     }
 
     Hash Hasher::bitstring(Square square, Piece piece) const {
-        return _bitstrings[square * 13 + piece];
+        return _bitstrings[square * 12 + piece];
     }
 
     Hash Hasher::bitstring(Square ep_dst) const {
-        return _bitstrings[ep_dst * 13 + (Piece::BlackQueen + 1)];
+        return _bitstrings[64 * 12 + ep_dst];
     }
 
     Hash Hasher::bitstring(Color turn) const {
-        return _bitstrings[64 * 13 + 1];
+        return _bitstrings[64 * 12 + 64];
     }
 
-    Hash Hasher::bitstring(CastlingRight right) const {
-        return _bitstrings[64 * 13 + 1 + right];
+    Hash Hasher::bitstring(CastlingFlagSet castling) const {
+        return _bitstrings[64 * 12 + 64 + 1 + castling];
     }
 
     Hash Hasher::operator()(Board &board,
@@ -44,12 +44,7 @@ namespace Brainiac {
                 hash ^= bitstring(square, piece);
             }
         }
-        for (unsigned c = 0; c < 4; c++) {
-            CastlingRight right = CastlingRight(c);
-            if (castling & (1 << right)) {
-                hash ^= bitstring(right);
-            }
-        }
+        hash ^= bitstring(castling);
         return hash;
     }
 } // namespace Brainiac
