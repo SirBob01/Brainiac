@@ -73,20 +73,31 @@ std::vector<PerftTestCase> POSITIONS = {
     {"1k6/1b6/8/8/7R/8/8/4K2R b K - 0 1", 5, 1063513},
 };
 
-static char *test_perft() {
+static char *test_perft_hash() {
+    Hasher hasher;
     for (PerftTestCase &test_case : POSITIONS) {
-        Game game(test_case.fen);
+        Game game(test_case.fen, hasher);
         std::cout << "perft(`" << test_case.fen << "`, " << test_case.depth
                   << ") ";
-        uint64_t nodes = perft(game, test_case.depth, test_case.depth);
+        bool hash_fail = false;
+        uint64_t nodes = perft(game,
+                               test_case.depth,
+                               test_case.depth,
+                               [&](Move move, uint64_t children) {
+                                   Game copy(game.fen(), hasher);
+                                   if (game.hash() != copy.hash()) {
+                                       hash_fail = true;
+                                   }
+                               });
         std::cout << nodes << " == " << test_case.result << "?\n";
         mu_assert("Perft case failed", nodes == test_case.result);
+        mu_assert("Incremental hash failed", !hash_fail);
     }
     return 0;
 }
 
 static char *all_tests() {
-    mu_run_test(test_perft);
+    mu_run_test(test_perft_hash);
     return 0;
 }
 

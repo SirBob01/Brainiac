@@ -17,12 +17,12 @@ namespace Brainiac {
     /**
      * @brief Number of bitstrings.
      *
-     * 12 piece types (6 per color) and en-passant target for the 64 squares.
-     * Current turn state.
-     * 4 castling flags.
+     * 12 piece types (6 per color) and En-Passant for the 64 squares
+     * 1 current turn state.
+     * 16 castling flag permutations.
      *
      */
-    const unsigned BITSTRING_COUNT = (64 * 13) + 1 + 4;
+    const unsigned BITSTRING_COUNT = (64 * 13) + 1 + 16;
 
     /**
      * @brief Zobrist hasher functor.
@@ -65,12 +65,12 @@ namespace Brainiac {
         Hash bitstring(Color turn) const;
 
         /**
-         * @brief Get the bitstring for a castling right.
+         * @brief Get the bitstring for a castling rights bitfield.
          *
-         * @param right
+         * @param castling
          * @return Hash
          */
-        Hash bitstring(CastlingRight right) const;
+        Hash bitstring(CastlingFlagSet castling) const;
 
         /**
          * @brief State hashing function.
