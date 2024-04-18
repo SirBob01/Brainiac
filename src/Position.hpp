@@ -13,10 +13,10 @@ namespace Brainiac {
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     /**
-     * @brief Game simulation.
+     * @brief Game position simulation.
      *
      */
-    class Game {
+    class Position {
         std::vector<State> _states;
         unsigned _index;
         Hasher _hasher;
@@ -30,7 +30,7 @@ namespace Brainiac {
         State &push_state();
 
       public:
-        Game(std::string fen = DEFAULT_BOARD_FEN, Hasher hasher = Hasher());
+        Position(std::string fen = DEFAULT_BOARD_FEN, Hasher hasher = Hasher());
 
         /**
          * @brief Get the fen string of the current game state.

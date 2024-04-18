@@ -1,14 +1,14 @@
-#include "Game.hpp"
+#include "Position.hpp"
 
 namespace Brainiac {
-    Game::Game(std::string fen, Hasher hasher) {
+    Position::Position(std::string fen, Hasher hasher) {
         _states.reserve(64);
         _states.emplace_back(fen, hasher);
         _index = 0;
         _hasher = hasher;
     }
 
-    State &Game::push_state() {
+    State &Position::push_state() {
         _states.resize(_index + 1);
         _states.emplace_back(_states[_index]);
         _index++;
@@ -17,35 +17,35 @@ namespace Brainiac {
         return _states[_index];
     }
 
-    std::string Game::fen() const { return _states[_index].fen(); }
+    std::string Position::fen() const { return _states[_index].fen(); }
 
-    Hash Game::hash() const { return _states[_index].hash; }
+    Hash Position::hash() const { return _states[_index].hash; }
 
-    const Board Game::board() const { return _states[_index].board; }
+    const Board Position::board() const { return _states[_index].board; }
 
-    Color Game::turn() const { return _states[_index].turn; }
+    Color Position::turn() const { return _states[_index].turn; }
 
-    const MoveList &Game::moves() const { return _states[_index].moves; }
+    const MoveList &Position::moves() const { return _states[_index].moves; }
 
-    const CastlingFlagSet Game::castling() const {
+    const CastlingFlagSet Position::castling() const {
         return _states[_index].castling;
     }
 
-    unsigned Game::halfmoves() const { return _states[_index].halfmoves; }
+    unsigned Position::halfmoves() const { return _states[_index].halfmoves; }
 
-    unsigned Game::fullmoves() const { return _states[_index].fullmoves; }
+    unsigned Position::fullmoves() const { return _states[_index].fullmoves; }
 
-    bool Game::is_check() const { return _states[_index].check; }
+    bool Position::is_check() const { return _states[_index].check; }
 
-    bool Game::is_checkmate() const {
+    bool Position::is_checkmate() const {
         return is_check() && moves().size() == 0;
     }
 
-    bool Game::is_statelmate() const {
+    bool Position::is_statelmate() const {
         return !is_check() && moves().size() == 0;
     }
 
-    void Game::make(Move move) {
+    void Position::make(Move move) {
         State &state = push_state();
 
         Square src_sq = move.src();
@@ -263,9 +263,9 @@ namespace Brainiac {
         state.generate_moves();
     }
 
-    void Game::undo() { _index--; }
+    void Position::undo() { _index--; }
 
-    void Game::skip() {
+    void Position::skip() {
         State &state = push_state();
 
         // Update state
@@ -276,8 +276,9 @@ namespace Brainiac {
         state.generate_moves();
     }
 
-    Move
-    Game::find_move(const Square src, const Square dst, char promotion) const {
+    Move Position::find_move(const Square src,
+                             const Square dst,
+                             char promotion) const {
         for (const Move &move : moves()) {
             if (move.src() == src && move.dst() == dst) {
                 if (promotion) {
@@ -310,5 +311,5 @@ namespace Brainiac {
         return {};
     }
 
-    void Game::print() const { _states[_index].print(); }
+    void Position::print() const { _states[_index].print(); }
 } // namespace Brainiac
