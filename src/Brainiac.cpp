@@ -4,17 +4,19 @@
 #include "Brainiac.hpp"
 #include "MoveList.hpp"
 
-Brainiac::Bitboard
-perft(Brainiac::Game &game, unsigned depth, unsigned max_depth, bool verbose) {
+Brainiac::Bitboard perft(Brainiac::Position &pos,
+                         unsigned depth,
+                         unsigned max_depth,
+                         bool verbose) {
     Brainiac::Bitboard nodes = 0;
-    const Brainiac::MoveList &moves = game.moves();
+    const Brainiac::MoveList &moves = pos.moves();
     if (depth == 1) {
         return moves.size();
     }
     for (const Brainiac::Move &move : moves) {
-        game.make(move);
-        uint64_t children = perft(game, depth - 1, max_depth, verbose);
-        game.undo();
+        pos.make(move);
+        uint64_t children = perft(pos, depth - 1, max_depth, verbose);
+        pos.undo();
         if (depth == max_depth && verbose) {
             std::cout << move.standard_notation() << ": " << children << "\n";
         }
@@ -30,14 +32,14 @@ void perft_command(
     std::cout << "Enter perft depth: ";
     std::cin >> depth;
 
-    Brainiac::Game game(fen_string);
-    game.print();
-    std::cout << game.fen() << "\n";
+    Brainiac::Position pos(fen_string);
+    pos.print();
+    std::cout << pos.fen() << "\n";
 
     for (int i = 1; i <= depth; i++) {
         auto start = std::chrono::high_resolution_clock::now();
         std::cout << "Perft(" << i << ") = ";
-        uint64_t nodes = perft(game, i, i, false);
+        uint64_t nodes = perft(pos, i, i, false);
         std::cout << nodes << " (";
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration =
@@ -47,14 +49,14 @@ void perft_command(
 }
 
 int main() {
-    Brainiac::Game game;
-    game.print();
-    std::cout << "Moves: " << game.moves().size() << "\n";
-    for (const Brainiac::Move &move : game.moves()) {
+    Brainiac::Position pos;
+    pos.print();
+    std::cout << "Moves: " << pos.moves().size() << "\n";
+    for (const Brainiac::Move &move : pos.moves()) {
         std::cout << move.standard_notation() << "\n";
     }
-    std::cout << (game.fen()) << "\n";
-    Brainiac::print_bitboard(game.hash());
+    std::cout << (pos.fen()) << "\n";
+    Brainiac::print_bitboard(pos.hash());
 
     perft_command();
     return 0;
