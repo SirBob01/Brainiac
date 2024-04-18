@@ -79,19 +79,15 @@ static char *test_perft_hash() {
         Game game(test_case.fen, hasher);
         std::cout << "perft(`" << test_case.fen << "`, " << test_case.depth
                   << ") ";
-        bool hash_fail = false;
-        uint64_t nodes = perft(game,
-                               test_case.depth,
-                               test_case.depth,
-                               [&](Move move, uint64_t children) {
-                                   Game copy(game.fen(), hasher);
-                                   if (game.hash() != copy.hash()) {
-                                       hash_fail = true;
-                                   }
-                               });
+        bool hash_match = true;
+        auto cb = [&](Move move, uint64_t children) {
+            Game copy(game.fen(), hasher);
+            hash_match &= (game.hash() == copy.hash());
+        };
+        uint64_t nodes = perft(game, test_case.depth, test_case.depth, cb);
         std::cout << nodes << " == " << test_case.result << "?\n";
         mu_assert("Perft case failed", nodes == test_case.result);
-        mu_assert("Incremental hash failed", !hash_fail);
+        mu_assert("Incremental hash failed", hash_match);
     }
     return 0;
 }
