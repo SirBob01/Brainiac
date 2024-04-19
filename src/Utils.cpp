@@ -15,4 +15,8 @@ namespace Brainiac {
         if (current.length()) tokens.push_back(current);
         return tokens;
     }
+
+    Seconds time() {
+        return std::chrono::steady_clock::now().time_since_epoch();
+    }
 } // namespace Brainiac
