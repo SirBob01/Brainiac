@@ -21,7 +21,7 @@ namespace Brainiac {
      * @brief Types of nodes depending on their value
      *
      */
-    enum NodeType { Exact = 0, Lower = 1, Upper = 2 };
+    enum NodeType : uint8_t { Exact = 0, Lower = 1, Upper = 2 };
 
     /**
      * @brief Transposition entry.
@@ -29,9 +29,9 @@ namespace Brainiac {
      */
     struct TableEntry {
         NodeType type;
-        Move best_move;
-        unsigned depth;
-        unsigned value = -INFINITY;
+        Move move;
+        short depth;
+        short value = -INFINITY;
     };
 
     /**
