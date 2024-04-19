@@ -1,6 +1,5 @@
 #pragma once
 
-#include <limits>
 #include <vector>
 
 #include "Position.hpp"
@@ -25,14 +24,25 @@ namespace Brainiac {
     enum NodeType : uint8_t { Exact = 0, Lower = 1, Upper = 2 };
 
     /**
+     * @brief Lower score bound.
+     *
+     */
+    constexpr short LOWER_BOUND = -10000;
+
+    /**
+     * @brief Upper score bound.
+     *
+     */
+    constexpr short UPPER_BOUND = -LOWER_BOUND;
+
+    /**
      * @brief Transposition entry.
      *
      */
     struct TableEntry {
         NodeType type;
-        Move move;
         short depth;
-        short value = std::numeric_limits<short>::min();
+        short value = LOWER_BOUND;
     };
 
     /**

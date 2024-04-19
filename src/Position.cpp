@@ -1,4 +1,5 @@
 #include "Position.hpp"
+#include "Bitboard.hpp"
 
 namespace Brainiac {
     Position::Position(std::string fen, Hasher hasher) {
@@ -41,9 +42,21 @@ namespace Brainiac {
         return is_check() && moves().size() == 0;
     }
 
-    bool Position::is_statelmate() const {
+    bool Position::is_stalemate() const {
         return !is_check() && moves().size() == 0;
     }
+
+    bool Position::is_draw() const {
+        const State &state = _states[_index];
+        Bitboard all = state.board.bitboard(Color::Black) |
+                       state.board.bitboard(Color::White);
+        unsigned rem = count_set_bitboard(all);
+        return is_stalemate() || state.halfmoves >= 100 || rem == 2;
+    }
+
+    bool Position::is_start() const { return _index == 0; }
+
+    bool Position::is_end() const { return _index == _states.size() - 1; }
 
     void Position::make(Move move) {
         State &state = push_state();
@@ -264,6 +277,8 @@ namespace Brainiac {
     }
 
     void Position::undo() { _index--; }
+
+    void Position::redo() { _index++; }
 
     void Position::skip() {
         State &state = push_state();
