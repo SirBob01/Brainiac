@@ -110,7 +110,31 @@ namespace Brainiac {
          * @return true
          * @return false
          */
-        bool is_statelmate() const;
+        bool is_stalemate() const;
+
+        /**
+         * @brief Test if the game is a draw.
+         *
+         * @return true
+         * @return false
+         */
+        bool is_draw() const;
+
+        /**
+         * @brief Test if the position is the initial state.
+         *
+         * @return true
+         * @return false
+         */
+        bool is_start() const;
+
+        /**
+         * @brief Test if the position is the latest state.
+         *
+         * @return true
+         * @return false
+         */
+        bool is_end() const;
 
         /**
          * @brief Make a move. This assumes moves are legal.
@@ -124,6 +148,12 @@ namespace Brainiac {
          *
          */
         void undo();
+
+        /**
+         * @brief Redo the next move.
+         *
+         */
+        void redo();
 
         /**
          * @brief Skip the current turn.

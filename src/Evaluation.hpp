@@ -3,8 +3,13 @@
 #include <array>
 
 #include "Position.hpp"
+#include "Transpositions.hpp"
 
 namespace Brainiac {
+    /**
+     * @brief Piece weights from white's perspective.
+     *
+     */
     constexpr std::array<short, 12> PIECE_WEIGHTS = {
         40,
         10,
@@ -21,10 +26,18 @@ namespace Brainiac {
     };
 
     /**
-     * @brief Compute the material score of the current position.
+     * @brief Compute the material score from white's perspective.
+     *
+     * @param board
+     * @return short
+     */
+    short compute_material(const Board &board);
+
+    /**
+     * @brief Evaluate a position for the current turn.
      *
      * @param pos
      * @return short
      */
-    short compute_material(Position &pos);
+    short evaluate(Position &pos);
 } // namespace Brainiac

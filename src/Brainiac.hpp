@@ -7,6 +7,7 @@
 #include "Perft.hpp"
 #include "Piece.hpp"
 #include "Position.hpp"
+#include "Search.hpp"
 #include "Sliders.hpp"
 #include "State.hpp"
 #include "Transpositions.hpp"
