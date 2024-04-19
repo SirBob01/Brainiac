@@ -49,9 +49,9 @@ namespace Brainiac {
         /**
          * @brief Get the current board state.
          *
-         * @return const Board
+         * @return const Board&
          */
-        const Board board() const;
+        const Board &board() const;
 
         /**
          * @brief Get the current turn.
