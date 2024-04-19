@@ -21,7 +21,7 @@ namespace Brainiac {
 
     Hash Position::hash() const { return _states[_index].hash; }
 
-    const Board Position::board() const { return _states[_index].board; }
+    const Board &Position::board() const { return _states[_index].board; }
 
     Color Position::turn() const { return _states[_index].turn; }
 
