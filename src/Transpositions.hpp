@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits>
 #include <vector>
 
 #include "Position.hpp"
@@ -31,7 +32,7 @@ namespace Brainiac {
         NodeType type;
         Move move;
         short depth;
-        short value = -INFINITY;
+        short value = std::numeric_limits<short>::min();
     };
 
     /**
