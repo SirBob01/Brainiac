@@ -24,12 +24,6 @@ namespace Brainiac {
      */
     struct State {
         /**
-         * @brief Board state.
-         *
-         */
-        Board board;
-
-        /**
          * @brief Castling rights.
          *
          */
@@ -48,23 +42,23 @@ namespace Brainiac {
         Color turn;
 
         /**
+         * @brief Is king in check?
+         *
+         */
+        bool check;
+
+        /**
          * @brief Half-moves depend on the board state (pawn advances or
          * captures reset it)
          *
          */
-        unsigned halfmoves;
+        uint16_t halfmoves;
 
         /**
          * @brief Fullmove counter.
          *
          */
-        unsigned fullmoves;
-
-        /**
-         * @brief Is king in check?
-         *
-         */
-        bool check;
+        uint16_t fullmoves;
 
         /**
          * @brief Move set.
@@ -77,6 +71,12 @@ namespace Brainiac {
          *
          */
         Hash hash;
+
+        /**
+         * @brief Board state.
+         *
+         */
+        Board board;
 
         /**
          * @brief Initialize an empty state.
