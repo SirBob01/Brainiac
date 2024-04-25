@@ -1,9 +1,8 @@
 #include "Position.hpp"
-#include "Bitboard.hpp"
 
 namespace Brainiac {
     Position::Position(std::string fen, Hasher hasher) {
-        _states.reserve(64);
+        _states.reserve(128);
         _states.emplace_back(fen, hasher);
         _index = 0;
         _hasher = hasher;
