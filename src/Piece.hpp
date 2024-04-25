@@ -81,4 +81,12 @@ namespace Brainiac {
      * @return Piece
      */
     Piece create_piece(PieceType type, Color color);
+
+    /**
+     * @brief Get the color of a piece.
+     *
+     * @param piece
+     * @return Color
+     */
+    Color get_piece_color(Piece piece);
 } // namespace Brainiac
