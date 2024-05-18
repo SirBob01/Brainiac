@@ -21,7 +21,7 @@ namespace Brainiac {
      * @brief Types of nodes depending on their value
      *
      */
-    enum NodeType : uint8_t { Exact = 0, Lower = 1, Upper = 2 };
+    enum NodeType : uint8_t { Exact, Lower, Upper, Invalid };
 
     /**
      * @brief Lower score bound.
@@ -40,9 +40,9 @@ namespace Brainiac {
      *
      */
     struct TableEntry {
-        NodeType type;
+        NodeType type = NodeType::Invalid;
         short depth;
-        short value = LOWER_BOUND;
+        short value;
     };
 
     /**
