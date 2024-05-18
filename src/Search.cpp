@@ -2,6 +2,29 @@
 
 namespace Brainiac {
     short Search::negamax(Position &pos, short depth, short alpha, short beta) {
+        // Read the transposition table
+        short alpha_orig = alpha;
+        TableEntry entry = _tptable.get(pos);
+        if (entry.type != NodeType::Invalid && entry.depth >= depth) {
+            switch (entry.type) {
+            case NodeType::Exact:
+                return entry.value;
+            case NodeType::Lower:
+                alpha = std::max(alpha, entry.value);
+                break;
+            case NodeType::Upper:
+                beta = std::min(beta, entry.value);
+                break;
+            default:
+                break;
+            }
+
+            // Early terminate
+            if (alpha >= beta) {
+                return entry.value;
+            }
+        }
+
         // Terminal node, evaluate
         if (depth == 0 || pos.is_checkmate() || pos.is_draw()) {
             return evaluate(pos);
@@ -21,6 +44,19 @@ namespace Brainiac {
                 break;
             }
         }
+
+        // Update the transposition table
+        TableEntry new_entry;
+        new_entry.depth = depth;
+        new_entry.value = value;
+        if (value <= alpha_orig) {
+            new_entry.type = NodeType::Upper;
+        } else if (value >= beta) {
+            new_entry.type = NodeType::Lower;
+        } else {
+            new_entry.type = NodeType::Exact;
+        }
+        _tptable.set(pos, new_entry);
         return value;
     }
 
