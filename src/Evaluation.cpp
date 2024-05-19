@@ -87,6 +87,6 @@ namespace Brainiac {
         const Board &board = pos.board();
         short material = compute_material(board);
         short placement = compute_placement(board);
-        return sign * (material + placement);
+        return sign * (material + 2 * placement);
     }
 } // namespace Brainiac
