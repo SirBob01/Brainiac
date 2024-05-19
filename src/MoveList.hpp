@@ -21,12 +21,20 @@ namespace Brainiac {
 
       public:
         /**
-         * @brief Access a move in the list
+         * @brief Access a move in the list.
          *
          * @param index
          * @return Move
          */
-        Move operator[](unsigned index) const;
+        Move &operator[](unsigned index);
+
+        /**
+         * @brief Access a const move in the list.
+         *
+         * @param index
+         * @return const Move&
+         */
+        const Move &operator[](unsigned index) const;
 
         /**
          * @brief Get the size of the list
