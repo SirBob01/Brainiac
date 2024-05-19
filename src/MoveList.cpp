@@ -1,7 +1,11 @@
 #include "MoveList.hpp"
 
 namespace Brainiac {
-    Move MoveList::operator[](unsigned index) const { return _list[index]; };
+    Move &MoveList::operator[](unsigned index) { return _list[index]; };
+
+    const Move &MoveList::operator[](unsigned index) const {
+        return _list[index];
+    };
 
     unsigned MoveList::size() const { return _count; };
 
