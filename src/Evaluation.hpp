@@ -107,6 +107,14 @@ namespace Brainiac {
     short compute_material(const Board &board);
 
     /**
+     * @brief Compute the placement score from white's perspective.
+     *
+     * @param board
+     * @return short
+     */
+    short compute_placement(const Board &board);
+
+    /**
      * @brief Evaluate a position for the current turn.
      *
      * @param pos
