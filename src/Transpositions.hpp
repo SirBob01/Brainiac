@@ -9,7 +9,7 @@ namespace Brainiac {
      * @brief Size of the transposition table.
      *
      */
-    constexpr uint32_t TABLE_SIZE = 1 << 20;
+    constexpr uint32_t TABLE_SIZE = 1 << 25;
 
     /**
      * @brief Mask to compute the table index.
