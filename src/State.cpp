@@ -42,7 +42,7 @@ namespace Brainiac {
         generate_moves();
     }
 
-    std::string State::fen() const {
+    std::string State::fen(bool include_counters) const {
         std::string fen = "";
         for (int row = 7; row >= 0; row--) {
             int counter = 0;
@@ -80,10 +80,12 @@ namespace Brainiac {
             fen += square_to_string(ep_dst);
         }
 
-        fen += " ";
-        fen += std::to_string(halfmoves);
-        fen += " ";
-        fen += std::to_string(fullmoves);
+        if (include_counters) {
+            fen += " ";
+            fen += std::to_string(halfmoves);
+            fen += " ";
+            fen += std::to_string(fullmoves);
+        }
         return fen;
     }
 
