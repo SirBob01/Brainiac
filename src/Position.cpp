@@ -17,7 +17,9 @@ namespace Brainiac {
         return _states[_index];
     }
 
-    std::string Position::fen() const { return _states[_index].fen(); }
+    std::string Position::fen(bool include_counters) const {
+        return _states[_index].fen(include_counters);
+    }
 
     Hash Position::hash() const { return _states[_index].hash; }
 

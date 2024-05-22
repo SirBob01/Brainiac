@@ -93,10 +93,10 @@ namespace Brainiac {
         State(std::string fen, Hasher &hasher);
 
         /**
-         * @brief Get the Fen string of the board.
+         * @brief Get the FEN string of the board.
          *
          */
-        std::string fen() const;
+        std::string fen(bool include_counters = true) const;
 
         /**
          * @brief Pretty print the state.

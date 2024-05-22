@@ -33,11 +33,12 @@ namespace Brainiac {
         Position(std::string fen = DEFAULT_BOARD_FEN, Hasher hasher = Hasher());
 
         /**
-         * @brief Get the fen string of the current game state.
+         * @brief Get the FEN string of the current game state.
          *
+         * @param include_counters
          * @return std::string
          */
-        std::string fen() const;
+        std::string fen(bool include_counters = true) const;
 
         /**
          * @brief Get the hash of the current game state.
