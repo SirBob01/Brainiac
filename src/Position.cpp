@@ -164,19 +164,27 @@ namespace Brainiac {
         switch (move_type) {
         case MoveType::KnightPromo:
         case MoveType::KnightPromoCapture:
+            state.hash ^= _hasher.bitstring(src_sq, src_piece);
             src_piece = create_piece(PieceType::Knight, state.turn);
+            state.hash ^= _hasher.bitstring(src_sq, src_piece);
             break;
         case MoveType::RookPromo:
         case MoveType::RookPromoCapture:
+            state.hash ^= _hasher.bitstring(src_sq, src_piece);
             src_piece = create_piece(PieceType::Rook, state.turn);
+            state.hash ^= _hasher.bitstring(src_sq, src_piece);
             break;
         case MoveType::BishopPromo:
         case MoveType::BishopPromoCapture:
+            state.hash ^= _hasher.bitstring(src_sq, src_piece);
             src_piece = create_piece(PieceType::Bishop, state.turn);
+            state.hash ^= _hasher.bitstring(src_sq, src_piece);
             break;
         case MoveType::QueenPromo:
         case MoveType::QueenPromoCapture:
+            state.hash ^= _hasher.bitstring(src_sq, src_piece);
             src_piece = create_piece(PieceType::Queen, state.turn);
+            state.hash ^= _hasher.bitstring(src_sq, src_piece);
             break;
         case MoveType::PawnDouble:
             state.hash ^= _hasher.bitstring(state.ep_dst) &
