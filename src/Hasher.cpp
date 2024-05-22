@@ -29,7 +29,7 @@ namespace Brainiac {
     Hash Hasher::operator()(Board &board,
                             CastlingFlagSet castling,
                             Color turn,
-                            Square ep_dst) {
+                            Square ep_dst) const {
         Hash hash = 0;
         if (turn == Color::Black) {
             hash ^= bitstring(turn);

@@ -84,6 +84,6 @@ namespace Brainiac {
         Hash operator()(Board &board,
                         CastlingFlagSet castling,
                         Color turn,
-                        Square ep_dst);
+                        Square ep_dst) const;
     };
 } // namespace Brainiac
