@@ -16,7 +16,6 @@ static char *test_compute_material() {
     mu_assert("Start position", compute_material(pos.board()) == 0);
 
     std::vector<std::string> fens = {
-        DEFAULT_BOARD_FEN,
         "8/3BRr1p/1k6/2b5/2pP4/8/5K2/8 b - d3 0 1",
     };
     for (const std::string &fen : fens) {
@@ -82,6 +81,88 @@ static char *test_compute_material() {
 static char *test_compute_placement() {
     Position pos;
     mu_assert("Start position", compute_placement(pos.board()) == 0);
+
+    std::vector<std::string> fens = {
+        "8/3BRr1p/1k6/2b5/2pP4/8/5K2/8 b - d3 0 1",
+    };
+    for (const std::string &fen : fens) {
+        Position pos(fen);
+
+        int value = compute_placement(pos.board());
+        int expected = 0;
+
+        // White pieces
+        for (uint8_t r = 0; r < 8; r++) {
+            for (uint8_t c = 0; c < 8; c++) {
+                Square sq = static_cast<Square>(r * 8 + c);
+                Piece piece = pos.board().get(sq);
+
+                // Invert matrix rows
+                uint8_t matrix_sq = (7 - r) * 8 + c;
+                switch (piece) {
+                case Piece::WhitePawn:
+                    expected += PAWN_MATRIX[matrix_sq];
+                    break;
+                case Piece::WhiteKnight:
+                    expected += KNIGHT_MATRIX[matrix_sq];
+                    break;
+                case Piece::WhiteBishop:
+                    expected += BISHOP_MATRIX[matrix_sq];
+                    break;
+                case Piece::WhiteRook:
+                    expected += ROOK_MATRIX[matrix_sq];
+                    break;
+                case Piece::WhiteQueen:
+                    expected += QUEEN_MATRIX[matrix_sq];
+                    break;
+                case Piece::WhiteKing:
+                    expected += KING_MATRIX[matrix_sq];
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+
+        // Black pieces
+        for (uint8_t r = 0; r < 8; r++) {
+            for (uint8_t c = 0; c < 8; c++) {
+                Square sq = static_cast<Square>((7 - r) * 8 + c);
+                Piece piece = pos.board().get(sq);
+
+                // Invert matrix rows
+                uint8_t matrix_sq = (7 - r) * 8 + c;
+                switch (piece) {
+                case Piece::BlackPawn:
+                    expected -= PAWN_MATRIX[matrix_sq];
+                    break;
+                case Piece::BlackKnight:
+                    expected -= KNIGHT_MATRIX[matrix_sq];
+                    break;
+                case Piece::BlackBishop:
+                    expected -= BISHOP_MATRIX[matrix_sq];
+                    break;
+                case Piece::BlackRook:
+                    expected -= ROOK_MATRIX[matrix_sq];
+                    break;
+                case Piece::BlackQueen:
+                    expected -= QUEEN_MATRIX[matrix_sq];
+                    break;
+                case Piece::BlackKing:
+                    expected -= KING_MATRIX[matrix_sq];
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+
+        std::cout << value << " " << expected << "\n";
+        fen_label = "Position FEN (" + fen + ")";
+        test_label = "Position placement (" + fen + ")";
+        mu_assert(fen_label.c_str(), pos.fen() == fen);
+        mu_assert(test_label.c_str(), value == expected);
+    }
     return 0;
 }
 

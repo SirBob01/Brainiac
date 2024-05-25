@@ -32,8 +32,9 @@ namespace Brainiac {
      * The higher the score at a particular index, the more favorable
      * that location for that piece.
      *
-     * Note that value placement matches the visual representation of the board,
-     * i.e., starting position is on the bottom 2 rows.
+     * Note that value placement is from the perspective of white from the
+     * visual representation of the board, i.e., starting position is on the
+     * bottom 2 rows.
      */
     // clang-format off
     const int QUEEN_MATRIX[64] = {
