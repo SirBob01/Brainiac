@@ -27,9 +27,10 @@ namespace Brainiac {
          * @brief Compute the move score for ordering
          *
          * @param move
+         * @param node
          * @return int
          */
-        int score_move(Move move);
+        int score_move(Move move, TableEntry node);
 
         /**
          * @brief Recursive negamax algorithm.

@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "Move.hpp"
 #include "Position.hpp"
 
 namespace Brainiac {
@@ -41,6 +42,7 @@ namespace Brainiac {
      */
     struct TableEntry {
         NodeType type = NodeType::Invalid;
+        Move move;
         unsigned depth;
         int value;
     };
