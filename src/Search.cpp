@@ -1,7 +1,37 @@
 #include "Search.hpp"
 
 namespace Brainiac {
-    int Search::score_move(Move move) { return _htable.get(move); }
+    int Search::score_move(Move move) {
+        int score = _htable.get(move);
+        switch (move.type()) {
+        case MoveType::Capture:
+        case MoveType::EnPassant:
+            score += 20;
+            break;
+        case MoveType::KnightPromo:
+        case MoveType::BishopPromo:
+        case MoveType::RookPromo:
+        case MoveType::QueenPromo:
+            score += 10;
+            break;
+        case MoveType::KnightPromoCapture:
+        case MoveType::BishopPromoCapture:
+        case MoveType::RookPromoCapture:
+        case MoveType::QueenPromoCapture:
+            score += 30;
+            break;
+        case MoveType::KingCastle:
+        case MoveType::QueenCastle:
+            score += 10;
+            break;
+        case MoveType::PawnDouble:
+            score += 5;
+            break;
+        default:
+            break;
+        }
+        return score;
+    }
 
     int Search::negamax(Position &pos, unsigned depth, int alpha, int beta) {
         // Read the transposition table
