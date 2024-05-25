@@ -1,8 +1,18 @@
 #include "Search.hpp"
 
 namespace Brainiac {
-    int Search::score_move(Move move) {
-        int score = _htable.get(move);
+    int Search::score_move(Move move, TableEntry node) {
+        int score = 0;
+
+        // Prioritize hash moves
+        bool node_valid = node.type != NodeType::Invalid;
+        bool node_move = node.move == move;
+        score += (node_move && node_valid) * 100000000;
+
+        // Prioritize moves with higher history heuristic
+        score += _htable.get(move);
+
+        // Prioritize non-quiet moves
         switch (move.type()) {
         case MoveType::Capture:
         case MoveType::EnPassant:
@@ -65,17 +75,21 @@ namespace Brainiac {
         // Non-terminal node
         int value = LOWER_BOUND;
         MoveList moves = pos.moves();
+        unsigned move_index = 0;
         for (unsigned i = 0; i < moves.size(); i++) {
             // Find highest scoring move
-            unsigned best_move = i;
+            move_index = i;
             for (unsigned j = i + 1; j < moves.size(); j++) {
-                if (score_move(moves[j]) > score_move(moves[best_move])) {
-                    best_move = j;
+                int score_j = score_move(moves[j], entry);
+                int score_i = score_move(moves[move_index], entry);
+                if (score_j > score_i) {
+                    move_index = j;
                 }
             }
+            Move &move = moves[move_index];
 
             // Evaluate subtree
-            pos.make(moves[best_move]);
+            pos.make(move);
             int score = -negamax(pos, depth - 1, -beta, -alpha);
             value = std::max(value, score);
             alpha = std::max(alpha, value);
@@ -83,18 +97,19 @@ namespace Brainiac {
 
             // Early terminate
             if (alpha >= beta) {
-                _htable.set(moves[best_move], depth);
+                _htable.set(move, depth);
                 break;
             }
 
             // Swap with current index to sort
-            std::swap(moves[best_move], moves[i]);
+            std::swap(move, moves[i]);
         }
 
         // Update the transposition table
         TableEntry new_entry;
         new_entry.depth = depth;
         new_entry.value = value;
+        new_entry.move = moves[move_index];
         if (value <= alpha_orig) {
             new_entry.type = NodeType::Upper;
         } else if (value >= beta) {
