@@ -70,8 +70,6 @@ static char *test_compute_material() {
             }
         }
 
-        std::cout << value << " " << expected << "\n";
-
         fen_label = "Position FEN (" + fen + ")";
         test_label = "Position material (" + fen + ")";
         mu_assert(fen_label.c_str(), pos.fen() == fen);

@@ -10,7 +10,7 @@ namespace Brainiac {
      *
      */
     class History {
-        std::array<signed, 64 * 64> _table;
+        std::array<int, 64 * 64> _table = {0};
 
         /**
          * @brief Compute the table index of a move.
