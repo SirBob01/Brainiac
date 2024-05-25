@@ -44,6 +44,9 @@ namespace Brainiac {
     }
 
     int Search::negamax(Position &pos, unsigned depth, int alpha, int beta) {
+        // Update statistics
+        _result.visited++;
+
         // Read the transposition table
         int alpha_orig = alpha;
         TableEntry entry = _tptable.get(pos);
@@ -121,7 +124,11 @@ namespace Brainiac {
         return value;
     }
 
-    Move Search::move(Position &pos) {
+    Result Search::search(Position &pos) {
+        // Reset result
+        _result.time = time();
+        _result.visited = 0;
+
         MoveList moves = pos.moves();
         for (unsigned d = 1; d <= MAX_DEPTH; d++) {
             int best_score = LOWER_BOUND;
@@ -146,6 +153,10 @@ namespace Brainiac {
             std::swap(moves[best_move], moves[0]);
         }
 
-        return moves[0];
+        // Update result
+        _result.move = moves[0];
+        _result.time = time() - _result.time;
+
+        return _result;
     }
 } // namespace Brainiac
