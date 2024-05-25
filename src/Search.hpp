@@ -16,12 +16,37 @@ namespace Brainiac {
     constexpr unsigned MAX_DEPTH = 7;
 
     /**
+     * @brief Search result.
+     *
+     */
+    struct Result {
+        /**
+         * @brief Best move found.
+         *
+         */
+        Move move;
+
+        /**
+         * @brief Total search time.
+         *
+         */
+        Seconds time;
+
+        /**
+         * @brief Number of nodes visited.
+         *
+         */
+        unsigned visited;
+    };
+
+    /**
      * @brief Search engine.
      *
      */
     class Search {
         Transpositions _tptable;
         History _htable;
+        Result _result;
 
         /**
          * @brief Compute the move score for ordering
@@ -51,8 +76,8 @@ namespace Brainiac {
          * @brief Calculate the next viable move for the current turn.
          *
          * @param pos
-         * @return Move
+         * @return Result
          */
-        Move move(Position &pos);
+        Result search(Position &pos);
     };
 } // namespace Brainiac

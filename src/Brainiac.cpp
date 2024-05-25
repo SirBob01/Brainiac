@@ -71,7 +71,13 @@ void play_bot(Brainiac::Color player_color) {
             std::cout << "Check!\n";
         }
         if (pos.turn() != player_color) {
-            pos.make(bot.move(pos));
+            Brainiac::Result result = bot.search(pos);
+            float nps = result.visited / result.time.count();
+
+            std::cout << "Total time: " << result.time << "\n";
+            std::cout << "Visited nodes: " << result.visited << "\n";
+            std::cout << "Nodes/s: " << nps << "\n";
+            pos.make(result.move);
         } else {
             while (move == Brainiac::Move()) {
                 std::cout << "Enter a move> ";
