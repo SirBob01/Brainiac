@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include "Evaluation.hpp"
+#include "History.hpp"
 #include "Position.hpp"
 #include "Transpositions.hpp"
 #include "Utils.hpp"
@@ -12,7 +13,7 @@ namespace Brainiac {
      * @brief Maximum possible depth of the search.
      *
      */
-    constexpr short MAX_DEPTH = 7;
+    constexpr unsigned MAX_DEPTH = 7;
 
     /**
      * @brief Search engine.
@@ -20,6 +21,15 @@ namespace Brainiac {
      */
     class Search {
         Transpositions _tptable;
+        History _htable;
+
+        /**
+         * @brief Compute the move score for ordering
+         *
+         * @param move
+         * @return int
+         */
+        int score_move(Move move);
 
         /**
          * @brief Recursive negamax algorithm.
@@ -30,10 +40,10 @@ namespace Brainiac {
          * @param beta
          * @return short
          */
-        short negamax(Position &pos,
-                      short depth,
-                      short alpha = LOWER_BOUND,
-                      short beta = UPPER_BOUND);
+        int negamax(Position &pos,
+                    unsigned depth,
+                    int alpha = LOWER_BOUND,
+                    int beta = UPPER_BOUND);
 
       public:
         /**
