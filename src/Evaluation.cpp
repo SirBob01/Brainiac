@@ -19,8 +19,8 @@ namespace Brainiac {
                 Piece piece = board.get(sq);
                 Color color = get_piece_color(piece);
 
-                // Invert the board if the piece is black
-                uint8_t index = color == Color::White ? sq : ((7 - r) * 8 + c);
+                // Invert the matrix rows
+                uint8_t index = color == Color::White ? ((7 - r) * 8 + c) : sq;
 
                 switch (piece) {
                 // White pieces
