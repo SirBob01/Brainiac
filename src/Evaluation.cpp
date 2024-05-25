@@ -1,9 +1,8 @@
 #include "Evaluation.hpp"
-#include "Piece.hpp"
 
 namespace Brainiac {
-    short compute_material(const Board &board) {
-        short total = 0;
+    int compute_material(const Board &board) {
+        int total = 0;
         for (uint8_t i = 0; i < 12; i++) {
             Piece piece = static_cast<Piece>(i);
             Bitboard bitboard = board.bitboard(piece);
@@ -12,8 +11,8 @@ namespace Brainiac {
         return total;
     }
 
-    short compute_placement(const Board &board) {
-        short total = 0;
+    int compute_placement(const Board &board) {
+        int total = 0;
         for (uint8_t r = 0; r < 8; r++) {
             for (uint8_t c = 0; c < 8; c++) {
                 Square sq = static_cast<Square>(r * 8 + c);
@@ -72,8 +71,8 @@ namespace Brainiac {
         return total;
     }
 
-    short evaluate(Position &pos) {
-        short sign = (pos.turn() << 1) - 1;
+    int evaluate(Position &pos) {
+        int sign = (pos.turn() << 1) - 1;
 
         // Leaf node
         if (pos.is_checkmate()) {
@@ -85,8 +84,8 @@ namespace Brainiac {
 
         // Non-leaf node (depth capped)
         const Board &board = pos.board();
-        short material = compute_material(board);
-        short placement = compute_placement(board);
+        int material = compute_material(board);
+        int placement = compute_placement(board);
         return sign * (material + 2 * placement);
     }
 } // namespace Brainiac

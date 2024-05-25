@@ -9,13 +9,13 @@ namespace Brainiac {
      * @brief Size of the transposition table.
      *
      */
-    constexpr uint32_t TABLE_SIZE = 1 << 25;
+    constexpr unsigned TABLE_SIZE = 1 << 24;
 
     /**
      * @brief Mask to compute the table index.
      *
      */
-    constexpr uint32_t TABLE_MASK = TABLE_SIZE - 1;
+    constexpr unsigned TABLE_MASK = TABLE_SIZE - 1;
 
     /**
      * @brief Types of nodes depending on their value
@@ -27,13 +27,13 @@ namespace Brainiac {
      * @brief Lower score bound.
      *
      */
-    constexpr short LOWER_BOUND = -10000;
+    constexpr int LOWER_BOUND = -1000000000;
 
     /**
      * @brief Upper score bound.
      *
      */
-    constexpr short UPPER_BOUND = -LOWER_BOUND;
+    constexpr int UPPER_BOUND = -LOWER_BOUND;
 
     /**
      * @brief Transposition entry.
@@ -41,8 +41,8 @@ namespace Brainiac {
      */
     struct TableEntry {
         NodeType type = NodeType::Invalid;
-        short depth;
-        short value;
+        unsigned depth;
+        int value;
     };
 
     /**

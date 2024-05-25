@@ -1,6 +1,7 @@
 #include "Bitboard.hpp"
 #include "Board.hpp"
 #include "Evaluation.hpp"
+#include "History.hpp"
 #include "Move.hpp"
 #include "MoveGen.hpp"
 #include "MoveList.hpp"

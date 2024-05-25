@@ -1,9 +1,11 @@
 #include "Search.hpp"
 
 namespace Brainiac {
-    short Search::negamax(Position &pos, short depth, short alpha, short beta) {
+    int Search::score_move(Move move) { return _htable.get(move); }
+
+    int Search::negamax(Position &pos, unsigned depth, int alpha, int beta) {
         // Read the transposition table
-        short alpha_orig = alpha;
+        int alpha_orig = alpha;
         TableEntry entry = _tptable.get(pos);
         if (entry.type != NodeType::Invalid && entry.depth >= depth) {
             switch (entry.type) {
@@ -25,24 +27,38 @@ namespace Brainiac {
             }
         }
 
-        // Terminal node, evaluate
+        // Terminal node
         if (depth == 0 || pos.is_checkmate() || pos.is_draw()) {
             return evaluate(pos);
         }
 
-        // Evaluate subtrees
-        short value = LOWER_BOUND;
-        for (Move move : pos.moves()) {
-            pos.make(move);
-            short score = -negamax(pos, depth - 1, -beta, -alpha);
+        // Non-terminal node
+        int value = LOWER_BOUND;
+        MoveList moves = pos.moves();
+        for (unsigned i = 0; i < moves.size(); i++) {
+            // Find highest scoring move
+            unsigned best_move = i;
+            for (unsigned j = i + 1; j < moves.size(); j++) {
+                if (score_move(moves[j]) > score_move(moves[best_move])) {
+                    best_move = j;
+                }
+            }
+
+            // Evaluate subtree
+            pos.make(moves[best_move]);
+            int score = -negamax(pos, depth - 1, -beta, -alpha);
             value = std::max(value, score);
             alpha = std::max(alpha, value);
             pos.undo();
 
             // Early terminate
             if (alpha >= beta) {
+                _htable.set(moves[best_move], depth);
                 break;
             }
+
+            // Swap with current index to sort
+            std::swap(moves[best_move], moves[i]);
         }
 
         // Update the transposition table
@@ -61,20 +77,30 @@ namespace Brainiac {
     }
 
     Move Search::move(Position &pos) {
-        Move best_move;
-        short best_score = LOWER_BOUND;
-        for (Move move : pos.moves()) {
-            pos.make(move);
+        MoveList moves = pos.moves();
+        for (unsigned d = 1; d <= MAX_DEPTH; d++) {
+            int best_score = LOWER_BOUND;
+            int best_move = 0;
 
-            // Evaluate the move
-            short score = -negamax(pos, MAX_DEPTH);
-            if (score > best_score || best_score == LOWER_BOUND) {
-                best_score = score;
-                best_move = move;
+            for (unsigned i = 0; i < moves.size(); i++) {
+                Move move = moves[i];
+
+                pos.make(move);
+
+                // Evaluate the move
+                int score = -negamax(pos, d);
+                if (score > best_score || best_score == LOWER_BOUND) {
+                    best_score = score;
+                    best_move = i;
+                }
+
+                pos.undo();
             }
 
-            pos.undo();
+            // Prioritize best_move in the next iteration
+            std::swap(moves[best_move], moves[0]);
         }
-        return best_move;
+
+        return moves[0];
     }
 } // namespace Brainiac

@@ -22,8 +22,8 @@ static char *test_compute_material() {
     for (const std::string &fen : fens) {
         Position pos(fen);
 
-        short value = compute_material(pos.board());
-        short expected = 0;
+        int value = compute_material(pos.board());
+        int expected = 0;
 
         // Compute it from the FEN string
         std::string layout = tokenize(fen)[0];
