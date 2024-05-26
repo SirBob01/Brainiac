@@ -151,7 +151,7 @@ namespace Brainiac {
                        can_reduce_move(move, best_value));
 
             // Compute depth extension
-            Depth E = depth == 0 && _position.is_check();
+            Depth E = depth < 2 && _position.is_check();
 
             // Evaluate subtree
             _position.make(move);
