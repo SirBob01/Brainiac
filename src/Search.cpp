@@ -102,6 +102,7 @@ namespace Brainiac {
     Value Search::negamax(Move prev, Depth depth, Value alpha, Value beta) {
         // Time management
         _timeout = time() - _start_time >= _remaining_time;
+        if (_timeout) return 0;
         _visited++;
 
         // Read the transposition table
@@ -128,8 +129,7 @@ namespace Brainiac {
         }
 
         // Terminal node
-        if (depth <= 0 || _position.is_checkmate() || _position.is_draw() ||
-            _timeout) {
+        if (depth <= 0 || _position.is_checkmate() || _position.is_draw()) {
             return evaluate(_position);
         }
 
@@ -152,7 +152,7 @@ namespace Brainiac {
         MoveList moves = _position.moves();
         MoveValue best_value = 0;
         uint16_t best_index = 0;
-        for (uint16_t i = 0; i < moves.size(); i++) {
+        for (uint16_t i = 0; i < moves.size() && !_timeout; i++) {
             // Find highest scoring move
             best_index = i;
             best_value = evaluate_move(moves[best_index], node);
@@ -184,7 +184,7 @@ namespace Brainiac {
             _position.undo();
 
             // Early terminate
-            if (alpha >= beta) {
+            if (alpha >= beta && !_timeout) {
                 _htable.set(move, depth);
                 break;
             }
@@ -204,7 +204,7 @@ namespace Brainiac {
         } else {
             node.type = NodeType::Exact;
         }
-        _tptable.set(_position, node);
+        if (!_timeout) _tptable.set(_position, node);
         return value;
     }
 
