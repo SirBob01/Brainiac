@@ -44,7 +44,7 @@ namespace Brainiac {
                std::abs(PIECE_WEIGHTS[attacker]);
     }
 
-    MoveValue Search::score_move(Move move, Node node, Position &pos) {
+    MoveValue Search::evaluate_move(Move move, Node node, Position &pos) {
         // Prioritize hash moves
         bool node_valid = node.type != NodeType::Invalid;
         bool node_move = node.move == move;
@@ -53,34 +53,34 @@ namespace Brainiac {
         }
 
         // Prioritize moves with higher history heuristic
-        MoveValue score = _htable.get(move);
+        MoveValue value = _htable.get(move);
 
         // Prioritize non-quiet moves
         // Also, prioritize queen promotion over all other promotions
         switch (move.type()) {
         case MoveType::Capture:
-            score += 40 + evaluate_capture(move, pos);
+            value += 40 + evaluate_capture(move, pos);
             break;
         case MoveType::QueenPromoCapture:
-            score += 50 + evaluate_capture(move, pos);
+            value += 50 + evaluate_capture(move, pos);
             break;
         case MoveType::EnPassant:
-            score += 20;
+            value += 20;
             break;
         case MoveType::QueenPromo:
-            score += 20;
+            value += 20;
             break;
         case MoveType::KingCastle:
         case MoveType::QueenCastle:
-            score += 10;
+            value += 10;
             break;
         case MoveType::PawnDouble:
-            score += 10;
+            value += 10;
             break;
         default:
             break;
         }
-        return score;
+        return value;
     }
 
     Value Search::negamax(Position &pos, Depth depth, Value alpha, Value beta) {
@@ -118,18 +118,20 @@ namespace Brainiac {
         // Non-terminal node
         Value value = MIN_VALUE;
         MoveList moves = pos.moves();
-        unsigned move_index = 0;
-        for (unsigned i = 0; i < moves.size(); i++) {
+        MoveValue best_value = 0;
+        uint16_t best_index = 0;
+        for (uint16_t i = 0; i < moves.size(); i++) {
             // Find highest scoring move
-            move_index = i;
-            for (unsigned j = i + 1; j < moves.size(); j++) {
-                MoveValue score_j = score_move(moves[j], node, pos);
-                MoveValue score_i = score_move(moves[move_index], node, pos);
-                if (score_j > score_i) {
-                    move_index = j;
+            best_index = i;
+            best_value = evaluate_move(moves[best_index], node, pos);
+            for (uint16_t j = i + 1; j < moves.size(); j++) {
+                MoveValue j_score = evaluate_move(moves[j], node, pos);
+                if (j_score > best_value) {
+                    best_index = j;
+                    best_value = j_score;
                 }
             }
-            Move &move = moves[move_index];
+            Move &move = moves[best_index];
 
             // Compute depth reduction
             Depth R = (depth >= 3 && i > 3 && move.type() == MoveType::Quiet &&
@@ -155,7 +157,7 @@ namespace Brainiac {
         // Update the transposition table
         node.depth = depth;
         node.value = value;
-        node.move = moves[move_index];
+        node.move = moves[best_index];
         if (value <= alpha_orig) {
             node.type = NodeType::Upper;
         } else if (value >= beta) {
@@ -174,26 +176,26 @@ namespace Brainiac {
 
         MoveList moves = pos.moves();
         for (Depth d = 1; d <= MAX_DEPTH; d++) {
-            Value best_score = MIN_VALUE;
-            unsigned best_move = 0;
+            Value best_value = MIN_VALUE;
+            uint16_t best_index = 0;
 
-            for (unsigned i = 0; i < moves.size(); i++) {
+            for (uint16_t i = 0; i < moves.size(); i++) {
                 Move move = moves[i];
 
                 pos.make(move);
 
                 // Evaluate the move
                 Value score = -negamax(pos, d);
-                if (score > best_score || best_score == MIN_VALUE) {
-                    best_score = score;
-                    best_move = i;
+                if (score > best_value || best_value == MIN_VALUE) {
+                    best_value = score;
+                    best_index = i;
                 }
 
                 pos.undo();
             }
 
             // Prioritize best_move in the next iteration
-            std::swap(moves[best_move], moves[0]);
+            std::swap(moves[best_index], moves[0]);
         }
 
         // Update result
