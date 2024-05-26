@@ -13,7 +13,7 @@ namespace Brainiac {
      * @brief Depth value.
      *
      */
-    using Depth = unsigned short;
+    using Depth = unsigned char;
 
     /**
      * @brief Maximum possible value of a position.

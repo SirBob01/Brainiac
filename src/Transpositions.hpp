@@ -32,9 +32,9 @@ namespace Brainiac {
      */
     struct Node {
         NodeType type = NodeType::Invalid;
-        Move move;
-        Value value;
         Depth depth;
+        Value value;
+        Move move;
     };
 
     /**
