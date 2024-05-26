@@ -34,6 +34,12 @@ namespace Brainiac {
     constexpr Value MIN_VALUE = -MAX_VALUE;
 
     /**
+     * @brief Winning value (checkmate).
+     *
+     */
+    constexpr Value WIN_VALUE = MAX_VALUE * 0.75;
+
+    /**
      * @brief Maximum possible value of a move.
      *
      */
