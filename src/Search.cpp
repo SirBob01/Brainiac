@@ -150,9 +150,12 @@ namespace Brainiac {
             Depth R = (depth >= 3 && i > 3 && !_position.is_check() &&
                        can_reduce_move(move, best_value));
 
+            // Compute depth extension
+            Depth E = depth == 0 && _position.is_check();
+
             // Evaluate subtree
             _position.make(move);
-            Value score = -negamax(depth - R - 1, -beta, -alpha);
+            Value score = -negamax(depth - R - 1 + E, -beta, -alpha);
             value = std::max(value, score);
             alpha = std::max(alpha, value);
             _position.undo();
