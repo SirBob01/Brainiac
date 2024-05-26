@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "Brainiac.hpp"
+#include "Position.hpp"
 
 Brainiac::Bitboard perft(Brainiac::Position &pos,
                          unsigned depth,
@@ -47,8 +48,10 @@ void perft_command(
     }
 }
 
-void play_bot(Brainiac::Color player_color) {
-    Brainiac::Position pos("r5rk/5p1p/5R2/4B3/8/8/7P/7K w - - 0 0");
+void play_bot(Brainiac::Color player_color, unsigned seed) {
+    Brainiac::Hasher hasher(seed);
+    Brainiac::Position pos("r5rk/5p1p/5R2/4B3/8/8/7P/7K w - - 0 0", hasher);
+    // Brainiac::Position pos(Brainiac::DEFAULT_BOARD_FEN, hasher);
     Brainiac::Search bot;
 
     Brainiac::Move move;
@@ -137,6 +140,6 @@ int main() {
     std::cout << (pos.fen()) << "\n";
     Brainiac::print_bitboard(pos.hash());
 
-    play_bot(Brainiac::Color::Black);
+    play_bot(Brainiac::Color::Black, 1118943);
     return 0;
 }
