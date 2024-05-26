@@ -32,6 +32,12 @@ namespace Brainiac {
          *
          */
         unsigned visited;
+
+        /**
+         * @brief Maximum depth searched (without extensions).
+         *
+         */
+        Depth max_depth;
     };
 
     /**

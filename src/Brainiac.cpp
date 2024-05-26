@@ -79,6 +79,7 @@ void play_bot(Brainiac::Color player_color, unsigned seed) {
 
             std::cout << "Total time: " << result.time << "\n";
             std::cout << "Visited nodes: " << result.visited << "\n";
+            std::cout << "Max depth: " << int(result.max_depth) << "\n";
             std::cout << "Nodes/s: " << nps << "\n";
             pos.make(result.move);
         } else {

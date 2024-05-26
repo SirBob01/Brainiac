@@ -247,6 +247,7 @@ namespace Brainiac {
         result.move = moves[0];
         result.time = time() - _start_time;
         result.visited = _visited;
+        result.max_depth = depth - 1;
         return result;
     }
 } // namespace Brainiac
