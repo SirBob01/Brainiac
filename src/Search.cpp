@@ -129,7 +129,7 @@ namespace Brainiac {
         }
 
         // Null move reduction
-        if (!_position.is_check()) {
+        if (!_position.is_check() && evaluate(_position) >= beta) {
             Depth R = depth > 6 ? 4 : 3;
             _position.skip();
             Value score = -negamax(depth - R - 1, -beta, -beta + 1);
