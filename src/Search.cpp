@@ -1,13 +1,15 @@
 #include "Search.hpp"
 
 namespace Brainiac {
-    int Search::score_move(Move move, Node node) {
-        int score = 0;
+    MoveValue Search::score_move(Move move, Node node) {
+        MoveValue score = 0;
 
         // Prioritize hash moves
         bool node_valid = node.type != NodeType::Invalid;
         bool node_move = node.move == move;
-        score += (node_move && node_valid) * 100000000;
+        if (node_valid && node_move) {
+            return MAX_MOVE_VALUE;
+        }
 
         // Prioritize moves with higher history heuristic
         score += _htable.get(move);
@@ -83,8 +85,8 @@ namespace Brainiac {
             // Find highest scoring move
             move_index = i;
             for (unsigned j = i + 1; j < moves.size(); j++) {
-                int score_j = score_move(moves[j], node);
-                int score_i = score_move(moves[move_index], node);
+                MoveValue score_j = score_move(moves[j], node);
+                MoveValue score_i = score_move(moves[move_index], node);
                 if (score_j > score_i) {
                     move_index = j;
                 }

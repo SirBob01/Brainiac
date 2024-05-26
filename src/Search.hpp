@@ -48,9 +48,9 @@ namespace Brainiac {
          *
          * @param move
          * @param node
-         * @return int
+         * @return MoveValue
          */
-        int score_move(Move move, Node node);
+        MoveValue score_move(Move move, Node node);
 
         /**
          * @brief Recursive negamax algorithm.
