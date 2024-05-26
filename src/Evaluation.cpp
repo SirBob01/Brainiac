@@ -76,7 +76,7 @@ namespace Brainiac {
 
         // Leaf node
         if (pos.is_checkmate()) {
-            return -sign * MAX_VALUE;
+            return -sign * WIN_VALUE;
         }
         if (pos.is_draw()) {
             return 0;
