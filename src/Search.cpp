@@ -83,6 +83,20 @@ namespace Brainiac {
         return value;
     }
 
+    bool Search::can_reduce_move(Move move, MoveValue value) {
+        MoveType type = move.type();
+        switch (type) {
+        case MoveType::Capture:
+            return value < 40;
+        case MoveType::QueenPromoCapture:
+            return value < 50;
+        case MoveType::Quiet:
+            return true;
+        default:
+            return false;
+        }
+    }
+
     Value Search::negamax(Position &pos, Depth depth, Value alpha, Value beta) {
         _visited++;
 
@@ -133,8 +147,8 @@ namespace Brainiac {
             Move &move = moves[best_index];
 
             // Compute depth reduction
-            Depth R = (depth >= 3 && i > 3 && move.type() == MoveType::Quiet &&
-                       !pos.is_check());
+            Depth R = (depth >= 3 && i > 3 && !pos.is_check() &&
+                       can_reduce_move(move, best_value));
 
             // Evaluate subtree
             pos.make(move);
