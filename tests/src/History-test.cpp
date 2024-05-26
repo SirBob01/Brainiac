@@ -17,8 +17,8 @@ static char *test_history() {
     Move quiet(Square::D1, Square::D2, MoveType::Quiet);
     Move promo(Square::C1, Square::C2, MoveType::QueenPromo);
 
-    unsigned depth0 = 4;
-    unsigned depth1 = 5;
+    Depth depth0 = 4;
+    Depth depth1 = 5;
 
     history.set(capture, depth0);
     history.set(capture, depth1);

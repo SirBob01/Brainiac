@@ -21,8 +21,8 @@ static char *test_compute_material() {
     for (const std::string &fen : fens) {
         Position pos(fen);
 
-        int value = compute_material(pos.board());
-        int expected = 0;
+        Value value = compute_material(pos.board());
+        Value expected = 0;
 
         // Compute it from the FEN string
         std::string layout = tokenize(fen)[0];
@@ -88,8 +88,8 @@ static char *test_compute_placement() {
     for (const std::string &fen : fens) {
         Position pos(fen);
 
-        int value = compute_placement(pos.board());
-        int expected = 0;
+        Value value = compute_placement(pos.board());
+        Value expected = 0;
 
         // White pieces
         for (uint8_t r = 0; r < 8; r++) {
@@ -157,7 +157,6 @@ static char *test_compute_placement() {
             }
         }
 
-        std::cout << value << " " << expected << "\n";
         fen_label = "Position FEN (" + fen + ")";
         test_label = "Position placement (" + fen + ")";
         mu_assert(fen_label.c_str(), pos.fen() == fen);

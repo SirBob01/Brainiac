@@ -3,6 +3,7 @@
 #include <array>
 
 #include "Move.hpp"
+#include "Numeric.hpp"
 
 namespace Brainiac {
     /**
@@ -35,6 +36,6 @@ namespace Brainiac {
          * @param move
          * @param depth
          */
-        void set(Move move, unsigned depth);
+        void set(Move move, Depth depth);
     };
 } // namespace Brainiac

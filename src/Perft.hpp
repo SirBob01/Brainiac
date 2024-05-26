@@ -4,6 +4,7 @@
 #include <functional>
 
 #include "Move.hpp"
+#include "Numeric.hpp"
 #include "Position.hpp"
 
 namespace Brainiac {
@@ -17,7 +18,7 @@ namespace Brainiac {
      * @return uint64_t
      */
     uint64_t perft(Position &pos,
-                   unsigned depth,
-                   unsigned max_depth,
+                   Depth depth,
+                   Depth max_depth,
                    std::function<void(Move, uint64_t)> cb = nullptr);
 } // namespace Brainiac

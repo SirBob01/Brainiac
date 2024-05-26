@@ -2,8 +2,8 @@
 
 namespace Brainiac {
     uint64_t perft(Position &pos,
-                   unsigned depth,
-                   unsigned max_depth,
+                   Depth depth,
+                   Depth max_depth,
                    std::function<void(Move, uint64_t)> cb) {
         uint64_t nodes = 0;
         const MoveList &moves = pos.moves();

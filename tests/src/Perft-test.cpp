@@ -11,7 +11,7 @@ int tests_run = 0;
 
 struct PerftTestCase {
     std::string fen;
-    uint64_t depth;
+    Depth depth;
     uint64_t result;
 };
 
