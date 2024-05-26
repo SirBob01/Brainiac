@@ -87,13 +87,16 @@ namespace Brainiac {
         /**
          * @brief Recursive negamax algorithm.
          *
+         * @param prev
          * @param depth
          * @param alpha
          * @param beta
          * @return Value
          */
-        Value
-        negamax(Depth depth, Value alpha = MIN_VALUE, Value beta = MAX_VALUE);
+        Value negamax(Move prev,
+                      Depth depth,
+                      Value alpha = MIN_VALUE,
+                      Value beta = MAX_VALUE);
 
       public:
         /**

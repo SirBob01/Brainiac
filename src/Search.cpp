@@ -97,7 +97,7 @@ namespace Brainiac {
         }
     }
 
-    Value Search::negamax(Depth depth, Value alpha, Value beta) {
+    Value Search::negamax(Move prev, Depth depth, Value alpha, Value beta) {
         _visited++;
 
         // Read the transposition table
@@ -129,10 +129,10 @@ namespace Brainiac {
         }
 
         // Null move reduction
-        if (!_position.is_check() && evaluate(_position) >= beta) {
+        if (!_position.is_check() && prev.type() != MoveType::Skip) {
             Depth R = depth > 6 ? 4 : 3;
             _position.skip();
-            Value score = -negamax(depth - R - 1, -beta, -beta + 1);
+            Value score = -negamax(Move(), depth - R - 1, -beta, -beta + 1);
             _position.undo();
             if (score >= beta) {
                 depth -= 4;
@@ -169,7 +169,7 @@ namespace Brainiac {
 
             // Evaluate subtree
             _position.make(move);
-            Value score = -negamax(depth - R - 1 + E, -beta, -alpha);
+            Value score = -negamax(move, depth - R - 1 + E, -beta, -alpha);
             value = std::max(value, score);
             alpha = std::max(alpha, value);
             _position.undo();
@@ -215,7 +215,7 @@ namespace Brainiac {
                 _position.make(move);
 
                 // Evaluate the move
-                Value score = -negamax(d);
+                Value score = -negamax(move, d);
                 if (score > best_value || best_value == MIN_VALUE) {
                     best_value = score;
                     best_index = i;
