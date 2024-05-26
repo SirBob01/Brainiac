@@ -62,14 +62,14 @@ namespace Brainiac {
         MoveValue evaluate_capture(Move move, Position &pos);
 
         /**
-         * @brief Compute the move score for ordering
+         * @brief Compute the move value for ordering
          *
          * @param move
          * @param node
          * @param pos
          * @return MoveValue
          */
-        MoveValue score_move(Move move, Node node, Position &pos);
+        MoveValue evaluate_move(Move move, Node node, Position &pos);
 
         /**
          * @brief Recursive negamax algorithm.
