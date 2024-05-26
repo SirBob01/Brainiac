@@ -47,8 +47,6 @@ namespace Brainiac {
     }
 
     MoveValue Search::score_move(Move move, Node node, Position &pos) {
-        MoveValue score = 0;
-
         // Prioritize hash moves
         bool node_valid = node.type != NodeType::Invalid;
         bool node_move = node.move == move;
@@ -57,26 +55,22 @@ namespace Brainiac {
         }
 
         // Prioritize moves with higher history heuristic
-        score += _htable.get(move);
+        MoveValue score = _htable.get(move);
 
         // Prioritize non-quiet moves
+        // Also, prioritize queen promotion over all other promotions
         switch (move.type()) {
         case MoveType::Capture:
-            score += see_capture(move, pos);
+            score += 20 + see_capture(move, pos);
+            break;
+        case MoveType::QueenPromoCapture:
+            score += 30 + see_capture(move, pos);
+            break;
         case MoveType::EnPassant:
             score += 20;
             break;
-        case MoveType::KnightPromo:
-        case MoveType::BishopPromo:
-        case MoveType::RookPromo:
         case MoveType::QueenPromo:
             score += 10;
-            break;
-        case MoveType::KnightPromoCapture:
-        case MoveType::BishopPromoCapture:
-        case MoveType::RookPromoCapture:
-        case MoveType::QueenPromoCapture:
-            score += 30;
             break;
         case MoveType::KingCastle:
         case MoveType::QueenCastle:
