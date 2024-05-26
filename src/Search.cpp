@@ -1,10 +1,10 @@
 #include "Search.hpp"
 
 namespace Brainiac {
-    Value Search::see_target(Square target, Position &pos) {
+    Value Search::see_target(Square target) {
         // TODO: Too slow
-        const Board &board = pos.board();
-        const MoveList &moves = pos.moves();
+        const Board &board = _position.board();
+        const MoveList &moves = _position.moves();
 
         Piece victim = board.get(target);
         if (victim == Piece::Empty) {
@@ -28,23 +28,23 @@ namespace Brainiac {
         }
 
         if (lva != MAX_VALUE) {
-            pos.make(best_move);
-            value = std::max(0, mvv - see_target(target, pos));
-            pos.undo();
+            _position.make(best_move);
+            value = std::max(0, mvv - see_target(target));
+            _position.undo();
         }
 
         return value;
     }
 
-    MoveValue Search::evaluate_capture(Move move, Position &pos) {
-        const Board &board = pos.board();
+    MoveValue Search::evaluate_capture(Move move) {
+        const Board &board = _position.board();
         Piece attacker = board.get(move.src());
         Piece victim = board.get(move.dst());
         return std::abs(PIECE_WEIGHTS[victim]) -
                std::abs(PIECE_WEIGHTS[attacker]);
     }
 
-    MoveValue Search::evaluate_move(Move move, Node node, Position &pos) {
+    MoveValue Search::evaluate_move(Move move, Node node) {
         // Prioritize hash moves
         bool node_valid = node.type != NodeType::Invalid;
         bool node_move = node.move == move;
@@ -59,10 +59,10 @@ namespace Brainiac {
         // Also, prioritize queen promotion over all other promotions
         switch (move.type()) {
         case MoveType::Capture:
-            value += 40 + evaluate_capture(move, pos);
+            value += 40 + evaluate_capture(move);
             break;
         case MoveType::QueenPromoCapture:
-            value += 50 + evaluate_capture(move, pos);
+            value += 50 + evaluate_capture(move);
             break;
         case MoveType::EnPassant:
             value += 20;
@@ -97,12 +97,12 @@ namespace Brainiac {
         }
     }
 
-    Value Search::negamax(Position &pos, Depth depth, Value alpha, Value beta) {
+    Value Search::negamax(Depth depth, Value alpha, Value beta) {
         _visited++;
 
         // Read the transposition table
         Value alpha_orig = alpha;
-        Node node = _tptable.get(pos);
+        Node node = _tptable.get(_position);
         if (node.type != NodeType::Invalid && node.depth >= depth) {
             switch (node.type) {
             case NodeType::Exact:
@@ -124,21 +124,21 @@ namespace Brainiac {
         }
 
         // Terminal node
-        if (depth == 0 || pos.is_checkmate() || pos.is_draw()) {
-            return evaluate(pos);
+        if (depth == 0 || _position.is_checkmate() || _position.is_draw()) {
+            return evaluate(_position);
         }
 
         // Non-terminal node
         Value value = MIN_VALUE;
-        MoveList moves = pos.moves();
+        MoveList moves = _position.moves();
         MoveValue best_value = 0;
         uint16_t best_index = 0;
         for (uint16_t i = 0; i < moves.size(); i++) {
             // Find highest scoring move
             best_index = i;
-            best_value = evaluate_move(moves[best_index], node, pos);
+            best_value = evaluate_move(moves[best_index], node);
             for (uint16_t j = i + 1; j < moves.size(); j++) {
-                MoveValue j_score = evaluate_move(moves[j], node, pos);
+                MoveValue j_score = evaluate_move(moves[j], node);
                 if (j_score > best_value) {
                     best_index = j;
                     best_value = j_score;
@@ -147,15 +147,15 @@ namespace Brainiac {
             Move &move = moves[best_index];
 
             // Compute depth reduction
-            Depth R = (depth >= 3 && i > 3 && !pos.is_check() &&
+            Depth R = (depth >= 3 && i > 3 && !_position.is_check() &&
                        can_reduce_move(move, best_value));
 
             // Evaluate subtree
-            pos.make(move);
-            Value score = -negamax(pos, depth - R - 1, -beta, -alpha);
+            _position.make(move);
+            Value score = -negamax(depth - R - 1, -beta, -alpha);
             value = std::max(value, score);
             alpha = std::max(alpha, value);
-            pos.undo();
+            _position.undo();
 
             // Early terminate
             if (alpha >= beta) {
@@ -178,16 +178,16 @@ namespace Brainiac {
         } else {
             node.type = NodeType::Exact;
         }
-        _tptable.set(pos, node);
+        _tptable.set(_position, node);
         return value;
     }
 
-    Result Search::search(Position &pos) {
+    Result Search::search() {
         // Reset statistics
         _start_time = time();
         _visited = 0;
 
-        MoveList moves = pos.moves();
+        MoveList moves = _position.moves();
         for (Depth d = 1; d <= MAX_DEPTH; d++) {
             Value best_value = MIN_VALUE;
             uint16_t best_index = 0;
@@ -195,16 +195,16 @@ namespace Brainiac {
             for (uint16_t i = 0; i < moves.size(); i++) {
                 Move move = moves[i];
 
-                pos.make(move);
+                _position.make(move);
 
                 // Evaluate the move
-                Value score = -negamax(pos, d);
+                Value score = -negamax(d);
                 if (score > best_value || best_value == MIN_VALUE) {
                     best_value = score;
                     best_index = i;
                 }
 
-                pos.undo();
+                _position.undo();
             }
 
             // Prioritize best_move in the next iteration
