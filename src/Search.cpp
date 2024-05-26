@@ -2,6 +2,7 @@
 
 namespace Brainiac {
     Value Search::see_target(Square target, Position &pos) {
+        // TODO: Too slow
         const Board &board = pos.board();
         const MoveList &moves = pos.moves();
 
@@ -35,15 +36,12 @@ namespace Brainiac {
         return value;
     }
 
-    MoveValue Search::see_capture(Move move, Position &pos) {
-        Piece attacker = pos.board().get(move.src());
-        MoveValue value = std::abs(PIECE_WEIGHTS[attacker]);
-
-        pos.make(move);
-        value -= see_target(move.dst(), pos);
-        pos.undo();
-
-        return value;
+    MoveValue Search::evaluate_capture(Move move, Position &pos) {
+        const Board &board = pos.board();
+        Piece attacker = board.get(move.src());
+        Piece victim = board.get(move.dst());
+        return std::abs(PIECE_WEIGHTS[victim]) -
+               std::abs(PIECE_WEIGHTS[attacker]);
     }
 
     MoveValue Search::score_move(Move move, Node node, Position &pos) {
@@ -61,23 +59,23 @@ namespace Brainiac {
         // Also, prioritize queen promotion over all other promotions
         switch (move.type()) {
         case MoveType::Capture:
-            score += 20 + see_capture(move, pos);
+            score += 40 + evaluate_capture(move, pos);
             break;
         case MoveType::QueenPromoCapture:
-            score += 30 + see_capture(move, pos);
+            score += 50 + evaluate_capture(move, pos);
             break;
         case MoveType::EnPassant:
             score += 20;
             break;
         case MoveType::QueenPromo:
-            score += 10;
+            score += 20;
             break;
         case MoveType::KingCastle:
         case MoveType::QueenCastle:
             score += 10;
             break;
         case MoveType::PawnDouble:
-            score += 5;
+            score += 10;
             break;
         default:
             break;
@@ -133,9 +131,13 @@ namespace Brainiac {
             }
             Move &move = moves[move_index];
 
+            // Compute depth reduction
+            Depth R = (depth >= 3 && i > 3 && move.type() == MoveType::Quiet &&
+                       !pos.is_check());
+
             // Evaluate subtree
             pos.make(move);
-            Value score = -negamax(pos, depth - 1, -beta, -alpha);
+            Value score = -negamax(pos, depth - R - 1, -beta, -alpha);
             value = std::max(value, score);
             alpha = std::max(alpha, value);
             pos.undo();

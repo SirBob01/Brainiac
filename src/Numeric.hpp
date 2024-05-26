@@ -49,5 +49,5 @@ namespace Brainiac {
      * @brief Maximum possible depth of the search.
      *
      */
-    constexpr Depth MAX_DEPTH = 7;
+    constexpr Depth MAX_DEPTH = 8;
 } // namespace Brainiac

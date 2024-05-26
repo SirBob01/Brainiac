@@ -53,13 +53,13 @@ namespace Brainiac {
         Value see_target(Square target, Position &pos);
 
         /**
-         * @brief Compute SEE for a move.
+         * @brief Evaluate a capture move.
          *
          * @param move
          * @param pos
          * @return MoveValue
          */
-        MoveValue see_capture(Move move, Position &pos);
+        MoveValue evaluate_capture(Move move, Position &pos);
 
         /**
          * @brief Compute the move score for ordering
