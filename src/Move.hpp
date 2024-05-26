@@ -29,6 +29,7 @@ namespace Brainiac {
      * Enum of all types of moves.
      */
     enum MoveType : uint8_t {
+        Skip,
         Quiet,
         PawnDouble,
         KingCastle,
