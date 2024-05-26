@@ -124,8 +124,22 @@ namespace Brainiac {
         }
 
         // Terminal node
-        if (depth == 0 || _position.is_checkmate() || _position.is_draw()) {
+        if (depth <= 0 || _position.is_checkmate() || _position.is_draw()) {
             return evaluate(_position);
+        }
+
+        // Null move reduction
+        if (!_position.is_check()) {
+            Depth R = depth > 6 ? 4 : 3;
+            _position.skip();
+            Value score = -negamax(depth - R - 1, -beta, -beta + 1);
+            _position.undo();
+            if (score >= beta) {
+                depth -= 4;
+                if (depth <= 0) {
+                    return evaluate(_position);
+                }
+            }
         }
 
         // Non-terminal node
