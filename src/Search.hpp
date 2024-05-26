@@ -41,7 +41,9 @@ namespace Brainiac {
     class Search {
         Transpositions _tptable;
         History _htable;
-        Result _result;
+
+        Seconds _start_time;
+        unsigned _visited;
 
         /**
          * @brief Static exchange evaluation on a target square.
