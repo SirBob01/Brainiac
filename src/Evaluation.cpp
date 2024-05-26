@@ -82,10 +82,17 @@ namespace Brainiac {
             return 0;
         }
 
+        // Compute mobility
+        Value mobility = pos.moves().size();
+        pos.skip();
+        mobility -= pos.moves().size();
+        pos.undo();
+
         // Non-leaf node (depth capped)
         const Board &board = pos.board();
         Value material = compute_material(board);
         Value placement = compute_placement(board);
-        return sign * (material + 2 * placement);
+
+        return sign * 2 * (material + 3 * placement) + mobility;
     }
 } // namespace Brainiac
