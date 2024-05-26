@@ -5,6 +5,8 @@
 #include <vector>
 
 namespace Brainiac {
+    using namespace std::chrono_literals;
+
     /**
      * @brief Time measurement in seconds.
      *

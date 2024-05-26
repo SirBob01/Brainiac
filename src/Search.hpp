@@ -44,7 +44,9 @@ namespace Brainiac {
         Transpositions _tptable;
         History _htable;
 
+        bool _timeout;
         Seconds _start_time;
+        Seconds _remaining_time;
         unsigned _visited;
 
         /**

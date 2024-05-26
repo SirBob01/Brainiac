@@ -55,5 +55,5 @@ namespace Brainiac {
      * @brief Maximum possible depth of the search.
      *
      */
-    constexpr Depth MAX_DEPTH = 8;
+    constexpr Depth MAX_DEPTH = std::numeric_limits<Depth>::max();
 } // namespace Brainiac

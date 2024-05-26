@@ -100,6 +100,8 @@ namespace Brainiac {
     }
 
     Value Search::negamax(Move prev, Depth depth, Value alpha, Value beta) {
+        // Time management
+        _timeout = time() - _start_time >= _remaining_time;
         _visited++;
 
         // Read the transposition table
@@ -126,7 +128,8 @@ namespace Brainiac {
         }
 
         // Terminal node
-        if (depth <= 0 || _position.is_checkmate() || _position.is_draw()) {
+        if (depth <= 0 || _position.is_checkmate() || _position.is_draw() ||
+            _timeout) {
             return evaluate(_position);
         }
 
@@ -207,31 +210,37 @@ namespace Brainiac {
 
     Result Search::search() {
         // Reset statistics
+        _timeout = false;
         _start_time = time();
         _visited = 0;
+        _remaining_time = 10s; // TODO: Compute this dynamically.
 
         MoveList moves = _position.moves();
-        for (Depth d = 1; d <= MAX_DEPTH; d++) {
-            Value best_value = MIN_VALUE;
-            uint16_t best_index = 0;
 
-            for (uint16_t i = 0; i < moves.size(); i++) {
+        // Initial aspiration window
+        Value alpha = MIN_VALUE;
+        Value beta = MAX_VALUE;
+
+        Depth depth = 1;
+        Value best_value = MIN_VALUE;
+        while (depth <= MAX_DEPTH && best_value != WIN_VALUE && !_timeout) {
+            uint16_t best_index = 0;
+            for (uint16_t i = 0; i < moves.size() && !_timeout; i++) {
                 Move move = moves[i];
 
-                _position.make(move);
-
                 // Evaluate the move
-                Value score = -negamax(move, d);
-                if (score > best_value || best_value == MIN_VALUE) {
+                _position.make(move);
+                Value score = -negamax(move, depth, alpha, beta);
+                if (score > best_value) {
                     best_value = score;
                     best_index = i;
                 }
-
                 _position.undo();
             }
 
             // Prioritize best_move in the next iteration
             std::swap(moves[best_index], moves[0]);
+            depth++;
         }
 
         Result result;
