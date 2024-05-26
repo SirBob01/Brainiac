@@ -31,13 +31,13 @@ std::vector<MateTestCase> POSITIONS = {
 static char *test_mate_in_n() {
     for (MateTestCase &test : POSITIONS) {
         Position pos(test.fen);
-        Search search;
+        Search search(pos);
 
         Color bot_turn = pos.turn();
 
         for (unsigned i = 0; i < test.sequence.size(); i++) {
             if (pos.turn() == bot_turn) {
-                Result result = search.search(pos);
+                Result result = search.search();
 
                 move_label = "Searched move (" +
                              test.sequence[i].standard_notation() +
