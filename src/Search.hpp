@@ -39,6 +39,8 @@ namespace Brainiac {
      *
      */
     class Search {
+        Position &_position;
+
         Transpositions _tptable;
         History _htable;
 
@@ -52,7 +54,7 @@ namespace Brainiac {
          * @param pos
          * @return Value
          */
-        Value see_target(Square target, Position &pos);
+        Value see_target(Square target);
 
         /**
          * @brief Evaluate a capture move.
@@ -61,22 +63,22 @@ namespace Brainiac {
          * @param pos
          * @return MoveValue
          */
-        MoveValue evaluate_capture(Move move, Position &pos);
+        MoveValue evaluate_capture(Move move);
 
         /**
          * @brief Compute the move value for ordering
          *
          * @param move
          * @param node
-         * @param pos
          * @return MoveValue
          */
-        MoveValue evaluate_move(Move move, Node node, Position &pos);
+        MoveValue evaluate_move(Move move, Node node);
 
         /**
          * @brief Check if a move can be reduced.
          *
          * @param move
+         * @param value
          * @return true
          * @return false
          */
@@ -85,24 +87,27 @@ namespace Brainiac {
         /**
          * @brief Recursive negamax algorithm.
          *
-         * @param pos
          * @param depth
          * @param alpha
          * @param beta
          * @return Value
          */
-        Value negamax(Position &pos,
-                      Depth depth,
-                      Value alpha = MIN_VALUE,
-                      Value beta = MAX_VALUE);
+        Value
+        negamax(Depth depth, Value alpha = MIN_VALUE, Value beta = MAX_VALUE);
 
       public:
         /**
+         * @brief Construct a new Search object.
+         *
+         * @param position
+         */
+        Search(Position &position) : _position(position){};
+
+        /**
          * @brief Calculate the next viable move for the current turn.
          *
-         * @param pos
          * @return Result
          */
-        Result search(Position &pos);
+        Result search();
     };
 } // namespace Brainiac
