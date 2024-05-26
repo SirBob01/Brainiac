@@ -74,6 +74,15 @@ namespace Brainiac {
         MoveValue evaluate_move(Move move, Node node, Position &pos);
 
         /**
+         * @brief Check if a move can be reduced.
+         *
+         * @param move
+         * @return true
+         * @return false
+         */
+        bool can_reduce_move(Move move, MoveValue value);
+
+        /**
          * @brief Recursive negamax algorithm.
          *
          * @param pos
