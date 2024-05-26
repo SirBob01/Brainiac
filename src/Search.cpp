@@ -56,18 +56,20 @@ namespace Brainiac {
         MoveValue value = _htable.get(move);
 
         // Prioritize non-quiet moves
-        // Also, prioritize queen promotion over all other promotions
+        // Also, prioritize queen and knight promotions over all others
         switch (move.type()) {
         case MoveType::Capture:
             value += 40 + evaluate_capture(move);
             break;
         case MoveType::QueenPromoCapture:
+        case MoveType::KnightPromoCapture:
             value += 50 + evaluate_capture(move);
             break;
         case MoveType::EnPassant:
             value += 20;
             break;
         case MoveType::QueenPromo:
+        case MoveType::KnightPromo:
             value += 20;
             break;
         case MoveType::KingCastle:
