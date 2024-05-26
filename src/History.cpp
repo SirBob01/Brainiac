@@ -7,7 +7,7 @@ namespace Brainiac {
 
     int History::get(Move move) const { return _table[index(move)]; }
 
-    void History::set(Move move, unsigned depth) {
+    void History::set(Move move, Depth depth) {
         switch (move.type()) {
         case Quiet:
         case PawnDouble:

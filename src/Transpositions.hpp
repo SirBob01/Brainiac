@@ -2,7 +2,9 @@
 
 #include <vector>
 
+#include "Evaluation.hpp"
 #include "Move.hpp"
+#include "Numeric.hpp"
 #include "Position.hpp"
 
 namespace Brainiac {
@@ -25,26 +27,14 @@ namespace Brainiac {
     enum NodeType : uint8_t { Exact, Lower, Upper, Invalid };
 
     /**
-     * @brief Lower score bound.
+     * @brief Transposition node.
      *
      */
-    constexpr int LOWER_BOUND = -1000000000;
-
-    /**
-     * @brief Upper score bound.
-     *
-     */
-    constexpr int UPPER_BOUND = -LOWER_BOUND;
-
-    /**
-     * @brief Transposition entry.
-     *
-     */
-    struct TableEntry {
+    struct Node {
         NodeType type = NodeType::Invalid;
         Move move;
-        unsigned depth;
-        int value;
+        Value value;
+        Depth depth;
     };
 
     /**
@@ -52,7 +42,7 @@ namespace Brainiac {
      *
      */
     class Transpositions {
-        std::vector<TableEntry> _table;
+        std::vector<Node> _table;
 
       public:
         Transpositions();
@@ -61,16 +51,16 @@ namespace Brainiac {
          * @brief Read an entry from the table.
          *
          * @param pos
-         * @return TableEntry
+         * @return Node
          */
-        TableEntry get(Position &pos) const;
+        Node get(Position &pos) const;
 
         /**
          * @brief Set an entry to the table.
          *
          * @param pos
-         * @param entry
+         * @param node
          */
-        void set(Position &pos, TableEntry entry);
+        void set(Position &pos, Node node);
     };
 } // namespace Brainiac

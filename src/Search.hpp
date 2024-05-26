@@ -4,17 +4,12 @@
 
 #include "Evaluation.hpp"
 #include "History.hpp"
+#include "Numeric.hpp"
 #include "Position.hpp"
 #include "Transpositions.hpp"
 #include "Utils.hpp"
 
 namespace Brainiac {
-    /**
-     * @brief Maximum possible depth of the search.
-     *
-     */
-    constexpr unsigned MAX_DEPTH = 7;
-
     /**
      * @brief Search result.
      *
@@ -55,7 +50,7 @@ namespace Brainiac {
          * @param node
          * @return int
          */
-        int score_move(Move move, TableEntry node);
+        int score_move(Move move, Node node);
 
         /**
          * @brief Recursive negamax algorithm.
@@ -64,12 +59,12 @@ namespace Brainiac {
          * @param depth
          * @param alpha
          * @param beta
-         * @return short
+         * @return Value
          */
-        int negamax(Position &pos,
-                    unsigned depth,
-                    int alpha = LOWER_BOUND,
-                    int beta = UPPER_BOUND);
+        Value negamax(Position &pos,
+                      Depth depth,
+                      Value alpha = MIN_VALUE,
+                      Value beta = MAX_VALUE);
 
       public:
         /**

@@ -1,7 +1,7 @@
 #include "Search.hpp"
 
 namespace Brainiac {
-    int Search::score_move(Move move, TableEntry node) {
+    int Search::score_move(Move move, Node node) {
         int score = 0;
 
         // Prioritize hash moves
@@ -43,22 +43,22 @@ namespace Brainiac {
         return score;
     }
 
-    int Search::negamax(Position &pos, unsigned depth, int alpha, int beta) {
+    Value Search::negamax(Position &pos, Depth depth, Value alpha, Value beta) {
         // Update statistics
         _result.visited++;
 
         // Read the transposition table
-        int alpha_orig = alpha;
-        TableEntry entry = _tptable.get(pos);
-        if (entry.type != NodeType::Invalid && entry.depth >= depth) {
-            switch (entry.type) {
+        Value alpha_orig = alpha;
+        Node node = _tptable.get(pos);
+        if (node.type != NodeType::Invalid && node.depth >= depth) {
+            switch (node.type) {
             case NodeType::Exact:
-                return entry.value;
+                return node.value;
             case NodeType::Lower:
-                alpha = std::max(alpha, entry.value);
+                alpha = std::max(alpha, node.value);
                 break;
             case NodeType::Upper:
-                beta = std::min(beta, entry.value);
+                beta = std::min(beta, node.value);
                 break;
             default:
                 break;
@@ -66,7 +66,7 @@ namespace Brainiac {
 
             // Early terminate
             if (alpha >= beta) {
-                return entry.value;
+                return node.value;
             }
         }
 
@@ -76,15 +76,15 @@ namespace Brainiac {
         }
 
         // Non-terminal node
-        int value = LOWER_BOUND;
+        Value value = MIN_VALUE;
         MoveList moves = pos.moves();
         unsigned move_index = 0;
         for (unsigned i = 0; i < moves.size(); i++) {
             // Find highest scoring move
             move_index = i;
             for (unsigned j = i + 1; j < moves.size(); j++) {
-                int score_j = score_move(moves[j], entry);
-                int score_i = score_move(moves[move_index], entry);
+                int score_j = score_move(moves[j], node);
+                int score_i = score_move(moves[move_index], node);
                 if (score_j > score_i) {
                     move_index = j;
                 }
@@ -93,7 +93,7 @@ namespace Brainiac {
 
             // Evaluate subtree
             pos.make(move);
-            int score = -negamax(pos, depth - 1, -beta, -alpha);
+            Value score = -negamax(pos, depth - 1, -beta, -alpha);
             value = std::max(value, score);
             alpha = std::max(alpha, value);
             pos.undo();
@@ -109,18 +109,17 @@ namespace Brainiac {
         }
 
         // Update the transposition table
-        TableEntry new_entry;
-        new_entry.depth = depth;
-        new_entry.value = value;
-        new_entry.move = moves[move_index];
+        node.depth = depth;
+        node.value = value;
+        node.move = moves[move_index];
         if (value <= alpha_orig) {
-            new_entry.type = NodeType::Upper;
+            node.type = NodeType::Upper;
         } else if (value >= beta) {
-            new_entry.type = NodeType::Lower;
+            node.type = NodeType::Lower;
         } else {
-            new_entry.type = NodeType::Exact;
+            node.type = NodeType::Exact;
         }
-        _tptable.set(pos, new_entry);
+        _tptable.set(pos, node);
         return value;
     }
 
@@ -130,9 +129,9 @@ namespace Brainiac {
         _result.visited = 0;
 
         MoveList moves = pos.moves();
-        for (unsigned d = 1; d <= MAX_DEPTH; d++) {
-            int best_score = LOWER_BOUND;
-            int best_move = 0;
+        for (Depth d = 1; d <= MAX_DEPTH; d++) {
+            Value best_score = MIN_VALUE;
+            unsigned best_move = 0;
 
             for (unsigned i = 0; i < moves.size(); i++) {
                 Move move = moves[i];
@@ -140,8 +139,8 @@ namespace Brainiac {
                 pos.make(move);
 
                 // Evaluate the move
-                int score = -negamax(pos, d);
-                if (score > best_score || best_score == LOWER_BOUND) {
+                Value score = -negamax(pos, d);
+                if (score > best_score || best_score == MIN_VALUE) {
                     best_score = score;
                     best_move = i;
                 }
