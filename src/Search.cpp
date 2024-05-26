@@ -172,6 +172,10 @@ namespace Brainiac {
             // Evaluate subtree
             _position.make(move);
             Value score = -negamax(move, depth - R - 1 + E, -beta, -alpha);
+            if (score > alpha) {
+                // Fail-low, do full re-search
+                score = -negamax(move, depth - 1 + E, -beta, -alpha);
+            }
             value = std::max(value, score);
             alpha = std::max(alpha, value);
             _position.undo();
