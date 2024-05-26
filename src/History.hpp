@@ -11,7 +11,7 @@ namespace Brainiac {
      *
      */
     class History {
-        std::array<int, 64 * 64> _table = {0};
+        std::array<MoveValue, 64 * 64> _table = {0};
 
         /**
          * @brief Compute the table index of a move.
@@ -26,9 +26,9 @@ namespace Brainiac {
          * @brief Get the score of a move.
          *
          * @param move
-         * @return int
+         * @return MoveValue
          */
-        int get(Move move) const;
+        MoveValue get(Move move) const;
 
         /**
          * @brief Update the score of a move.

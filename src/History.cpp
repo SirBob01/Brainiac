@@ -5,7 +5,7 @@ namespace Brainiac {
         return move.src() * 64 + move.dst();
     }
 
-    int History::get(Move move) const { return _table[index(move)]; }
+    MoveValue History::get(Move move) const { return _table[index(move)]; }
 
     void History::set(Move move, Depth depth) {
         switch (move.type()) {

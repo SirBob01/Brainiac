@@ -10,6 +10,12 @@ namespace Brainiac {
     using Value = short;
 
     /**
+     * @brief Move value.
+     *
+     */
+    using MoveValue = int;
+
+    /**
      * @brief Depth value.
      *
      */
@@ -26,6 +32,18 @@ namespace Brainiac {
      *
      */
     constexpr Value MIN_VALUE = -MAX_VALUE;
+
+    /**
+     * @brief Maximum possible value of a move.
+     *
+     */
+    constexpr MoveValue MAX_MOVE_VALUE = std::numeric_limits<MoveValue>::max();
+
+    /**
+     * @brief Minimum possible value of a move.
+     *
+     */
+    constexpr MoveValue MIN_MOVE_VALUE = -MAX_MOVE_VALUE;
 
     /**
      * @brief Maximum possible depth of the search.

@@ -37,7 +37,7 @@ static char *test_history() {
     mu_assert("Capture promote history", history.get(capture_promo) == 0);
 
     // Non-captures
-    int expected = (depth0 * depth0) + (depth1 * depth1);
+    MoveValue expected = (depth0 * depth0) + (depth1 * depth1);
     mu_assert("Quiet history", history.get(quiet) == expected);
     mu_assert("Promote history", history.get(promo) == expected);
 
