@@ -44,13 +44,32 @@ namespace Brainiac {
         Result _result;
 
         /**
+         * @brief Static exchange evaluation on a target square.
+         *
+         * @param target
+         * @param pos
+         * @return Value
+         */
+        Value see_target(Square target, Position &pos);
+
+        /**
+         * @brief Compute SEE for a move.
+         *
+         * @param move
+         * @param pos
+         * @return MoveValue
+         */
+        MoveValue see_capture(Move move, Position &pos);
+
+        /**
          * @brief Compute the move score for ordering
          *
          * @param move
          * @param node
+         * @param pos
          * @return MoveValue
          */
-        MoveValue score_move(Move move, Node node);
+        MoveValue score_move(Move move, Node node, Position &pos);
 
         /**
          * @brief Recursive negamax algorithm.

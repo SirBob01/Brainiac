@@ -1,7 +1,52 @@
 #include "Search.hpp"
 
 namespace Brainiac {
-    MoveValue Search::score_move(Move move, Node node) {
+    Value Search::see_target(Square target, Position &pos) {
+        const Board &board = pos.board();
+        const MoveList &moves = pos.moves();
+
+        Piece victim = board.get(target);
+        if (victim == Piece::Empty) {
+            return 0;
+        }
+
+        Value value = 0;
+        Value mvv = std::abs(PIECE_WEIGHTS[victim]);
+        Value lva = MAX_VALUE;
+
+        Move best_move = moves[0];
+        for (Move move : moves) {
+            if (move.dst() != target) continue;
+
+            Piece attacker = board.get(move.src());
+            Value attacker_value = std::abs(PIECE_WEIGHTS[attacker]);
+            if (attacker_value < lva) {
+                lva = attacker_value;
+                best_move = move;
+            }
+        }
+
+        if (lva != MAX_VALUE) {
+            pos.make(best_move);
+            value = std::max(0, mvv - see_target(target, pos));
+            pos.undo();
+        }
+
+        return value;
+    }
+
+    MoveValue Search::see_capture(Move move, Position &pos) {
+        Piece attacker = pos.board().get(move.src());
+        MoveValue value = std::abs(PIECE_WEIGHTS[attacker]);
+
+        pos.make(move);
+        value -= see_target(move.dst(), pos);
+        pos.undo();
+
+        return value;
+    }
+
+    MoveValue Search::score_move(Move move, Node node, Position &pos) {
         MoveValue score = 0;
 
         // Prioritize hash moves
@@ -17,6 +62,7 @@ namespace Brainiac {
         // Prioritize non-quiet moves
         switch (move.type()) {
         case MoveType::Capture:
+            score += see_capture(move, pos);
         case MoveType::EnPassant:
             score += 20;
             break;
@@ -85,8 +131,8 @@ namespace Brainiac {
             // Find highest scoring move
             move_index = i;
             for (unsigned j = i + 1; j < moves.size(); j++) {
-                MoveValue score_j = score_move(moves[j], node);
-                MoveValue score_i = score_move(moves[move_index], node);
+                MoveValue score_j = score_move(moves[j], node, pos);
+                MoveValue score_i = score_move(moves[move_index], node, pos);
                 if (score_j > score_i) {
                     move_index = j;
                 }
