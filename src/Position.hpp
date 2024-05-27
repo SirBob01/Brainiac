@@ -138,6 +138,14 @@ namespace Brainiac {
         bool is_end() const;
 
         /**
+         * @brief Test if the position is quiet.
+         *
+         * @return true
+         * @return false
+         */
+        bool is_quiet();
+
+        /**
          * @brief Make a move. This assumes moves are legal.
          *
          * @param move
