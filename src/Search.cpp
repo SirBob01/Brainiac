@@ -2,7 +2,6 @@
 
 namespace Brainiac {
     Value Search::see_target(Square target) {
-        // TODO: Too slow
         const Board &board = _position.board();
         const MoveList &moves = _position.moves();
 
@@ -38,10 +37,12 @@ namespace Brainiac {
 
     MoveValue Search::evaluate_capture(Move move) {
         const Board &board = _position.board();
-        Piece attacker = board.get(move.src());
         Piece victim = board.get(move.dst());
-        return std::abs(PIECE_WEIGHTS[victim]) -
-               std::abs(PIECE_WEIGHTS[attacker]);
+
+        _position.make(move);
+        Value value = std::abs(PIECE_WEIGHTS[victim]) - see_target(move.dst());
+        _position.undo();
+        return value;
     }
 
     MoveValue Search::evaluate_move(Move move, Node node) {
@@ -213,7 +214,7 @@ namespace Brainiac {
         _timeout = false;
         _start_time = time();
         _visited = 0;
-        _remaining_time = 10s; // TODO: Compute this dynamically.
+        _remaining_time = 15s; // TODO: Compute this dynamically.
 
         MoveList moves = _position.moves();
 
@@ -239,7 +240,9 @@ namespace Brainiac {
             }
 
             // Prioritize best_move in the next iteration
-            std::swap(moves[best_index], moves[0]);
+            if (!_timeout) {
+                std::swap(moves[best_index], moves[0]);
+            }
             depth++;
         }
 
