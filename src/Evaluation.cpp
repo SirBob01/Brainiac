@@ -87,6 +87,6 @@ namespace Brainiac {
         Value material = compute_material(board);
         Value placement = compute_placement(board);
 
-        return -sign * (material + placement);
+        return -sign * (4 * material + placement);
     }
 } // namespace Brainiac

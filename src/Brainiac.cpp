@@ -2,7 +2,6 @@
 #include <iostream>
 
 #include "Brainiac.hpp"
-#include "Position.hpp"
 
 Brainiac::Bitboard perft(Brainiac::Position &pos,
                          unsigned depth,
@@ -50,8 +49,8 @@ void perft_command(
 
 void play_bot(Brainiac::Color player_color, unsigned seed) {
     Brainiac::Hasher hasher(seed);
-    Brainiac::Position pos("r5rk/5p1p/5R2/4B3/8/8/7P/7K w - - 0 0", hasher);
-    // Brainiac::Position pos(Brainiac::DEFAULT_BOARD_FEN, hasher);
+    // Brainiac::Position pos("r5rk/5p1p/5R2/4B3/8/8/7P/7K w - - 0 0", hasher);
+    Brainiac::Position pos(Brainiac::DEFAULT_BOARD_FEN, hasher);
     Brainiac::Search bot(pos);
 
     Brainiac::Move move;
@@ -63,11 +62,11 @@ void play_bot(Brainiac::Color player_color, unsigned seed) {
         std::cout << "Evaluation: " << evaluation << "\n";
         std::cout << "\n";
         if (evaluation > 1) {
-            std::cout << "White winning\n";
+            std::cout << "You are winning\n";
         } else if (evaluation < -1) {
-            std::cout << "Black winning\n";
+            std::cout << "Opponent winning\n";
         } else {
-            std::cout << "White and black are evenly matched\n";
+            std::cout << "Evenly matched\n";
         }
 
         if (pos.is_check()) {
@@ -132,15 +131,21 @@ void play_bot(Brainiac::Color player_color, unsigned seed) {
 }
 
 int main() {
-    Brainiac::Position pos;
-    pos.print();
-    std::cout << "Moves: " << pos.moves().size() << "\n";
-    for (const Brainiac::Move &move : pos.moves()) {
-        std::cout << move.standard_notation() << "\n";
-    }
-    std::cout << (pos.fen()) << "\n";
-    Brainiac::print_bitboard(pos.hash());
+    Brainiac::Position pos("rnbqkbnr/pppppppp/8/8/8/8/8/8 w KQkq - 0 0");
+    // Brainiac::Position pos;
 
+    pos.skip();
+    pos.make(Brainiac::Move(Brainiac::E7, Brainiac::E5, Brainiac::PawnDouble));
+    pos.skip();
+
+    Brainiac::Value placement = compute_placement(pos.board());
+    Brainiac::Value material = compute_material(pos.board());
+
+    pos.print();
+    std::cout << pos.fen() << "\n";
+    std::cout << "Placement: " << placement << "\n";
+    std::cout << "Material: " << material << "\n\n";
+    std::cout << "Value: " << Brainiac::evaluate(pos) << "\n";
     play_bot(Brainiac::Color::Black, 1118943);
     return 0;
 }
