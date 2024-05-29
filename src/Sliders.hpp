@@ -239,8 +239,6 @@ namespace Brainiac {
      * @brief Attack tables for sliding pieces.
      *
      */
-    constexpr std::array<SlidingMoveTable, 64> ROOK_ATTACK_TABLES =
-        init_rook_tables();
-    constexpr std::array<SlidingMoveTable, 64> BISHOP_ATTACK_TABLES =
-        init_bishop_tables();
+    extern std::array<SlidingMoveTable, 64> ROOK_ATTACK_TABLES;
+    extern std::array<SlidingMoveTable, 64> BISHOP_ATTACK_TABLES;
 } // namespace Brainiac

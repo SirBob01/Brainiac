@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 
-#include "../../src/Search.hpp"
+#include "../../src/Brainiac.hpp"
 
 #include "ctest.hpp"
 
@@ -59,6 +59,7 @@ static char *all_tests() {
 }
 
 int main(int argc, char **argv) {
+    init();
     char *result = all_tests();
     if (result != 0) {
         std::cout << "FAILED... " << result << "\n";
