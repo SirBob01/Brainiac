@@ -244,7 +244,9 @@ namespace Brainiac {
             break;
         }
         case MoveType::QueenCastle: {
-            Square rook_sq = static_cast<Square>(state.turn * Square::A8);
+            Square rook_sq = static_cast<Square>(
+                static_cast<std::underlying_type_t<Color>>(state.turn) *
+                static_cast<std::underlying_type_t<Square>>(Square::A8));
             Square rook_dst_sq = static_cast<Square>(dst_sq + 1);
             Piece rook_piece = state.board.get(rook_sq);
 

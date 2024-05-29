@@ -191,7 +191,8 @@ namespace Brainiac {
             table.shift = count_set_bitboard(block_mask);
             table.magic = ROOK_MAGICS[i];
 
-            for (unsigned j = 0; j < (1 << table.shift); j++) {
+            unsigned count = (1 << table.shift);
+            for (unsigned j = 0; j < count; j++) {
                 Bitboard blockers = get_occupancy(j, table.shift, block_mask);
                 Bitboard index = (blockers * table.magic) >> (64 - table.shift);
                 table.move_masks[index] = get_n_mask(bitboard, blockers) |
@@ -221,7 +222,8 @@ namespace Brainiac {
             table.shift = count_set_bitboard(block_mask);
             table.magic = BISHOP_MAGICS[i];
 
-            for (unsigned j = 0; j < (1 << table.shift); j++) {
+            unsigned count = (1 << table.shift);
+            for (unsigned j = 0; j < count; j++) {
                 Bitboard blockers = get_occupancy(j, table.shift, block_mask);
                 Bitboard index = (blockers * table.magic) >> (64 - table.shift);
                 table.move_masks[index] = get_ne_mask(bitboard, blockers) |
