@@ -1,0 +1,39 @@
+name: linux
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Setup Repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Build
+        run: |
+          threads=`nproc`
+          mkdir build
+          cd build
+          cmake ..
+          make -j $threads
+
+      - name: Build Tests
+        working-directory: tests
+        run: |
+          threads=`nproc`
+          mkdir build
+          cd build
+          cmake ..
+          make -j $threads
+
+      - name: Test
+        working-directory: tests
+        env:
+          CTEST_OUTPUT_ON_FAILURE: 1
+        run: |
+          cd build
+          ctest --verbose
