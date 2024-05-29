@@ -30,25 +30,25 @@ std::vector<MateTestCase> POSITIONS = {
 
 static char *test_mate_in_n() {
     for (MateTestCase &test : POSITIONS) {
-        Position pos(test.fen);
-        Search search(pos);
+        Position position(test.fen);
+        Search search;
 
-        Color bot_turn = pos.turn();
+        Color bot_turn = position.turn();
 
         for (unsigned i = 0; i < test.sequence.size(); i++) {
-            if (pos.turn() == bot_turn) {
-                Result result = search.search();
+            if (position.turn() == bot_turn) {
+                Result result = search.search(position);
 
                 move_label = "Searched move (" +
                              test.sequence[i].standard_notation() +
                              ") = " + result.move.standard_notation();
                 mu_assert(move_label.c_str(), result.move == test.sequence[i]);
             }
-            pos.make(test.sequence[i]);
+            position.make(test.sequence[i]);
         }
 
         fen_label = "Checkmate (" + test.fen + ")";
-        mu_assert(fen_label.c_str(), pos.is_checkmate());
+        mu_assert(fen_label.c_str(), position.is_checkmate());
     }
     return 0;
 }
