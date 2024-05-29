@@ -18,7 +18,6 @@ To build the engine executable, run
 ### Performance Enhancements
 
 - Dynamic thinking time for live games
-- Add MoveList to transposition table hash to prevent recomputing legal moves
 - Add heuristics for "protected pieces" and "hanging pieces" (penalty)
 - Optimize slow heuristic functions
   - SEE

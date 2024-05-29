@@ -13,3 +13,11 @@
 #include "State.hpp"
 #include "Transpositions.hpp"
 #include "Utils.hpp"
+
+namespace Brainiac {
+    /**
+     * @brief Initialize the engine and perform start-up routines here.
+     *
+     */
+    void init();
+} // namespace Brainiac
