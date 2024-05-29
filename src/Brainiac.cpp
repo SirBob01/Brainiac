@@ -51,7 +51,7 @@ void play_bot(Brainiac::Color player_color, unsigned seed) {
     Brainiac::Hasher hasher(seed);
     // Brainiac::Position pos("r5rk/5p1p/5R2/4B3/8/8/7P/7K w - - 0 0", hasher);
     Brainiac::Position pos(Brainiac::DEFAULT_BOARD_FEN, hasher);
-    Brainiac::Search bot(pos);
+    Brainiac::Search bot;
 
     Brainiac::Move move;
     std::string move_input;
@@ -73,7 +73,7 @@ void play_bot(Brainiac::Color player_color, unsigned seed) {
             std::cout << "Check!\n";
         }
         if (pos.turn() != player_color) {
-            Brainiac::Result result = bot.search();
+            Brainiac::Result result = bot.search(pos);
             float nps = result.visited / result.time.count();
 
             std::cout << "Total time: " << result.time << "\n";
