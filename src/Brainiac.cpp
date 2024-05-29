@@ -76,7 +76,7 @@ void play_bot(Brainiac::Color player_color, unsigned seed) {
             Brainiac::Result result = bot.search(pos);
             float nps = result.visited / result.time.count();
 
-            std::cout << "Total time: " << result.time << "\n";
+            std::cout << "Total time: " << result.time.count() << "\n";
             std::cout << "Visited nodes: " << result.visited << "\n";
             std::cout << "Max depth: " << int(result.max_depth) << "\n";
             std::cout << "Nodes/s: " << nps << "\n";
