@@ -184,6 +184,14 @@ namespace Brainiac {
         find_move(const Square src, const Square dst, char promotion = 0) const;
 
         /**
+         * @brief Find a legal move from a given long algebraic notation string.
+         *
+         * @param str
+         * @return Move
+         */
+        Move find_move(const std::string &str) const;
+
+        /**
          * @brief Pretty print the current game state.
          *
          */
