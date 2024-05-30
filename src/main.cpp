@@ -1,28 +1,5 @@
 #include "Brainiac.hpp"
 
-void perft_command(
-    std::string fen_string =
-        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") {
-    int depth;
-    std::cout << "Enter perft depth: ";
-    std::cin >> depth;
-
-    Brainiac::Position pos(fen_string);
-    pos.print();
-    std::cout << pos.fen() << "\n";
-
-    for (int i = 1; i <= depth; i++) {
-        auto start = std::chrono::high_resolution_clock::now();
-        std::cout << "Perft(" << i << ") = ";
-        uint64_t nodes = Brainiac::perft(pos, i, i);
-        std::cout << nodes << " (";
-        auto stop = std::chrono::high_resolution_clock::now();
-        auto duration =
-            std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-        std::cout << duration.count() / 1000000.0 << " s)\n";
-    }
-}
-
 void play_bot(Brainiac::Color player_color, unsigned seed) {
     Brainiac::Hasher hasher(seed);
     // Brainiac::Position pos("r5rk/5p1p/5R2/4B3/8/8/7P/7K w - - 0 0", hasher);
@@ -108,6 +85,7 @@ void play_bot(Brainiac::Color player_color, unsigned seed) {
 
 int main() {
     Brainiac::init();
-    perft_command();
+    Brainiac::UCI uci;
+    uci.run();
     return 0;
 }
