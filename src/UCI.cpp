@@ -80,7 +80,6 @@ namespace Brainiac {
 
         // Non-UCI commands (for debugging)
         _command_map["help"] = [&](Tokens &args) {
-            std::cout << "\n";
             std::cout << "Brainiac is a simple chess engine. It uses the "
                          "Universal Chess Interface (UCI) to communicate with "
                          "a GUI. Below are the available commands:\n";
