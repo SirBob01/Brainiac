@@ -109,6 +109,12 @@ namespace Brainiac {
 
       public:
         /**
+         * @brief Reset the search state.
+         *
+         */
+        void reset();
+
+        /**
          * @brief Calculate the next viable move for the current turn.
          *
          * @return Result

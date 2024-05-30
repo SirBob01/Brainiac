@@ -62,5 +62,11 @@ namespace Brainiac {
          * @param node
          */
         void set(Position &pos, Node node);
+
+        /**
+         * @brief Clear the table.
+         *
+         */
+        void clear();
     };
 } // namespace Brainiac
