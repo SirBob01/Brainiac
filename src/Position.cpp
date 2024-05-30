@@ -1,4 +1,5 @@
 #include "Position.hpp"
+#include "Square.hpp"
 
 namespace Brainiac {
     Position::Position(std::string fen, Hasher hasher) {
@@ -359,6 +360,19 @@ namespace Brainiac {
             }
         }
         return {};
+    }
+
+    Move Position::find_move(const std::string &str) const {
+        if (str.length() < 4) return {};
+        std::string from = str.substr(0, 2);
+        std::string to = str.substr(2, 2);
+        char promotion = 0;
+        if (str.length() >= 5) {
+            promotion = str[4];
+        }
+        return find_move(string_to_square(from),
+                         string_to_square(to),
+                         promotion);
     }
 
     void Position::print() const { _states[_index].print(); }
