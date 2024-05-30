@@ -1,7 +1,7 @@
 #include "Transpositions.hpp"
 
 namespace Brainiac {
-    Transpositions::Transpositions() : _table(TABLE_SIZE) {}
+    Transpositions::Transpositions() : _table(TABLE_SIZE) { clear(); }
 
     Node Transpositions::get(Position &pos) const {
         return _table[pos.hash() & TABLE_MASK];
@@ -14,5 +14,11 @@ namespace Brainiac {
             _table[index].depth >= node.depth) {
             _table[index] = node;
         }
+    }
+
+    void Transpositions::clear() {
+        Node node;
+        node.type = NodeType::Invalid;
+        std::fill(_table.begin(), _table.end(), node);
     }
 } // namespace Brainiac
