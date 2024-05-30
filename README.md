@@ -17,10 +17,11 @@ To build the engine executable, run
 
 ### Performance Enhancements
 
+- Quiescence search
+- Aspiration window
 - Dynamic thinking time for live games
 - Add heuristics for "protected pieces" and "hanging pieces" (penalty)
-- Optimize slow heuristic functions
-  - SEE
+- Optimize SEE algorithm
 - Mate distance pruning
 - King safety (evaluation)
 

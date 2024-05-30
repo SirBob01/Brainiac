@@ -55,7 +55,7 @@ namespace Brainiac {
         }
 
         // Prioritize moves with higher history heuristic
-        MoveValue value = _htable.get(move);
+        MoveValue value = _htable.get(position, move);
 
         // Prioritize non-quiet moves
         // Also, prioritize queen and knight promotions over all others
@@ -193,7 +193,7 @@ namespace Brainiac {
 
             // Early terminate
             if (alpha >= beta && !_timeout) {
-                _htable.set(move, depth);
+                _htable.set(position, move, depth);
                 break;
             }
 
@@ -214,6 +214,11 @@ namespace Brainiac {
         }
         if (!_timeout) _tptable.set(position, node);
         return value;
+    }
+
+    void Search::reset() {
+        _tptable.clear();
+        _htable.clear();
     }
 
     Result Search::search(Position &position) {
