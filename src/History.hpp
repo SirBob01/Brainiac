@@ -4,6 +4,8 @@
 
 #include "Move.hpp"
 #include "Numeric.hpp"
+#include "Piece.hpp"
+#include "Position.hpp"
 
 namespace Brainiac {
     /**
@@ -11,31 +13,42 @@ namespace Brainiac {
      *
      */
     class History {
-        std::array<MoveValue, 64 * 64> _table = {0};
+        std::array<MoveValue, 12 * 64> _table;
 
         /**
          * @brief Compute the table index of a move.
          *
+         * @param position
          * @param move
          * @return unsigned
          */
-        unsigned index(Move move) const;
+        unsigned index(const Position &position, Move move) const;
 
       public:
+        History();
+
         /**
          * @brief Get the score of a move.
          *
+         * @param position
          * @param move
          * @return MoveValue
          */
-        MoveValue get(Move move) const;
+        MoveValue get(const Position &position, Move move) const;
 
         /**
          * @brief Update the score of a move.
          *
+         * @param position
          * @param move
          * @param depth
          */
-        void set(Move move, Depth depth);
+        void set(const Position &position, Move move, Depth depth);
+
+        /**
+         * @brief Clear the table.
+         *
+         */
+        void clear();
     };
 } // namespace Brainiac

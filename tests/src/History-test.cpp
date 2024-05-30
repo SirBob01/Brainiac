@@ -9,6 +9,7 @@ using namespace Brainiac;
 int tests_run = 0;
 
 static char *test_history() {
+    Position position;
     History history;
 
     Move capture(Square::A1, Square::A2, MoveType::Capture);
@@ -20,26 +21,27 @@ static char *test_history() {
     Depth depth0 = 4;
     Depth depth1 = 5;
 
-    history.set(capture, depth0);
-    history.set(capture, depth1);
+    history.set(position, capture, depth0);
+    history.set(position, capture, depth1);
 
-    history.set(capture_promo, depth0);
-    history.set(capture_promo, depth1);
+    history.set(position, capture_promo, depth0);
+    history.set(position, capture_promo, depth1);
 
-    history.set(quiet, depth0);
-    history.set(quiet, depth1);
+    history.set(position, quiet, depth0);
+    history.set(position, quiet, depth1);
 
-    history.set(promo, depth0);
-    history.set(promo, depth1);
+    history.set(position, promo, depth0);
+    history.set(position, promo, depth1);
 
     // Captures don't update history
-    mu_assert("Capture history", history.get(capture) == 0);
-    mu_assert("Capture promote history", history.get(capture_promo) == 0);
+    mu_assert("Capture history", history.get(position, capture) == 0);
+    mu_assert("Capture promote history",
+              history.get(position, capture_promo) == 0);
 
     // Non-captures
     MoveValue expected = (depth0 * depth0) + (depth1 * depth1);
-    mu_assert("Quiet history", history.get(quiet) == expected);
-    mu_assert("Promote history", history.get(promo) == expected);
+    mu_assert("Quiet history", history.get(position, quiet) == expected);
+    mu_assert("Promote history", history.get(position, promo) == expected);
 
     return 0;
 }
