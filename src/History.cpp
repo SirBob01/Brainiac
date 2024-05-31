@@ -22,9 +22,17 @@ namespace Brainiac {
         case KnightPromo:
         case RookPromo:
         case BishopPromo:
-        case QueenPromo:
-            _table[index(position, move)] += depth * depth;
-            break;
+        case QueenPromo: {
+            unsigned i = index(position, move);
+            MoveValue inc = depth * depth;
+
+            // Protect from integer overflow
+            if (MAX_MOVE_VALUE - _table[i] >= inc) {
+                _table[i] += inc;
+            } else {
+                _table[i] = MAX_MOVE_VALUE;
+            }
+        } break;
         default:
             break;
         }

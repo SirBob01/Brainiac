@@ -43,6 +43,13 @@ static char *test_history() {
     mu_assert("Quiet history", history.get(position, quiet) == expected);
     mu_assert("Promote history", history.get(position, promo) == expected);
 
+    // Test overflow
+    unsigned iters = (MAX_MOVE_VALUE / (MAX_DEPTH * MAX_DEPTH)) + 1;
+    for (unsigned i = 0; i < iters; i++) {
+        history.set(position, quiet, MAX_DEPTH);
+    }
+    mu_assert("Overflow condition",
+              history.get(position, quiet) == MAX_MOVE_VALUE);
     return 0;
 }
 
