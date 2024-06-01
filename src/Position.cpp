@@ -34,9 +34,9 @@ namespace Brainiac {
         return _states[_index].castling;
     }
 
-    unsigned Position::halfmoves() const { return _states[_index].halfmoves; }
+    Clock Position::halfmoves() const { return _states[_index].halfmoves; }
 
-    unsigned Position::fullmoves() const { return _states[_index].fullmoves; }
+    Clock Position::fullmoves() const { return _states[_index].fullmoves; }
 
     bool Position::is_check() const { return _states[_index].check; }
 

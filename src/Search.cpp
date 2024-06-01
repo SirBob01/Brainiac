@@ -48,9 +48,10 @@ namespace Brainiac {
 
     MoveValue Search::evaluate_move(Position &position, Move move, Node node) {
         // Prioritize hash moves
-        bool node_valid = node.type != NodeType::Invalid;
+        bool node_type = node.type != NodeType::Invalid;
         bool node_move = node.move == move;
-        if (node_valid && node_move) {
+        bool node_hash = node.hash == position.hash();
+        if (node_type && node_move && node_hash) {
             return MAX_MOVE_VALUE;
         }
 
@@ -114,7 +115,8 @@ namespace Brainiac {
         // Read the transposition table
         Value alpha_orig = alpha;
         Node node = _tptable.get(position);
-        if (node.type != NodeType::Invalid && node.depth >= depth) {
+        if (node.type != NodeType::Invalid && node.depth >= depth &&
+            node.hash == position.hash()) {
             switch (node.type) {
             case NodeType::Exact:
                 return node.value;
@@ -202,17 +204,15 @@ namespace Brainiac {
         }
 
         // Update the transposition table
-        node.depth = depth;
-        node.value = value;
-        node.move = moves[best_index];
-        if (value <= alpha_orig) {
-            node.type = NodeType::Upper;
-        } else if (value >= beta) {
-            node.type = NodeType::Lower;
-        } else {
-            node.type = NodeType::Exact;
+        if (!_timeout) {
+            NodeType type = NodeType::Exact;
+            if (value <= alpha_orig) {
+                node.type = NodeType::Upper;
+            } else if (value >= beta) {
+                node.type = NodeType::Lower;
+            }
+            _tptable.set(position, type, depth, value, moves[best_index]);
         }
-        if (!_timeout) _tptable.set(position, node);
         return value;
     }
 

@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "Hasher.hpp"
+#include "Numeric.hpp"
 #include "State.hpp"
 
 namespace Brainiac {
@@ -78,16 +79,16 @@ namespace Brainiac {
         /**
          * @brief Get the current halfmove clock.
          *
-         * @return unsigned
+         * @return Clock
          */
-        unsigned halfmoves() const;
+        Clock halfmoves() const;
 
         /**
          * @brief Get the current fullmove clock.
          *
-         * @return unsigned
+         * @return Clock
          */
-        unsigned fullmoves() const;
+        Clock fullmoves() const;
 
         /**
          * @brief Test if the king is in check for the current turn.
