@@ -159,24 +159,24 @@ namespace Brainiac {
         // Non-terminal node
         Value value = MIN_VALUE;
         MoveList moves = position.moves();
-        MoveValue best_value = 0;
-        uint16_t best_index = 0;
-        for (uint16_t i = 0; i < moves.size() && !_timeout; i++) {
+        MoveValue move_value = 0;
+        MoveIndex move_index = 0;
+        for (MoveIndex i = 0; i < moves.size() && !_timeout; i++) {
             // Find highest scoring move
-            best_index = i;
-            best_value = evaluate_move(position, moves[best_index], node);
-            for (uint16_t j = i + 1; j < moves.size(); j++) {
-                MoveValue j_score = evaluate_move(position, moves[j], node);
-                if (j_score > best_value) {
-                    best_index = j;
-                    best_value = j_score;
+            move_index = i;
+            move_value = evaluate_move(position, moves[move_index], node);
+            for (MoveIndex j = i + 1; j < moves.size(); j++) {
+                MoveValue j_value = evaluate_move(position, moves[j], node);
+                if (j_value > move_value) {
+                    move_index = j;
+                    move_value = j_value;
                 }
             }
-            Move &move = moves[best_index];
+            Move &move = moves[move_index];
 
             // Compute depth reduction
             Depth R = (depth >= 3 && i > 3 && !position.is_check() &&
-                       can_reduce_move(move, best_value));
+                       can_reduce_move(move, move_value));
 
             // Compute depth extension
             Depth E = depth < 2 && position.is_check();
@@ -211,7 +211,7 @@ namespace Brainiac {
             } else if (value >= beta) {
                 type = NodeType::Lower;
             }
-            _tptable.set(position, type, depth, value, moves[best_index]);
+            _tptable.set(position, type, depth, value, moves[move_index]);
         }
         return value;
     }
@@ -237,8 +237,8 @@ namespace Brainiac {
         Depth depth = 1;
         Value best_value = MIN_VALUE;
         while (depth <= MAX_DEPTH && best_value != WIN_VALUE && !_timeout) {
-            uint16_t best_index = 0;
-            for (uint16_t i = 0; i < moves.size() && !_timeout; i++) {
+            MoveIndex best_index = 0;
+            for (MoveIndex i = 0; i < moves.size() && !_timeout; i++) {
                 Move move = moves[i];
 
                 // Evaluate the move
