@@ -35,6 +35,7 @@ namespace Brainiac {
         Depth depth;
         Value value;
         Move move;
+        Hash hash;
     };
 
     /**
@@ -50,18 +51,25 @@ namespace Brainiac {
         /**
          * @brief Read an entry from the table.
          *
-         * @param pos
+         * @param position
          * @return Node
          */
-        Node get(Position &pos) const;
+        Node get(Position &position) const;
 
         /**
          * @brief Set an entry to the table.
          *
-         * @param pos
-         * @param node
+         * @param position
+         * @param type
+         * @param depth
+         * @param value
+         * @param move
          */
-        void set(Position &pos, Node node);
+        void set(Position &position,
+                 NodeType type,
+                 Depth depth,
+                 Value value,
+                 Move move);
 
         /**
          * @brief Clear the table.
