@@ -3,16 +3,24 @@
 namespace Brainiac {
     Transpositions::Transpositions() : _table(TABLE_SIZE) { clear(); }
 
-    Node Transpositions::get(Position &pos) const {
-        return _table[pos.hash() & TABLE_MASK];
+    Node Transpositions::get(Position &position) const {
+        return _table[position.hash() & TABLE_MASK];
     }
 
-    void Transpositions::set(Position &pos, Node node) {
+    void Transpositions::set(Position &position,
+                             NodeType type,
+                             Depth depth,
+                             Value value,
+                             Move move) {
         // Overwrite if new entry's depth if higher
-        unsigned index = pos.hash() & TABLE_MASK;
-        if (_table[index].type == NodeType::Invalid ||
-            _table[index].depth >= node.depth) {
-            _table[index] = node;
+        Hash hash = position.hash();
+        Node &node = _table[hash & TABLE_MASK];
+        if (node.type == NodeType::Invalid || node.depth >= depth) {
+            node.type = type;
+            node.depth = depth;
+            node.value = value;
+            node.move = move;
+            node.hash = hash;
         }
     }
 

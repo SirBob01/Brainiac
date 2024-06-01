@@ -9,6 +9,7 @@
 #include "Move.hpp"
 #include "MoveGen.hpp"
 #include "MoveList.hpp"
+#include "Numeric.hpp"
 #include "Piece.hpp"
 #include "Sliders.hpp"
 #include "Utils.hpp"
@@ -52,13 +53,13 @@ namespace Brainiac {
          * captures reset it)
          *
          */
-        uint16_t halfmoves;
+        Clock halfmoves;
 
         /**
          * @brief Fullmove counter.
          *
          */
-        uint16_t fullmoves;
+        Clock fullmoves;
 
         /**
          * @brief Move set.
