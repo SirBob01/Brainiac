@@ -207,9 +207,9 @@ namespace Brainiac {
         if (!_timeout) {
             NodeType type = NodeType::Exact;
             if (value <= alpha_orig) {
-                node.type = NodeType::Upper;
+                type = NodeType::Upper;
             } else if (value >= beta) {
-                node.type = NodeType::Lower;
+                type = NodeType::Lower;
             }
             _tptable.set(position, type, depth, value, moves[best_index]);
         }
