@@ -22,6 +22,12 @@ namespace Brainiac {
     using Depth = char;
 
     /**
+     * @brief Clock counter.
+     *
+     */
+    using Clock = unsigned short;
+
+    /**
      * @brief Maximum possible value of a position.
      *
      */
