@@ -16,6 +16,12 @@ namespace Brainiac {
     using MoveValue = int;
 
     /**
+     * @brief Move index.
+     *
+     */
+    using MoveIndex = unsigned short;
+
+    /**
      * @brief Depth value.
      *
      */
