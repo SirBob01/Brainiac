@@ -11,6 +11,12 @@
 
 namespace Brainiac {
     /**
+     * @brief Maximum depth of quiescence search.
+     *
+     */
+    constexpr Depth MAX_QSEARCH_DEPTH = 6;
+
+    /**
      * @brief Search result.
      *
      */
@@ -51,7 +57,9 @@ namespace Brainiac {
         bool _timeout;
         Seconds _start_time;
         Seconds _remaining_time;
-        unsigned _visited;
+
+        unsigned _negamax_visited;
+        unsigned _qsearch_visited;
 
         /**
          * @brief Static exchange evaluation on a target square.
@@ -99,13 +107,15 @@ namespace Brainiac {
          * @param depth
          * @param alpha
          * @param beta
+         * @param qsearch
          * @return Value
          */
         Value negamax(Position &position,
                       Move prev,
                       Depth depth,
                       Value alpha = MIN_VALUE,
-                      Value beta = MAX_VALUE);
+                      Value beta = MAX_VALUE,
+                      bool qsearch = false);
 
       public:
         /**
