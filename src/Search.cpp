@@ -233,22 +233,27 @@ namespace Brainiac {
         // Initial aspiration window
         Value alpha = MIN_VALUE;
         Value beta = MAX_VALUE;
+        Value value = MIN_VALUE;
 
         Depth depth = 1;
-        Value best_value = MIN_VALUE;
-        while (depth <= MAX_DEPTH && best_value != WIN_VALUE && !_timeout) {
+        while (depth <= MAX_DEPTH && value != WIN_VALUE && !_timeout) {
             MoveIndex best_index = 0;
-            for (MoveIndex i = 0; i < moves.size() && !_timeout; i++) {
+            for (MoveIndex i = 0; i < moves.size(); i++) {
                 Move move = moves[i];
 
                 // Evaluate the move
                 position.make(move);
                 Value score = -negamax(position, move, depth, alpha, beta);
-                if (score > best_value) {
-                    best_value = score;
-                    best_index = i;
-                }
                 position.undo();
+
+                // Check for cut-off
+                if (score > value) {
+                    best_index = i;
+                    value = score;
+                }
+                if (value >= WIN_VALUE || _timeout) {
+                    break;
+                }
             }
 
             // Prioritize best_move in the next iteration
