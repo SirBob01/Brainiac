@@ -106,11 +106,14 @@ namespace Brainiac {
                           Move prev,
                           Depth depth,
                           Value alpha,
-                          Value beta) {
+                          Value beta,
+                          bool qsearch) {
         // Time management
         _timeout = time() - _start_time >= _remaining_time;
         if (_timeout) return 0;
-        _visited++;
+
+        _negamax_visited += !qsearch;
+        _qsearch_visited += qsearch;
 
         // Read the transposition table
         Value alpha_orig = alpha;
@@ -136,17 +139,36 @@ namespace Brainiac {
             }
         }
 
+        // Check standing pat score
+        if (qsearch && !position.is_check()) {
+            Value stand_pat = evaluate(position);
+            if (stand_pat >= beta) return stand_pat;
+            if (stand_pat > alpha) alpha = stand_pat;
+        }
+
         // Terminal node
-        if (depth <= 0 || position.is_checkmate() || position.is_draw()) {
+        if (position.is_checkmate() || position.is_draw() ||
+            (qsearch && (depth <= 0 || position.is_quiet()))) {
             return evaluate(position);
+        } else if (!qsearch && depth <= 0) {
+            return negamax(position,
+                           prev,
+                           MAX_QSEARCH_DEPTH,
+                           alpha,
+                           beta,
+                           true);
         }
 
         // Null move reduction
         if (!position.is_check() && prev.type() != MoveType::Skip) {
             Depth R = depth > 6 ? 4 : 3;
             position.skip();
-            Value score =
-                -negamax(position, Move(), depth - R - 1, -beta, -beta + 1);
+            Value score = -negamax(position,
+                                   Move(),
+                                   depth - R - 1,
+                                   -beta,
+                                   -beta + 1,
+                                   qsearch);
             position.undo();
             if (score >= beta) {
                 depth -= 4;
@@ -156,9 +178,27 @@ namespace Brainiac {
             }
         }
 
+        // Compute moves to visit
+        MoveList moves;
+        for (Move move : position.moves()) {
+            switch (move.type()) {
+            case MoveType::Capture:
+            case MoveType::QueenPromoCapture:
+            case MoveType::KnightPromoCapture:
+            case MoveType::QueenPromo:
+            case MoveType::KnightPromo:
+                moves.add(move);
+                break;
+            default:
+                if (!qsearch) {
+                    moves.add(move);
+                }
+                break;
+            }
+        }
+
         // Non-terminal node
         Value value = MIN_VALUE;
-        MoveList moves = position.moves();
         MoveValue move_value = 0;
         MoveIndex move_index = 0;
         for (MoveIndex i = 0; i < moves.size() && !_timeout; i++) {
@@ -174,6 +214,21 @@ namespace Brainiac {
             }
             Move &move = moves[move_index];
 
+            // Skip bad captures
+            if (qsearch) {
+                switch (move.type()) {
+                case MoveType::Capture:
+                    if (move_value < 40) continue;
+                    break;
+                case MoveType::QueenPromoCapture:
+                case MoveType::KnightPromoCapture:
+                    if (move_value < 50) continue;
+                    break;
+                default:
+                    break;
+                }
+            }
+
             // Compute depth reduction
             Depth R = (depth >= 3 && i > 3 && !position.is_check() &&
                        can_reduce_move(move, move_value));
@@ -183,19 +238,30 @@ namespace Brainiac {
 
             // Evaluate subtree
             position.make(move);
-            Value score =
-                -negamax(position, move, depth - R - 1 + E, -beta, -alpha);
-            if (score > alpha) {
+            Value score = -negamax(position,
+                                   move,
+                                   depth - R - 1 + E,
+                                   -beta,
+                                   -alpha,
+                                   qsearch);
+            if (R && score > alpha) {
                 // Fail-low, do full re-search
-                score = -negamax(position, move, depth - 1 + E, -beta, -alpha);
+                score = -negamax(position,
+                                 move,
+                                 depth - 1 + E,
+                                 -beta,
+                                 -alpha,
+                                 qsearch);
             }
             value = std::max(value, score);
             alpha = std::max(alpha, value);
             position.undo();
 
             // Early terminate
-            if (alpha >= beta && !_timeout) {
-                _htable.set(position, move, depth);
+            if (alpha >= beta) {
+                if (!_timeout && !qsearch) {
+                    _htable.set(position, move, depth);
+                }
                 break;
             }
 
@@ -204,7 +270,7 @@ namespace Brainiac {
         }
 
         // Update the transposition table
-        if (!_timeout) {
+        if (!_timeout && !qsearch) {
             NodeType type = NodeType::Exact;
             if (value <= alpha_orig) {
                 type = NodeType::Upper;
@@ -225,7 +291,8 @@ namespace Brainiac {
         // Reset statistics
         _timeout = false;
         _start_time = time();
-        _visited = 0;
+        _negamax_visited = 0;
+        _qsearch_visited = 0;
         _remaining_time = 15s; // TODO: Compute this dynamically.
 
         MoveList moves = position.moves();
@@ -266,8 +333,9 @@ namespace Brainiac {
         Result result;
         result.move = moves[0];
         result.time = time() - _start_time;
-        result.visited = _visited;
+        result.visited = _negamax_visited + _qsearch_visited;
         result.max_depth = depth - 1;
+
         return result;
     }
 } // namespace Brainiac

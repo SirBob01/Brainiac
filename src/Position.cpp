@@ -61,27 +61,26 @@ namespace Brainiac {
     bool Position::is_end() const { return _index == _states.size() - 1; }
 
     bool Position::is_quiet() {
-        // Check turn's moves
+        // Check if any moves will significantly affect evaluation
         for (Move move : moves()) {
-            if (move.type() != MoveType::Quiet) {
+            switch (move.type()) {
+            case MoveType::Capture:
+            case MoveType::QueenPromoCapture:
+            case MoveType::KnightPromoCapture:
+            case MoveType::BishopPromoCapture:
+            case MoveType::RookPromoCapture:
+            case MoveType::QueenPromo:
+            case MoveType::KnightPromo:
+            case MoveType::BishopPromo:
+            case MoveType::RookPromo:
                 return false;
+            default:
+                break;
             }
         }
-        bool turn_check = is_check();
 
-        // Check opponent's moves
-        skip();
-        for (Move move : moves()) {
-            if (move.type() != MoveType::Quiet) {
-                undo();
-                return false;
-            }
-        }
-        bool opp_check = is_check();
-        undo();
-
-        // Make sure board isn't in check
-        return !turn_check && !opp_check;
+        // Make sure current turn isn't in check
+        return !is_check();
     }
 
     void Position::make(Move move) {

@@ -59,6 +59,13 @@ namespace Brainiac {
         void add(Square src, Square dst, MoveType type);
 
         /**
+         * @brief Add a new move to the list
+         *
+         * @param move
+         */
+        void add(Move move);
+
+        /**
          * @brief Get the pointer to the first move in the list
          *
          * @return const Move*
