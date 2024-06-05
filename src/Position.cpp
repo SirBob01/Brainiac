@@ -1,44 +1,176 @@
 #include "Position.hpp"
-#include "Square.hpp"
 
 namespace Brainiac {
     Position::Position(std::string fen, Hasher hasher) {
         _states.reserve(128);
-        _states.emplace_back(fen, hasher);
-        _index = 0;
         _hasher = hasher;
+
+        // Initialize the board
+        std::vector<std::string> fields = tokenize(fen, ' ');
+        int row = 7;
+        int col = 0;
+        for (auto &c : fields[0]) {
+            if (c == '/') {
+                row--;
+                col = 0;
+            } else if (c <= '9' && c >= '0') {
+                col += c - '0';
+            } else {
+                int char_idx = 0;
+                while (PIECE_CHARS[char_idx] != c) {
+                    char_idx++;
+                }
+                _board.set(Square(row * 8 + col),
+                           Piece((char_idx / 6) * 6 + (char_idx % 6)));
+                col++;
+            }
+        }
+
+        // Castling state
+        State &state = _states.emplace_back();
+        state.castling = 0;
+        for (auto &c : fields[2]) {
+            if (c == 'K') state.castling |= (1 << CastlingRight::WK);
+            else if (c == 'Q') state.castling |= (1 << CastlingRight::WQ);
+            else if (c == 'k') state.castling |= (1 << CastlingRight::BK);
+            else if (c == 'q') state.castling |= (1 << CastlingRight::BQ);
+        }
+
+        // EnPassant capture square
+        state.ep_dst = fields[3].length() == 2 ? string_to_square(fields[3])
+                                               : Square::Null;
+
+        // Half-moves
+        state.halfmoves = stoi(fields[4]);
+
+        _fullmoves = stoi(fields[5]);
+
+        // Current turn
+        _turn = (fields[1][0] == 'w') ? Color::White : Color::Black;
+
+        // Compute hash
+        state.hash = hasher(_board, state.castling, _turn, state.ep_dst);
+
+        generate_moves();
     }
 
-    State &Position::push_state() {
-        _states.resize(_index + 1);
-        _states.emplace_back(_states[_index]);
-        _index++;
+    void Position::generate_moves() {
+        State &state = _states[_states.size() - 1];
 
-        _states[_index].halfmoves++;
-        return _states[_index];
+        Color op = static_cast<Color>(!_turn);
+
+        Piece f_king = create_piece(PieceType::King, _turn);
+        Piece f_pawn = create_piece(PieceType::Pawn, _turn);
+        Piece f_rook = create_piece(PieceType::Rook, _turn);
+        Piece f_knight = create_piece(PieceType::Knight, _turn);
+        Piece f_bishop = create_piece(PieceType::Bishop, _turn);
+        Piece f_queen = create_piece(PieceType::Queen, _turn);
+
+        Piece o_king = create_piece(PieceType::King, op);
+        Piece o_pawn = create_piece(PieceType::Pawn, op);
+        Piece o_rook = create_piece(PieceType::Rook, op);
+        Piece o_knight = create_piece(PieceType::Knight, op);
+        Piece o_bishop = create_piece(PieceType::Bishop, op);
+        Piece o_queen = create_piece(PieceType::Queen, op);
+
+        MoveGen generator;
+        generator.friends = _board.bitboard(_turn);
+        generator.enemies = _board.bitboard(op);
+        generator.all = generator.friends | generator.enemies;
+
+        generator.f_king = _board.bitboard(f_king);
+        generator.f_pawn = _board.bitboard(f_pawn);
+        generator.f_rook = _board.bitboard(f_rook);
+        generator.f_knight = _board.bitboard(f_knight);
+        generator.f_bishop = _board.bitboard(f_bishop);
+        generator.f_queen = _board.bitboard(f_queen);
+
+        generator.o_king = _board.bitboard(o_king);
+        generator.o_pawn = _board.bitboard(o_pawn);
+        generator.o_rook = _board.bitboard(o_rook);
+        generator.o_knight = _board.bitboard(o_knight);
+        generator.o_bishop = _board.bitboard(o_bishop);
+        generator.o_queen = _board.bitboard(o_queen);
+
+        generator.ep_dst = state.ep_dst;
+        generator.turn = _turn;
+        generator.castling = state.castling;
+
+        state.moves.clear();
+        state.check = generator.generate(state.moves);
     }
 
     std::string Position::fen(bool include_counters) const {
-        return _states[_index].fen(include_counters);
+        const State &state = _states[_states.size() - 1];
+        std::string fen = "";
+        for (int row = 7; row >= 0; row--) {
+            int counter = 0;
+            for (int col = 0; col < 8; col++) {
+                Piece piece = _board.get(Square(row * 8 + col));
+                if (piece != Piece::Empty) {
+                    if (counter) {
+                        fen += counter + '0';
+                        counter = 0;
+                    }
+                    fen += PIECE_CHARS[piece];
+                } else {
+                    counter += 1;
+                }
+            }
+            if (counter) fen += counter + '0';
+            if (row) fen += '/';
+        }
+        fen += " ";
+        fen += _turn == Color::White ? "w" : "b";
+
+        std::string castling_rights = "";
+
+        if (state.castling & (1 << CastlingRight::WK)) castling_rights += 'K';
+        if (state.castling & (1 << CastlingRight::WQ)) castling_rights += 'Q';
+        if (state.castling & (1 << CastlingRight::BK)) castling_rights += 'k';
+        if (state.castling & (1 << CastlingRight::BQ)) castling_rights += 'q';
+        if (castling_rights.length() == 0) castling_rights = "-";
+        fen += " " + castling_rights;
+
+        if (state.ep_dst == Square::Null) {
+            fen += " -";
+        } else {
+            fen += " ";
+            fen += square_to_string(state.ep_dst);
+        }
+
+        if (include_counters) {
+            fen += " ";
+            fen += std::to_string(state.halfmoves);
+            fen += " ";
+            fen += std::to_string(fullmoves());
+        }
+        return fen;
     }
 
-    Hash Position::hash() const { return _states[_index].hash; }
+    Hash Position::hash() const { return _states[_states.size() - 1].hash; }
 
-    const Board &Position::board() const { return _states[_index].board; }
+    const Board &Position::board() const { return _board; }
 
-    Color Position::turn() const { return _states[_index].turn; }
+    Color Position::turn() const { return _turn; }
 
-    const MoveList &Position::moves() const { return _states[_index].moves; }
+    MoveList Position::moves() const {
+        return _states[_states.size() - 1].moves;
+    }
 
     const CastlingFlagSet Position::castling() const {
-        return _states[_index].castling;
+        return _states[_states.size() - 1].castling;
     }
 
-    Clock Position::halfmoves() const { return _states[_index].halfmoves; }
+    Clock Position::halfmoves() const {
+        return _states[_states.size() - 1].halfmoves;
+    }
 
-    Clock Position::fullmoves() const { return _states[_index].fullmoves; }
+    Clock Position::fullmoves() const { return _fullmoves; }
 
-    bool Position::is_check() const { return _states[_index].check; }
+    bool Position::is_check() const {
+        return _states[_states.size() - 1].check;
+    }
 
     bool Position::is_checkmate() const {
         return is_check() && moves().size() == 0;
@@ -49,16 +181,14 @@ namespace Brainiac {
     }
 
     bool Position::is_draw() const {
-        const State &state = _states[_index];
-        Bitboard all = state.board.bitboard(Color::Black) |
-                       state.board.bitboard(Color::White);
-        unsigned rem = count_set_bitboard(all);
+        const State &state = _states[_states.size() - 1];
+        Bitboard black = _board.bitboard(Color::Black);
+        Bitboard white = _board.bitboard(Color::White);
+        unsigned rem = count_set_bitboard(white | black);
         return is_stalemate() || state.halfmoves >= 100 || rem == 2;
     }
 
-    bool Position::is_start() const { return _index == 0; }
-
-    bool Position::is_end() const { return _index == _states.size() - 1; }
+    bool Position::is_start() const { return _states.size() == 1; }
 
     bool Position::is_quiet() {
         // Check if any moves will significantly affect evaluation
@@ -84,14 +214,19 @@ namespace Brainiac {
     }
 
     void Position::make(Move move) {
-        State &state = push_state();
+        State &state = _states.emplace_back(_states[_states.size() - 1]);
+        state.halfmoves++;
 
         Square src_sq = move.src();
         Square dst_sq = move.dst();
         MoveType move_type = move.type();
 
-        Piece src_piece = state.board.get(src_sq);
-        Piece dst_piece = state.board.get(dst_sq);
+        Piece src_piece = _board.get(src_sq);
+        Piece dst_piece = _board.get(dst_sq);
+
+        // Update previous move and captured piece
+        state.prev_move = move;
+        state.dst_piece = dst_piece;
 
         // Clear castling rights if relevant pieces were moved
         switch (src_piece) {
@@ -191,25 +326,25 @@ namespace Brainiac {
         case MoveType::KnightPromo:
         case MoveType::KnightPromoCapture:
             state.hash ^= _hasher.bitstring(src_sq, src_piece);
-            src_piece = create_piece(PieceType::Knight, state.turn);
+            src_piece = create_piece(PieceType::Knight, _turn);
             state.hash ^= _hasher.bitstring(src_sq, src_piece);
             break;
         case MoveType::RookPromo:
         case MoveType::RookPromoCapture:
             state.hash ^= _hasher.bitstring(src_sq, src_piece);
-            src_piece = create_piece(PieceType::Rook, state.turn);
+            src_piece = create_piece(PieceType::Rook, _turn);
             state.hash ^= _hasher.bitstring(src_sq, src_piece);
             break;
         case MoveType::BishopPromo:
         case MoveType::BishopPromoCapture:
             state.hash ^= _hasher.bitstring(src_sq, src_piece);
-            src_piece = create_piece(PieceType::Bishop, state.turn);
+            src_piece = create_piece(PieceType::Bishop, _turn);
             state.hash ^= _hasher.bitstring(src_sq, src_piece);
             break;
         case MoveType::QueenPromo:
         case MoveType::QueenPromoCapture:
             state.hash ^= _hasher.bitstring(src_sq, src_piece);
-            src_piece = create_piece(PieceType::Queen, state.turn);
+            src_piece = create_piece(PieceType::Queen, _turn);
             state.hash ^= _hasher.bitstring(src_sq, src_piece);
             break;
         case MoveType::PawnDouble:
@@ -220,41 +355,41 @@ namespace Brainiac {
             break;
         case MoveType::EnPassant: {
             // Map turn Color [0, 1] to Direction [1, -1]
-            int pawn_dir = ((1 - state.turn) * 2) - 1;
+            char pawn_dir = ((1 - _turn) * 2) - 1;
 
-            Square target = static_cast<Square>(state.ep_dst - (8 * pawn_dir));
-            Piece target_piece = state.board.get(target);
+            state.ep_pawn = static_cast<Square>(state.ep_dst - (8 * pawn_dir));
+            Piece target_piece = _board.get(state.ep_pawn);
 
-            state.board.clear(target);
+            _board.clear(state.ep_pawn);
 
-            state.hash ^= _hasher.bitstring(target, target_piece);
+            state.hash ^= _hasher.bitstring(state.ep_pawn, target_piece);
             break;
         }
 
         case MoveType::KingCastle: {
-            Square rook_sq = static_cast<Square>(state.turn * 56 + 7);
-            Square rook_dst_sq = static_cast<Square>(dst_sq - 1);
-            Piece rook_piece = state.board.get(rook_sq);
+            state.castle_rook_src = static_cast<Square>(_turn * 56 + 7);
+            state.castle_rook_dst = static_cast<Square>(dst_sq - 1);
+            Piece rook_piece = _board.get(state.castle_rook_src);
 
-            state.board.set(rook_dst_sq, rook_piece);
-            state.board.clear(rook_sq);
+            _board.set(state.castle_rook_dst, rook_piece);
+            _board.clear(state.castle_rook_src);
 
-            state.hash ^= _hasher.bitstring(rook_sq, rook_piece);
-            state.hash ^= _hasher.bitstring(rook_dst_sq, rook_piece);
+            state.hash ^= _hasher.bitstring(state.castle_rook_src, rook_piece);
+            state.hash ^= _hasher.bitstring(state.castle_rook_dst, rook_piece);
             break;
         }
         case MoveType::QueenCastle: {
-            Square rook_sq = static_cast<Square>(
-                static_cast<std::underlying_type_t<Color>>(state.turn) *
+            state.castle_rook_src = static_cast<Square>(
+                static_cast<std::underlying_type_t<Color>>(_turn) *
                 static_cast<std::underlying_type_t<Square>>(Square::A8));
-            Square rook_dst_sq = static_cast<Square>(dst_sq + 1);
-            Piece rook_piece = state.board.get(rook_sq);
+            state.castle_rook_dst = static_cast<Square>(dst_sq + 1);
+            Piece rook_piece = _board.get(state.castle_rook_src);
 
-            state.board.set(rook_dst_sq, rook_piece);
-            state.board.clear(rook_sq);
+            _board.set(state.castle_rook_dst, rook_piece);
+            _board.clear(state.castle_rook_src);
 
-            state.hash ^= _hasher.bitstring(rook_sq, rook_piece);
-            state.hash ^= _hasher.bitstring(rook_dst_sq, rook_piece);
+            state.hash ^= _hasher.bitstring(state.castle_rook_src, rook_piece);
+            state.hash ^= _hasher.bitstring(state.castle_rook_dst, rook_piece);
             break;
         }
 
@@ -295,35 +430,99 @@ namespace Brainiac {
         }
 
         // Move the src piece
-        state.board.set(dst_sq, src_piece);
-        state.board.clear(src_sq);
+        _board.set(dst_sq, src_piece);
+        _board.clear(src_sq);
 
+        bool non_empty = dst_piece != Piece::Empty;
         state.hash ^= _hasher.bitstring(src_sq, src_piece);
         state.hash ^= _hasher.bitstring(dst_sq, src_piece);
-        state.hash ^=
-            _hasher.bitstring(dst_sq, dst_piece) & -(dst_piece != Piece::Empty);
+        state.hash ^= _hasher.bitstring(dst_sq, dst_piece) & -non_empty;
 
-        // Update turn and fullmove counter
-        state.fullmoves += (state.turn == Color::Black);
-        state.turn = static_cast<Color>(!state.turn);
-        state.hash ^= _hasher.bitstring(state.turn);
+        // Update full move counter
+        _fullmoves += (_turn == Color::Black);
 
-        state.generate_moves();
+        // Update turn
+        _turn = static_cast<Color>(!_turn);
+        state.hash ^= _hasher.bitstring(_turn);
+
+        // Generate moves
+        generate_moves();
     }
 
-    void Position::undo() { _index--; }
+    void Position::undo() {
+        // TODO: Revert the board ??
+        // * If last move was king castle, move kingside rook back
+        // * If last move was queen castle, move queenside rook back
+        const State &state = _states[_states.size() - 1];
 
-    void Position::redo() { _index++; }
+        // Update turn
+        Color op = _turn;
+        _turn = static_cast<Color>(!_turn);
+
+        Square src_sq = state.prev_move.src();
+        Square dst_sq = state.prev_move.dst();
+
+        // Source piece is currently on the destination square
+        Piece src_piece = _board.get(dst_sq);
+
+        // Handle different move types
+        switch (state.prev_move.type()) {
+        case MoveType::Capture:
+            _board.set(dst_sq, state.dst_piece);
+            break;
+        case MoveType::QueenPromoCapture:
+        case MoveType::KnightPromoCapture:
+        case MoveType::BishopPromoCapture:
+        case MoveType::RookPromoCapture:
+            src_piece = create_piece(PieceType::Pawn, _turn);
+            _board.set(dst_sq, state.dst_piece);
+            break;
+        case MoveType::QueenPromo:
+        case MoveType::KnightPromo:
+        case MoveType::BishopPromo:
+        case MoveType::RookPromo:
+            src_piece = create_piece(PieceType::Pawn, _turn);
+            _board.clear(dst_sq);
+            break;
+        case MoveType::EnPassant: {
+            Piece pawn = create_piece(PieceType::Pawn, op);
+            _board.set(state.ep_pawn, pawn);
+            _board.clear(dst_sq);
+            break;
+        }
+        case MoveType::KingCastle:
+        case MoveType::QueenCastle: {
+            Piece rook_piece = _board.get(state.castle_rook_dst);
+            _board.set(state.castle_rook_src, rook_piece);
+            _board.clear(state.castle_rook_dst);
+            _board.clear(dst_sq);
+            break;
+        }
+        case MoveType::Quiet:
+        case MoveType::PawnDouble:
+            _board.clear(dst_sq);
+            break;
+        default:
+            break;
+        }
+
+        // Move piece back to source square
+        _board.set(src_sq, src_piece);
+
+        // Revert state
+        _states.pop_back();
+    }
 
     void Position::skip() {
-        State &state = push_state();
+        State &state = _states.emplace_back(_states[_states.size() - 1]);
+        state.halfmoves++;
 
-        // Update state
-        state.fullmoves += (state.turn == Color::Black);
-        state.turn = static_cast<Color>(!state.turn);
-        state.hash ^= _hasher.bitstring(state.turn);
+        // Update full move counter
+        _fullmoves += (_turn == Color::Black);
 
-        state.generate_moves();
+        // Update turn
+        _turn = static_cast<Color>(!_turn);
+        state.hash ^= _hasher.bitstring(_turn);
     }
 
     Move Position::find_move(const Square src,
@@ -374,5 +573,9 @@ namespace Brainiac {
                          promotion);
     }
 
-    void Position::print() const { _states[_index].print(); }
+    void Position::print() const {
+        if (_turn == Color::White) std::cout << "White's turn.\n";
+        else std::cout << "Black's turn.\n";
+        _board.print();
+    }
 } // namespace Brainiac

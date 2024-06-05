@@ -6,8 +6,11 @@
 #include <vector>
 
 #include "Hasher.hpp"
+#include "MoveGen.hpp"
+#include "MoveList.hpp"
 #include "Numeric.hpp"
 #include "State.hpp"
+#include "Utils.hpp"
 
 namespace Brainiac {
     static const std::string DEFAULT_BOARD_FEN =
@@ -19,16 +22,13 @@ namespace Brainiac {
      */
     class Position {
         std::vector<State> _states;
-        unsigned _index;
+        Board _board;
+        Color _turn;
+        Clock _fullmoves;
+
         Hasher _hasher;
 
-        /**
-         * @brief Push a new state onto the array, overwriting any states ahead
-         * of the curernt index for the `undo` case.
-         *
-         * @return State&
-         */
-        State &push_state();
+        void generate_moves();
 
       public:
         Position(std::string fen = DEFAULT_BOARD_FEN, Hasher hasher = Hasher());
@@ -65,9 +65,9 @@ namespace Brainiac {
         /**
          * @brief Get the move list for the current turn.
          *
-         * @return const MoveList&
+         * @return const MoveList
          */
-        const MoveList &moves() const;
+        MoveList moves() const;
 
         /**
          * @brief Get the current set of castling rights.
@@ -131,14 +131,6 @@ namespace Brainiac {
         bool is_start() const;
 
         /**
-         * @brief Test if the position is the latest state.
-         *
-         * @return true
-         * @return false
-         */
-        bool is_end() const;
-
-        /**
          * @brief Test if the position is quiet.
          *
          * @return true
@@ -158,12 +150,6 @@ namespace Brainiac {
          *
          */
         void undo();
-
-        /**
-         * @brief Redo the next move.
-         *
-         */
-        void redo();
 
         /**
          * @brief Skip the current turn.

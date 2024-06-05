@@ -69,13 +69,6 @@ void play_bot(Brainiac::Color player_color, unsigned seed) {
                         }
                     }
                     break;
-                } else if (move_input == "redo") {
-                    for (int i = 0; i < 2; i++) {
-                        if (!pos.is_end()) {
-                            pos.redo();
-                        }
-                    }
-                    break;
                 } else if (move_input == "stop") {
                     return;
                 } else {
