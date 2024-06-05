@@ -2,7 +2,7 @@
 
 namespace Brainiac {
     Position::Position(std::string fen, Hasher hasher) {
-        _states.reserve(256);
+        _states.reserve(32);
         _hasher = hasher;
 
         // Initialize the board
@@ -51,10 +51,10 @@ namespace Brainiac {
         // Compute hash
         state.hash = hasher(_board, state.castling, _turn, state.ep_dst);
 
-        generate_moves();
+        prepare_movegen();
     }
 
-    void Position::generate_moves() {
+    void Position::prepare_movegen() {
         State &state = _states[_states.size() - 1];
 
         Color op = static_cast<Color>(!_turn);
@@ -73,31 +73,30 @@ namespace Brainiac {
         Piece o_bishop = create_piece(PieceType::Bishop, op);
         Piece o_queen = create_piece(PieceType::Queen, op);
 
-        MoveGen generator;
-        generator.friends = _board.bitboard(_turn);
-        generator.enemies = _board.bitboard(op);
-        generator.all = generator.friends | generator.enemies;
+        _generator.friends = _board.bitboard(_turn);
+        _generator.enemies = _board.bitboard(op);
+        _generator.all = _generator.friends | _generator.enemies;
 
-        generator.f_king = _board.bitboard(f_king);
-        generator.f_pawn = _board.bitboard(f_pawn);
-        generator.f_rook = _board.bitboard(f_rook);
-        generator.f_knight = _board.bitboard(f_knight);
-        generator.f_bishop = _board.bitboard(f_bishop);
-        generator.f_queen = _board.bitboard(f_queen);
+        _generator.f_king = _board.bitboard(f_king);
+        _generator.f_pawn = _board.bitboard(f_pawn);
+        _generator.f_rook = _board.bitboard(f_rook);
+        _generator.f_knight = _board.bitboard(f_knight);
+        _generator.f_bishop = _board.bitboard(f_bishop);
+        _generator.f_queen = _board.bitboard(f_queen);
 
-        generator.o_king = _board.bitboard(o_king);
-        generator.o_pawn = _board.bitboard(o_pawn);
-        generator.o_rook = _board.bitboard(o_rook);
-        generator.o_knight = _board.bitboard(o_knight);
-        generator.o_bishop = _board.bitboard(o_bishop);
-        generator.o_queen = _board.bitboard(o_queen);
+        _generator.o_king = _board.bitboard(o_king);
+        _generator.o_pawn = _board.bitboard(o_pawn);
+        _generator.o_rook = _board.bitboard(o_rook);
+        _generator.o_knight = _board.bitboard(o_knight);
+        _generator.o_bishop = _board.bitboard(o_bishop);
+        _generator.o_queen = _board.bitboard(o_queen);
 
-        generator.ep_dst = state.ep_dst;
-        generator.turn = _turn;
-        generator.castling = state.castling;
+        _generator.ep_dst = state.ep_dst;
+        _generator.turn = _turn;
+        _generator.castling = state.castling;
 
-        state.moves.clear();
-        state.check = generator.generate(state.moves);
+        _moves.clear();
+        _moves_ready = false;
     }
 
     std::string Position::fen(bool include_counters) const {
@@ -154,8 +153,12 @@ namespace Brainiac {
 
     Color Position::turn() const { return _turn; }
 
-    MoveList Position::moves() const {
-        return _states[_states.size() - 1].moves;
+    const MoveList &Position::moves() {
+        if (!_moves_ready) {
+            _check = _generator.generate(_moves);
+            _moves_ready = true;
+        }
+        return _moves;
     }
 
     const CastlingFlagSet Position::castling() const {
@@ -168,19 +171,19 @@ namespace Brainiac {
 
     Clock Position::fullmoves() const { return _fullmoves; }
 
-    bool Position::is_check() const {
-        return _states[_states.size() - 1].check;
+    bool Position::is_check() {
+        if (!_moves_ready) {
+            _check = _generator.generate(_moves);
+            _moves_ready = true;
+        }
+        return _check;
     }
 
-    bool Position::is_checkmate() const {
-        return is_check() && moves().size() == 0;
-    }
+    bool Position::is_checkmate() { return is_check() && moves().size() == 0; }
 
-    bool Position::is_stalemate() const {
-        return !is_check() && moves().size() == 0;
-    }
+    bool Position::is_stalemate() { return !is_check() && moves().size() == 0; }
 
-    bool Position::is_draw() const {
+    bool Position::is_draw() {
         const State &state = _states[_states.size() - 1];
         Bitboard black = _board.bitboard(Color::Black);
         Bitboard white = _board.bitboard(Color::White);
@@ -446,7 +449,7 @@ namespace Brainiac {
         state.hash ^= _hasher.bitstring(_turn);
 
         // Generate moves
-        generate_moves();
+        prepare_movegen();
     }
 
     void Position::undo() {
@@ -458,6 +461,9 @@ namespace Brainiac {
         // Update turn
         Color op = _turn;
         _turn = static_cast<Color>(!_turn);
+
+        // Update fullmove counter
+        _fullmoves -= (_turn == Color::Black);
 
         Square src_sq = state.prev_move.src();
         Square dst_sq = state.prev_move.dst();
@@ -505,6 +511,7 @@ namespace Brainiac {
         case MoveType::Skip:
             // Early return on a skip move
             _states.pop_back();
+            prepare_movegen();
             return;
         }
 
@@ -513,6 +520,7 @@ namespace Brainiac {
 
         // Revert state
         _states.pop_back();
+        prepare_movegen();
     }
 
     void Position::skip() {
@@ -525,11 +533,12 @@ namespace Brainiac {
         // Update turn
         _turn = static_cast<Color>(!_turn);
         state.hash ^= _hasher.bitstring(_turn);
+
+        prepare_movegen();
     }
 
-    Move Position::find_move(const Square src,
-                             const Square dst,
-                             char promotion) const {
+    Move
+    Position::find_move(const Square src, const Square dst, char promotion) {
         for (const Move &move : moves()) {
             if (move.src() == src && move.dst() == dst) {
                 if (promotion) {
@@ -562,7 +571,7 @@ namespace Brainiac {
         return {};
     }
 
-    Move Position::find_move(const std::string &str) const {
+    Move Position::find_move(const std::string &str) {
         if (str.length() < 4) return {};
         std::string from = str.substr(0, 2);
         std::string to = str.substr(2, 2);

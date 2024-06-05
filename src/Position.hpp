@@ -21,14 +21,24 @@ namespace Brainiac {
      *
      */
     class Position {
-        std::vector<State> _states;
         Board _board;
+        MoveList _moves;
+        std::vector<State> _states;
+
         Color _turn;
         Clock _fullmoves;
 
         Hasher _hasher;
+        MoveGen _generator;
 
-        void generate_moves();
+        bool _moves_ready;
+        bool _check;
+
+        /**
+         * @brief Prepare the move generator.
+         *
+         */
+        void prepare_movegen();
 
       public:
         Position(std::string fen = DEFAULT_BOARD_FEN, Hasher hasher = Hasher());
@@ -65,9 +75,9 @@ namespace Brainiac {
         /**
          * @brief Get the move list for the current turn.
          *
-         * @return const MoveList
+         * @return const MoveList&
          */
-        MoveList moves() const;
+        const MoveList &moves();
 
         /**
          * @brief Get the current set of castling rights.
@@ -96,7 +106,7 @@ namespace Brainiac {
          * @return true
          * @return false
          */
-        bool is_check() const;
+        bool is_check();
 
         /**
          * @brief Test if the king is in checkmate for the current turn.
@@ -104,7 +114,7 @@ namespace Brainiac {
          * @return true
          * @return false
          */
-        bool is_checkmate() const;
+        bool is_checkmate();
 
         /**
          * @brief Test if the game is a stalemate.
@@ -112,7 +122,7 @@ namespace Brainiac {
          * @return true
          * @return false
          */
-        bool is_stalemate() const;
+        bool is_stalemate();
 
         /**
          * @brief Test if the game is a draw.
@@ -120,7 +130,7 @@ namespace Brainiac {
          * @return true
          * @return false
          */
-        bool is_draw() const;
+        bool is_draw();
 
         /**
          * @brief Test if the position is the initial state.
@@ -167,8 +177,7 @@ namespace Brainiac {
          * @param promotion
          * @return Move
          */
-        Move
-        find_move(const Square src, const Square dst, char promotion = 0) const;
+        Move find_move(const Square src, const Square dst, char promotion = 0);
 
         /**
          * @brief Find a legal move from a given long algebraic notation string.
@@ -176,7 +185,7 @@ namespace Brainiac {
          * @param str
          * @return Move
          */
-        Move find_move(const std::string &str) const;
+        Move find_move(const std::string &str);
 
         /**
          * @brief Pretty print the current game state.

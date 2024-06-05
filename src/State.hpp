@@ -72,17 +72,5 @@ namespace Brainiac {
          *
          */
         Hash hash;
-
-        /**
-         * @brief Is the king in check?
-         *
-         */
-        bool check;
-
-        /**
-         * @brief Legal move list.
-         *
-         */
-        MoveList moves; // Yeah this shouldn't be here. The fuck was I thinking.
     };
 } // namespace Brainiac

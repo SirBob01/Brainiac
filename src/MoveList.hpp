@@ -9,7 +9,7 @@ namespace Brainiac {
      * @brief Theoretical maximum number of moves playable in a chess game.
      *
      */
-    constexpr unsigned MAX_MOVES_PER_TURN = 218ULL;
+    constexpr unsigned MAX_MOVES_PER_TURN = 256ULL;
 
     /**
      * @brief A stack-allocated list of moves
