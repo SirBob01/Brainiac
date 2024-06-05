@@ -3,21 +3,15 @@
 #include <cstdint>
 #include <vector>
 
-#include "Bitboard.hpp"
-#include "Board.hpp"
 #include "Hasher.hpp"
 #include "Move.hpp"
-#include "MoveGen.hpp"
 #include "MoveList.hpp"
 #include "Numeric.hpp"
-#include "Piece.hpp"
-#include "Sliders.hpp"
-#include "Utils.hpp"
 
 namespace Brainiac {
     /**
-     * @brief Represents discrete chronological game state. This allows forward
-     * and backward movement in time (undo/redo moves).
+     * @brief Represents discrete chronological game state. This allows backward
+     * movement in time (undo moves).
      *
      * This stores information that is difficult to retrive during the
      * undo operation (e.g., castling rights).
@@ -37,16 +31,34 @@ namespace Brainiac {
         Square ep_dst;
 
         /**
-         * @brief Current turn.
+         * @brief En-passant capture pawn.
          *
          */
-        Color turn;
+        Square ep_pawn;
 
         /**
-         * @brief Is king in check?
+         * @brief Source square of castling move.
          *
          */
-        bool check;
+        Square castle_rook_src;
+
+        /**
+         * @brief Destination square of castling move.
+         *
+         */
+        Square castle_rook_dst;
+
+        /**
+         * @brief Last captured piece. Empty in the case of en-passant.
+         *
+         */
+        Piece dst_piece;
+
+        /**
+         * @brief Previous move.
+         *
+         */
+        Move prev_move;
 
         /**
          * @brief Half-moves depend on the board state (pawn advances or
@@ -56,59 +68,21 @@ namespace Brainiac {
         Clock halfmoves;
 
         /**
-         * @brief Fullmove counter.
-         *
-         */
-        Clock fullmoves;
-
-        /**
-         * @brief Move set.
-         *
-         */
-        MoveList moves;
-
-        /**
-         * @brief Hash value.
+         * @brief Hash key.
          *
          */
         Hash hash;
 
         /**
-         * @brief Board state.
+         * @brief Is the king in check?
          *
          */
-        Board board;
+        bool check;
 
         /**
-         * @brief Initialize an empty state.
+         * @brief Legal move list.
          *
          */
-        State();
-
-        /**
-         * @brief Initialize state from a FEN string.
-         *
-         * @param fen
-         * @param hasher
-         */
-        State(std::string fen, Hasher &hasher);
-
-        /**
-         * @brief Get the FEN string of the board.
-         *
-         */
-        std::string fen(bool include_counters = true) const;
-
-        /**
-         * @brief Pretty print the state.
-         *
-         */
-        void print() const;
-
-        /**
-         * @brief Generate the moves for the specified turn.
-         *
-         */
-        void generate_moves();
+        MoveList moves; // Yeah this shouldn't be here. The fuck was I thinking.
     };
 } // namespace Brainiac
