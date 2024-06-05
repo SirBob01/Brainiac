@@ -2,7 +2,7 @@
 
 namespace Brainiac {
     Position::Position(std::string fen, Hasher hasher) {
-        _states.reserve(128);
+        _states.reserve(256);
         _hasher = hasher;
 
         // Initialize the board
@@ -502,8 +502,10 @@ namespace Brainiac {
         case MoveType::PawnDouble:
             _board.clear(dst_sq);
             break;
-        default:
-            break;
+        case MoveType::Skip:
+            // Early return on a skip move
+            _states.pop_back();
+            return;
         }
 
         // Move piece back to source square
