@@ -5,6 +5,7 @@
 #include <functional>
 
 #include "History.hpp"
+#include "MovePicker.hpp"
 #include "Numeric.hpp"
 #include "PVTable.hpp"
 #include "Position.hpp"
@@ -177,34 +178,6 @@ namespace Brainiac {
         BestMoveCallback _on_bestmove;
         IterativeCallback _on_iterative;
         PVCallback _on_pv;
-
-        /**
-         * @brief Static exchange evaluation on a target square.
-         *
-         * @param position
-         * @param target
-         * @param pos
-         * @return Value
-         */
-        Value see_target(Position &position, Square target);
-
-        /**
-         * @brief Evaluate a capture move.
-         *
-         * @param move
-         * @param pos
-         * @return MoveValue
-         */
-        MoveValue evaluate_capture(Position &position, Move move);
-
-        /**
-         * @brief Compute the move value for ordering
-         *
-         * @param move
-         * @param node
-         * @return MoveValue
-         */
-        MoveValue evaluate_move(Position &position, Move move, Node node);
 
         /**
          * @brief Check if a move can be reduced.
