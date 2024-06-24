@@ -4,6 +4,7 @@
 
 #include "Evaluation.hpp"
 #include "History.hpp"
+#include "MovePicker.hpp"
 #include "Numeric.hpp"
 #include "Position.hpp"
 #include "Transpositions.hpp"
@@ -60,34 +61,6 @@ namespace Brainiac {
 
         unsigned _negamax_visited;
         unsigned _qsearch_visited;
-
-        /**
-         * @brief Static exchange evaluation on a target square.
-         *
-         * @param position
-         * @param target
-         * @param pos
-         * @return Value
-         */
-        Value see_target(Position &position, Square target);
-
-        /**
-         * @brief Evaluate a capture move.
-         *
-         * @param move
-         * @param pos
-         * @return MoveValue
-         */
-        MoveValue evaluate_capture(Position &position, Move move);
-
-        /**
-         * @brief Compute the move value for ordering
-         *
-         * @param move
-         * @param node
-         * @return MoveValue
-         */
-        MoveValue evaluate_move(Position &position, Move move, Node node);
 
         /**
          * @brief Check if a move can be reduced.
