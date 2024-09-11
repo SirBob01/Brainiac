@@ -28,7 +28,6 @@ static char *test_move_picker() {
 
         mu_assert("Move phase order preserved", entry.phase >= phase);
         if (entry.phase == phase) {
-            std::cout << int(entry.value) << "\n";
             mu_assert("Move value order preserved", entry.value >= value);
         }
         mu_assert("Move valid",
