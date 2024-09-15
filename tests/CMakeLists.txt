@@ -10,7 +10,7 @@ add_compile_options(-Wall -g -O3 -fPIC)
 file(GLOB_RECURSE INCLUDE "./src/*.hpp" "../src/*.hpp")
 file(GLOB_RECURSE SOURCES "../src/*.cpp")
 
-list(FILTER SOURCES EXCLUDE REGEX ".*main\\.cpp$")
+list(FILTER SOURCES EXCLUDE REGEX ".*Brainiac\\.cpp$")
 
 # Compile all tests
 file(GLOB TESTS "./src/*.cpp")
