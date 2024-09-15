@@ -109,8 +109,9 @@ namespace Brainiac {
                           Value beta,
                           bool qsearch) {
         // Time management
-        _timeout = time() - _start_time >= _remaining_time;
-        if (_timeout) return 0;
+        Seconds elapsed = time() - _start_time;
+        _timeout = elapsed >= _limit_time && _limit_time.count() >= 0;
+        if (!_running || _timeout) return 0;
 
         _negamax_visited += !qsearch;
         _qsearch_visited += qsearch;
@@ -201,7 +202,7 @@ namespace Brainiac {
         Value value = MIN_VALUE;
         MoveValue move_value = 0;
         MoveIndex move_index = 0;
-        for (MoveIndex i = 0; i < moves.size() && !_timeout; i++) {
+        for (MoveIndex i = 0; i < moves.size(); i++) {
             // Find highest scoring move
             move_index = i;
             move_value = evaluate_move(position, moves[move_index], node);
@@ -259,7 +260,7 @@ namespace Brainiac {
 
             // Early terminate
             if (alpha >= beta) {
-                if (!_timeout && !qsearch) {
+                if (_running && !_timeout && !qsearch) {
                     _htable.set(position, move, depth);
                 }
                 break;
@@ -270,7 +271,7 @@ namespace Brainiac {
         }
 
         // Update the transposition table
-        if (!_timeout && !qsearch) {
+        if (_running && !_timeout && !qsearch) {
             NodeType type = NodeType::Exact;
             if (value <= alpha_orig) {
                 type = NodeType::Upper;
@@ -287,14 +288,28 @@ namespace Brainiac {
         _htable.clear();
     }
 
-    Result Search::search(Position &position) {
-        // Reset statistics
+    void Search::set_bestmove_callback(BestMoveCallback callback) {
+        _on_bestmove = callback;
+    }
+
+    void Search::set_traverse_callback(TraverseCallback callback) {
+        _on_traverse = callback;
+    };
+
+    void Search::go(Position &position, SearchLimits limits) {
+        // A search is currently running
+        if (_running) return;
+        _running = true;
+
+        // Reset timer
         _timeout = false;
         _start_time = time();
+        _limit_time = limits.movetime;
+
         _negamax_visited = 0;
         _qsearch_visited = 0;
-        _remaining_time = 15s; // TODO: Compute this dynamically.
 
+        SearchInfo info;
         MoveList moves = position.moves();
 
         // Initial aspiration window
@@ -303,7 +318,7 @@ namespace Brainiac {
         Value value = MIN_VALUE;
 
         Depth depth = 1;
-        while (depth <= MAX_DEPTH && value != WIN_VALUE && !_timeout) {
+        while (depth <= limits.depth && value != WIN_VALUE) {
             MoveIndex best_index = 0;
             for (MoveIndex i = 0; i < moves.size(); i++) {
                 Move move = moves[i];
@@ -318,24 +333,34 @@ namespace Brainiac {
                     best_index = i;
                     value = score;
                 }
-                if (value >= WIN_VALUE || _timeout) {
+
+                // Traversal callback
+                info.move = move;
+                info.move_number = i + 1;
+                info.time = time() - _start_time;
+                info.visited = _negamax_visited + _qsearch_visited;
+                info.depth = depth;
+                info.value = value;
+
+                _on_traverse(info);
+
+                if (value >= WIN_VALUE || !_running || _timeout) {
                     break;
                 }
             }
 
             // Prioritize best_move in the next iteration
-            if (!_timeout) {
+            if (_running && !_timeout) {
                 std::swap(moves[best_index], moves[0]);
+            } else {
+                break;
             }
             depth++;
         }
 
-        Result result;
-        result.move = moves[0];
-        result.time = time() - _start_time;
-        result.visited = _negamax_visited + _qsearch_visited;
-        result.max_depth = depth - 1;
-
-        return result;
+        _on_bestmove(moves[0]);
+        _running = false;
     }
+
+    void Search::stop() { _running = false; }
 } // namespace Brainiac
