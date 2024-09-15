@@ -1,7 +1,7 @@
 #include <array>
 #include <iostream>
 
-#include "../../src/Brainiac.hpp"
+#include "../../src/Engine.hpp"
 
 #include "ctest.hpp"
 

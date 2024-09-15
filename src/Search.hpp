@@ -1,6 +1,8 @@
 #pragma once
 
+#include <atomic>
 #include <chrono>
+#include <functional>
 
 #include "Evaluation.hpp"
 #include "History.hpp"
@@ -17,15 +19,21 @@ namespace Brainiac {
     constexpr Depth MAX_QSEARCH_DEPTH = 6;
 
     /**
-     * @brief Search result.
+     * @brief Search information.
      *
      */
-    struct Result {
+    struct SearchInfo {
         /**
          * @brief Best move found.
          *
          */
         Move move;
+
+        /**
+         * @brief Move number.
+         *
+         */
+        unsigned move_number;
 
         /**
          * @brief Total search time.
@@ -40,11 +48,49 @@ namespace Brainiac {
         unsigned visited;
 
         /**
-         * @brief Maximum depth searched (without extensions).
+         * @brief Search depth.
          *
          */
-        Depth max_depth;
+        Depth depth;
+
+        /**
+         * @brief Current valuation in centipawns.
+         *
+         */
+        Value value;
     };
+
+    /**
+     * @brief Search limit parameters.
+     *
+     */
+    struct SearchLimits {
+        Seconds wtime = Seconds(0);
+        Seconds btime = Seconds(0);
+
+        Seconds winc = Seconds(0);
+        Seconds binc = Seconds(0);
+
+        Seconds movetime = Seconds(15);
+
+        Depth depth = MAX_DEPTH;
+
+        unsigned nodes = 0;
+        unsigned perft = 0;
+        unsigned movestogo = 0;
+    };
+
+    /**
+     * @brief Best move found callback.
+     *
+     */
+    using BestMoveCallback = std::function<void(Move &)>;
+
+    /**
+     * @brief Traversal callback.
+     *
+     */
+    using TraverseCallback = std::function<void(SearchInfo &)>;
 
     /**
      * @brief Search engine.
@@ -56,10 +102,15 @@ namespace Brainiac {
 
         bool _timeout;
         Seconds _start_time;
-        Seconds _remaining_time;
+        Seconds _limit_time;
 
         unsigned _negamax_visited;
         unsigned _qsearch_visited;
+
+        BestMoveCallback _on_bestmove = [](Move) {};
+        TraverseCallback _on_traverse = [](SearchInfo) {};
+
+        std::atomic_bool _running = false;
 
         /**
          * @brief Static exchange evaluation on a target square.
@@ -125,10 +176,32 @@ namespace Brainiac {
         void reset();
 
         /**
+         * @brief Set the bestmove callback.
+         *
+         * @param callback
+         */
+        void set_bestmove_callback(BestMoveCallback callback);
+
+        /**
+         * @brief Set the traverse callback.
+         *
+         * @param callback
+         */
+        void set_traverse_callback(TraverseCallback callback);
+
+        /**
          * @brief Calculate the next viable move for the current turn.
          *
-         * @return Result
+         * @param position
+         * @param limits
+         * @return Move
          */
-        Result search(Position &position);
+        void go(Position &position, SearchLimits limits);
+
+        /**
+         * @brief Stop the current search.
+         *
+         */
+        void stop();
     };
 } // namespace Brainiac

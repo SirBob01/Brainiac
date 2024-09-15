@@ -1,8 +1,8 @@
-#include "Brainiac.hpp"
+#include "Engine.hpp"
 
-namespace Brainiac {
-    void init() {
-        ROOK_ATTACK_TABLES = Brainiac::init_rook_tables();
-        BISHOP_ATTACK_TABLES = Brainiac::init_bishop_tables();
-    }
-} // namespace Brainiac
+int main(int argc, char *argv[]) {
+    Brainiac::init();
+    Brainiac::UCI uci;
+    uci.run();
+    return 0;
+}

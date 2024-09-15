@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 
-#include "../../src/Brainiac.hpp"
+#include "../../src/Engine.hpp"
 
 #include "ctest.hpp"
 
@@ -29,6 +29,7 @@ std::vector<MateTestCase> POSITIONS = {
 };
 
 static char *test_mate_in_n() {
+    SearchLimits limits;
     for (MateTestCase &test : POSITIONS) {
         Position position(test.fen);
         Search search;
@@ -37,12 +38,15 @@ static char *test_mate_in_n() {
 
         for (unsigned i = 0; i < test.sequence.size(); i++) {
             if (position.turn() == bot_turn) {
-                Result result = search.search(position);
+                Move best_move;
+                search.set_bestmove_callback(
+                    [&](Move &move) { best_move = move; });
+                search.go(position, limits);
 
                 move_label = "Searched move (" +
                              test.sequence[i].standard_notation() +
-                             ") = " + result.move.standard_notation();
-                mu_assert(move_label.c_str(), result.move == test.sequence[i]);
+                             ") = " + best_move.standard_notation();
+                mu_assert(move_label.c_str(), best_move == test.sequence[i]);
             }
             position.make(test.sequence[i]);
         }
