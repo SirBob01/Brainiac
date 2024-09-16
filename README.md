@@ -1,6 +1,6 @@
 # Brainiac
 
-Brainiac is a chess artificial intelligence engine.
+Brainiac is a UCI compliant chess engine.
 
 ## Performance
 
@@ -18,7 +18,6 @@ To build the engine executable, run
 ### Performance Enhancements
 
 - Log PV in UCI info
-- Time management
 - Aspiration window
 - Optimize SEE algorithm
 - Add heuristics for "protected pieces" and "hanging pieces" (penalty)

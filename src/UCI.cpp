@@ -96,21 +96,21 @@ namespace Brainiac {
                 if (key == "perft") {
                     limits.perft = stoi(args[++i]);
                 } else if (key == "wtime") {
-                    limits.wtime = Seconds(stoi(args[++i]) / 1000.0f);
+                    limits.white_time = Seconds(stoi(args[++i]) / 1000.0f);
                 } else if (key == "btime") {
-                    limits.btime = Seconds(stoi(args[++i]) / 1000.0f);
+                    limits.black_time = Seconds(stoi(args[++i]) / 1000.0f);
                 } else if (key == "winc") {
-                    limits.winc = Seconds(stoi(args[++i]) / 1000.0f);
+                    limits.white_increment = Seconds(stoi(args[++i]) / 1000.0f);
                 } else if (key == "binc") {
-                    limits.binc = Seconds(stoi(args[++i]) / 1000.0f);
+                    limits.black_increment = Seconds(stoi(args[++i]) / 1000.0f);
                 } else if (key == "movetime") {
-                    limits.movetime = Seconds(stoi(args[++i]) / 1000.0f);
+                    limits.move_time = Seconds(stoi(args[++i]) / 1000.0f);
                 } else if (key == "depth") {
                     limits.depth = stoi(args[++i]);
                 } else if (key == "nodes") {
                     limits.nodes = stoi(args[++i]);
                 } else if (key == "movestogo") {
-                    limits.movestogo = stoi(args[++i]);
+                    limits.moves_to_go = stoi(args[++i]);
                 }
             }
 

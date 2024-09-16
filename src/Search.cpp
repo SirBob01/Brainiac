@@ -304,7 +304,31 @@ namespace Brainiac {
         // Reset timer
         _timeout = false;
         _start_time = time();
-        _limit_time = limits.movetime;
+        if (limits.move_time.count()) {
+            _limit_time = limits.move_time;
+        } else {
+            // Compute time per move
+            Seconds increment = position.turn() == Color::White
+                                    ? limits.white_increment
+                                    : limits.black_increment;
+            _limit_time = position.turn() == Color::White ? limits.white_time
+                                                          : limits.black_time;
+            if (limits.moves_to_go) {
+                _limit_time /= limits.moves_to_go;
+            } else {
+                _limit_time /= 30;
+            }
+
+            // Apply increment
+            if (_limit_time >= increment) {
+                _limit_time += increment;
+            }
+
+            // Assume infinite time if no time was provided
+            if (!_limit_time.count()) {
+                _limit_time = Seconds(-1);
+            }
+        }
 
         _negamax_visited = 0;
         _qsearch_visited = 0;
