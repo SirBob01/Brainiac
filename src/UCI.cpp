@@ -42,7 +42,10 @@ namespace Brainiac {
             std::cout << "readyok" << std::endl;
         };
 
-        _command_map["quit"] = [&](Tokens &args) { _running = false; };
+        _command_map["quit"] = [&](Tokens &args) {
+            _search.stop();
+            _running = false;
+        };
 
         _command_map["debug"] = [&](Tokens &args) {
             if (args.empty()) return;
@@ -204,6 +207,8 @@ namespace Brainiac {
             }
         }
 
-        _search_thread.join();
+        if (_search_thread.joinable()) {
+            _search_thread.join();
+        }
     }
 } // namespace Brainiac

@@ -192,6 +192,9 @@ namespace Brainiac {
         /**
          * @brief Calculate the next viable move for the current turn.
          *
+         * Consecutive calls will be ignored unless stop() is invoked to
+         * terminate the existing search.
+         *
          * @param position
          * @param limits
          * @return Move
