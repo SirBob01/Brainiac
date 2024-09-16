@@ -65,19 +65,19 @@ namespace Brainiac {
      *
      */
     struct SearchLimits {
-        Seconds wtime = Seconds(0);
-        Seconds btime = Seconds(0);
+        Seconds white_time = Seconds(0);
+        Seconds black_time = Seconds(0);
 
-        Seconds winc = Seconds(0);
-        Seconds binc = Seconds(0);
+        Seconds white_increment = Seconds(0);
+        Seconds black_increment = Seconds(0);
 
-        Seconds movetime = Seconds(15);
-
-        Depth depth = MAX_DEPTH;
+        Seconds move_time = Seconds(0);
 
         unsigned nodes = 0;
         unsigned perft = 0;
-        unsigned movestogo = 0;
+        unsigned moves_to_go = 0;
+
+        Depth depth = MAX_DEPTH;
     };
 
     /**
