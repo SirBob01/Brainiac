@@ -17,18 +17,14 @@ To build the engine executable, run
 
 ### Performance Enhancements
 
-- Quiescence search
+- Log PV in UCI info
+- Time management
 - Aspiration window
-- Dynamic thinking time for live games
+- Optimize SEE algorithm
 - Add heuristics for "protected pieces" and "hanging pieces" (penalty)
 - Optimize SEE algorithm
 - Mate distance pruning
 - King safety (evaluation)
-
-### Engine Interface
-
-- Fix up main program command-line interface
-- Integrate [UCI protocol](http://wbec-ridderkerk.nl/html/UCIProtocol.html)
 
 ## License
 
