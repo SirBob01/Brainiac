@@ -17,9 +17,7 @@ To build the engine executable, run
 
 ### Performance Enhancements
 
-- Log PV in UCI info
 - Aspiration window
-- Optimize SEE algorithm
 - Add heuristics for "protected pieces" and "hanging pieces" (penalty)
 - Optimize SEE algorithm
 - Mate distance pruning

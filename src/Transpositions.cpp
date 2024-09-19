@@ -16,7 +16,7 @@ namespace Brainiac {
         Hash hash = position.hash();
         Node &node = _table[hash & TABLE_MASK];
         if (node.type == NodeType::Invalid ||
-            (node.hash == hash && node.depth >= depth)) {
+            (node.hash == hash && depth >= node.depth)) {
             node.type = type;
             node.depth = depth;
             node.value = value;

@@ -165,6 +165,8 @@ namespace Brainiac {
         History _htable;
         PVTable _pvtable;
 
+        std::atomic_bool _running;
+
         bool _timeout;
         Seconds _start_time;
         Seconds _limit_time;
@@ -172,11 +174,9 @@ namespace Brainiac {
         unsigned _negamax_visited;
         unsigned _qsearch_visited;
 
-        BestMoveCallback _on_bestmove = [](Move) {};
-        IterativeCallback _on_iterative = [](IterativeInfo) {};
-        PVCallback _on_pv = [](PVInfo) {};
-
-        std::atomic_bool _running = false;
+        BestMoveCallback _on_bestmove;
+        IterativeCallback _on_iterative;
+        PVCallback _on_pv;
 
         /**
          * @brief Static exchange evaluation on a target square.
@@ -237,6 +237,8 @@ namespace Brainiac {
                       bool qsearch = false);
 
       public:
+        Search();
+
         /**
          * @brief Reset the search state.
          *
@@ -268,7 +270,7 @@ namespace Brainiac {
          * @brief Calculate the next viable move for the current turn.
          *
          * Consecutive calls will be ignored unless stop() is invoked to
-         * terminate the existing search.
+         * terminate the running search.
          *
          * @param position
          * @param limits

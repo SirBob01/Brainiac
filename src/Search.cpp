@@ -1,6 +1,14 @@
 #include "Search.hpp"
 
 namespace Brainiac {
+    Search::Search() {
+        _running = false;
+
+        _on_bestmove = [](Move) {};
+        _on_iterative = [](IterativeInfo) {};
+        _on_pv = [](PVInfo) {};
+    }
+
     Value Search::see_target(Position &position, Square target) {
         const Board &board = position.board();
         const MoveList &moves = position.moves();
@@ -347,7 +355,11 @@ namespace Brainiac {
         _negamax_visited = 0;
         _qsearch_visited = 0;
 
+        // Initialize info objects
         IterativeInfo iterative_info;
+        PVInfo pv_info;
+
+        // Generate moves
         MoveList moves = position.moves();
 
         // Initial aspiration window
@@ -377,16 +389,16 @@ namespace Brainiac {
                     // Update the PV
                     _pvtable.update(0, move);
 
-                    PVInfo info;
-                    info.depth = depth;
-                    info.time = time() - _start_time;
-                    info.nodes = _negamax_visited + _qsearch_visited;
-                    info.value = value;
-                    info.pv_length = _pvtable.get_length(0);
-                    for (unsigned i = 0; i < info.pv_length; i++) {
-                        info.pv[i] = _pvtable.get(0, i);
+                    // PV callback
+                    pv_info.depth = depth;
+                    pv_info.time = time() - _start_time;
+                    pv_info.nodes = _negamax_visited + _qsearch_visited;
+                    pv_info.value = value;
+                    pv_info.pv_length = _pvtable.get_length(0);
+                    for (unsigned i = 0; i < pv_info.pv_length; i++) {
+                        pv_info.pv[i] = _pvtable.get(0, i);
                     }
-                    _on_pv(info);
+                    _on_pv(pv_info);
                 }
 
                 // Traversal callback
