@@ -33,7 +33,7 @@ namespace Brainiac {
             std::cout << stream.str() << std::endl;
         });
 
-        _search.set_bestmove_callback([](Move &move) {
+        _search.set_bestmove_callback([](Move move) {
             std::ostringstream stream;
             stream << "bestmove " << move.standard_notation();
             std::cout << stream.str() << std::endl;

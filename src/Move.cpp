@@ -18,6 +18,9 @@ namespace Brainiac {
     std::string Move::standard_notation() const {
         std::string s = square_to_string(src()) + square_to_string(dst());
         MoveType move_type = type();
+        if (move_type == MoveType::Skip) {
+            return "0000";
+        }
         if (move_type == MoveType::RookPromo ||
             move_type == MoveType::RookPromoCapture)
             s += 'r';

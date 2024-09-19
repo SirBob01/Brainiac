@@ -142,7 +142,7 @@ namespace Brainiac {
      * @brief Best move found callback.
      *
      */
-    using BestMoveCallback = std::function<void(Move &)>;
+    using BestMoveCallback = std::function<void(Move)>;
 
     /**
      * @brief Traversal callback.
