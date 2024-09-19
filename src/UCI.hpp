@@ -7,7 +7,6 @@
 
 #include "Perft.hpp"
 #include "Search.hpp"
-#include "Utils.hpp"
 
 namespace Brainiac {
     /**
