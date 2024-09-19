@@ -423,7 +423,14 @@ namespace Brainiac {
             depth++;
         }
 
-        _on_bestmove(moves[0]);
+        // Best move callback
+        if (moves.size()) {
+            _on_bestmove(moves[0]);
+        } else {
+            _on_bestmove(Move());
+        }
+
+        // Terminate the search
         _running = false;
     }
 

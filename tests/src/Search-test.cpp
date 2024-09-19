@@ -40,7 +40,7 @@ static char *test_mate_in_n() {
             if (position.turn() == bot_turn) {
                 Move best_move;
                 search.set_bestmove_callback(
-                    [&](Move &move) { best_move = move; });
+                    [&](Move move) { best_move = move; });
                 search.go(position, limits);
 
                 move_label = "Searched move (" +
@@ -57,8 +57,25 @@ static char *test_mate_in_n() {
     return 0;
 }
 
+static char *test_null_move() {
+    SearchLimits limits;
+    Position position("R6k/6rp/5B2/8/8/8/7P/7K b - - 0 2");
+
+    Move best_move(Square::E2, Square::E4, MoveType::Capture);
+
+    Search search;
+    search.set_bestmove_callback([&](Move move) { best_move = move; });
+    search.go(position, limits);
+
+    mu_assert("Null move type", best_move.type() == MoveType::Skip);
+    mu_assert("Null move notation", best_move.standard_notation() == "0000");
+
+    return 0;
+}
+
 static char *all_tests() {
     mu_run_test(test_mate_in_n);
+    mu_run_test(test_null_move);
     return 0;
 }
 
