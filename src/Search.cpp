@@ -413,7 +413,8 @@ namespace Brainiac {
             }
 
             // Prioritize best_move in the next iteration
-            if (_running && !_timeout) {
+            // This will also terminate if only 1 legal move is available
+            if (_running && !_timeout && moves.size() > 1) {
                 std::swap(moves[best_index], moves[0]);
             } else {
                 break;
