@@ -8,19 +8,28 @@ namespace Brainiac {
 
         // Assign search callbacks
 
-        _search.set_traverse_callback([](SearchInfo &info) {
-            // unsigned time_ms = info.time.count() * 1000;
-            unsigned nps = info.visited / info.time.count();
+        _search.set_iterative_callback([](IterativeInfo &info) {
             std::ostringstream stream;
             stream << "info depth " << static_cast<unsigned>(info.depth);
             stream << " currmove " << info.move.standard_notation();
             stream << " currmovenumber " << info.move_number;
-            stream << " nodes " << info.visited;
+            std::cout << stream.str() << std::endl;
+        });
+
+        _search.set_pv_callback([](PVInfo &info) {
+            unsigned time_ms = info.time.count() * 1000;
+            unsigned nps = info.nodes / info.time.count();
+
+            std::ostringstream stream;
+            stream << "info depth " << static_cast<unsigned>(info.depth);
+            stream << " time " << time_ms;
+            stream << " nodes " << info.nodes;
             stream << " nps " << nps;
             stream << " score cp " << info.value;
-            // stream << " time " << time_ms;
-            // stream << " pv "; // TODO
-
+            stream << " pv";
+            for (unsigned i = 0; i < info.pv_length; i++) {
+                stream << " " << info.pv[i].standard_notation();
+            }
             std::cout << stream.str() << std::endl;
         });
 
@@ -91,10 +100,11 @@ namespace Brainiac {
 
         _command_map["go"] = [&](Tokens &args) {
             SearchLimits limits;
+            unsigned perft = 0;
             for (unsigned i = 0; i < args.size(); i++) {
                 std::string key = args[i];
                 if (key == "perft") {
-                    limits.perft = stoi(args[++i]);
+                    perft = stoi(args[++i]);
                 } else if (key == "wtime") {
                     limits.white_time = Seconds(stoi(args[++i]) / 1000.0f);
                 } else if (key == "btime") {
@@ -114,8 +124,8 @@ namespace Brainiac {
                 }
             }
 
-            if (limits.perft) {
-                perft_handler(limits.perft);
+            if (perft) {
+                perft_handler(perft);
             } else {
                 if (_search_thread.joinable()) {
                     _search_thread.join();

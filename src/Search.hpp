@@ -1,12 +1,12 @@
 #pragma once
 
+#include <array>
 #include <atomic>
-#include <chrono>
 #include <functional>
 
-#include "Evaluation.hpp"
 #include "History.hpp"
 #include "Numeric.hpp"
+#include "PVTable.hpp"
 #include "Position.hpp"
 #include "Transpositions.hpp"
 #include "Utils.hpp"
@@ -19,12 +19,12 @@ namespace Brainiac {
     constexpr Depth MAX_QSEARCH_DEPTH = 6;
 
     /**
-     * @brief Search information.
+     * @brief Iterative deepening information.
      *
      */
-    struct SearchInfo {
+    struct IterativeInfo {
         /**
-         * @brief Best move found.
+         * @brief Current move searched.
          *
          */
         Move move;
@@ -36,28 +36,52 @@ namespace Brainiac {
         unsigned move_number;
 
         /**
-         * @brief Total search time.
-         *
-         */
-        Seconds time;
-
-        /**
-         * @brief Number of nodes visited.
-         *
-         */
-        unsigned visited;
-
-        /**
          * @brief Search depth.
+         *
+         */
+        Depth depth;
+    };
+
+    /**
+     * @brief PV information.
+     *
+     */
+    struct PVInfo {
+        /**
+         * @brief Current depth.
          *
          */
         Depth depth;
 
         /**
-         * @brief Current valuation in centipawns.
+         * @brief Total time spent in search.
+         *
+         */
+        Seconds time;
+
+        /**
+         * @brief Total number of nodes traversed.
+         *
+         */
+        unsigned nodes;
+
+        /**
+         * @brief Estimated valuation.
          *
          */
         Value value;
+
+        /**
+         * @brief PV move list.
+         *
+         */
+        std::array<Move, MAX_DEPTH> pv;
+
+        /**
+         * @brief Number of moves in the PV.
+         *
+         */
+        unsigned pv_length;
     };
 
     /**
@@ -65,18 +89,52 @@ namespace Brainiac {
      *
      */
     struct SearchLimits {
+        /**
+         * @brief Remaining time for white.
+         *
+         */
         Seconds white_time = Seconds(0);
+
+        /**
+         * @brief Remaining time for black.
+         *
+         */
         Seconds black_time = Seconds(0);
 
+        /**
+         * @brief Time increment per move for white.
+         *
+         */
         Seconds white_increment = Seconds(0);
+
+        /**
+         * @brief Time increment per move for black.
+         *
+         */
         Seconds black_increment = Seconds(0);
 
+        /**
+         * @brief Fixed search time (overrides all other settings).
+         *
+         */
         Seconds move_time = Seconds(0);
 
+        /**
+         * @brief Maximum number of nodes to search.
+         *
+         */
         unsigned nodes = 0;
-        unsigned perft = 0;
+
+        /**
+         * @brief Number of moves remaining.
+         *
+         */
         unsigned moves_to_go = 0;
 
+        /**
+         * @brief Maximum depth to search.
+         *
+         */
         Depth depth = MAX_DEPTH;
     };
 
@@ -90,7 +148,13 @@ namespace Brainiac {
      * @brief Traversal callback.
      *
      */
-    using TraverseCallback = std::function<void(SearchInfo &)>;
+    using IterativeCallback = std::function<void(IterativeInfo &)>;
+
+    /**
+     * @brief PV callback.
+     *
+     */
+    using PVCallback = std::function<void(PVInfo &)>;
 
     /**
      * @brief Search engine.
@@ -99,6 +163,7 @@ namespace Brainiac {
     class Search {
         Transpositions _tptable;
         History _htable;
+        PVTable _pvtable;
 
         bool _timeout;
         Seconds _start_time;
@@ -108,7 +173,8 @@ namespace Brainiac {
         unsigned _qsearch_visited;
 
         BestMoveCallback _on_bestmove = [](Move) {};
-        TraverseCallback _on_traverse = [](SearchInfo) {};
+        IterativeCallback _on_iterative = [](IterativeInfo) {};
+        PVCallback _on_pv = [](PVInfo) {};
 
         std::atomic_bool _running = false;
 
@@ -156,6 +222,7 @@ namespace Brainiac {
          * @param position
          * @param prev
          * @param depth
+         * @param ply
          * @param alpha
          * @param beta
          * @param qsearch
@@ -164,6 +231,7 @@ namespace Brainiac {
         Value negamax(Position &position,
                       Move prev,
                       Depth depth,
+                      Depth ply,
                       Value alpha = MIN_VALUE,
                       Value beta = MAX_VALUE,
                       bool qsearch = false);
@@ -176,18 +244,25 @@ namespace Brainiac {
         void reset();
 
         /**
+         * @brief Set the iterative deepening callback.
+         *
+         * @param callback
+         */
+        void set_iterative_callback(IterativeCallback callback);
+
+        /**
+         * @brief Set the PV callback.
+         *
+         * @param callback
+         */
+        void set_pv_callback(PVCallback callback);
+
+        /**
          * @brief Set the bestmove callback.
          *
          * @param callback
          */
         void set_bestmove_callback(BestMoveCallback callback);
-
-        /**
-         * @brief Set the traverse callback.
-         *
-         * @param callback
-         */
-        void set_traverse_callback(TraverseCallback callback);
 
         /**
          * @brief Calculate the next viable move for the current turn.

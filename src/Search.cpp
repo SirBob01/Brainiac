@@ -105,14 +105,19 @@ namespace Brainiac {
     Value Search::negamax(Position &position,
                           Move prev,
                           Depth depth,
+                          Depth ply,
                           Value alpha,
                           Value beta,
                           bool qsearch) {
+        // Clear the PV at this ply
+        _pvtable.clear(ply);
+
         // Time management
         Seconds elapsed = time() - _start_time;
         _timeout = elapsed >= _limit_time && _limit_time.count() >= 0;
         if (!_running || _timeout) return 0;
 
+        // Update visited statistics
         _negamax_visited += !qsearch;
         _qsearch_visited += qsearch;
 
@@ -155,6 +160,7 @@ namespace Brainiac {
             return negamax(position,
                            prev,
                            MAX_QSEARCH_DEPTH,
+                           ply + 1,
                            alpha,
                            beta,
                            true);
@@ -167,6 +173,7 @@ namespace Brainiac {
             Value score = -negamax(position,
                                    Move(),
                                    depth - R - 1,
+                                   ply + 1,
                                    -beta,
                                    -beta + 1,
                                    qsearch);
@@ -242,6 +249,7 @@ namespace Brainiac {
             Value score = -negamax(position,
                                    move,
                                    depth - R - 1 + E,
+                                   ply + 1,
                                    -beta,
                                    -alpha,
                                    qsearch);
@@ -250,6 +258,7 @@ namespace Brainiac {
                 score = -negamax(position,
                                  move,
                                  depth - 1 + E,
+                                 ply + 1,
                                  -beta,
                                  -alpha,
                                  qsearch);
@@ -262,6 +271,7 @@ namespace Brainiac {
             if (alpha >= beta) {
                 if (_running && !_timeout && !qsearch) {
                     _htable.set(position, move, depth);
+                    _pvtable.update(ply, move);
                 }
                 break;
             }
@@ -277,6 +287,8 @@ namespace Brainiac {
                 type = NodeType::Upper;
             } else if (value >= beta) {
                 type = NodeType::Lower;
+            } else {
+                _pvtable.update(ply, moves[move_index]);
             }
             _tptable.set(position, type, depth, value, moves[move_index]);
         }
@@ -288,13 +300,15 @@ namespace Brainiac {
         _htable.clear();
     }
 
+    void Search::set_iterative_callback(IterativeCallback callback) {
+        _on_iterative = callback;
+    };
+
+    void Search::set_pv_callback(PVCallback callback) { _on_pv = callback; };
+
     void Search::set_bestmove_callback(BestMoveCallback callback) {
         _on_bestmove = callback;
     }
-
-    void Search::set_traverse_callback(TraverseCallback callback) {
-        _on_traverse = callback;
-    };
 
     void Search::go(Position &position, SearchLimits limits) {
         // A search is currently running
@@ -333,7 +347,7 @@ namespace Brainiac {
         _negamax_visited = 0;
         _qsearch_visited = 0;
 
-        SearchInfo info;
+        IterativeInfo iterative_info;
         MoveList moves = position.moves();
 
         // Initial aspiration window
@@ -347,26 +361,39 @@ namespace Brainiac {
             for (MoveIndex i = 0; i < moves.size(); i++) {
                 Move move = moves[i];
 
+                // Clear PV at this ply
+                _pvtable.clear(0);
+
                 // Evaluate the move
                 position.make(move);
-                Value score = -negamax(position, move, depth, alpha, beta);
+                Value score = -negamax(position, move, depth, 1, alpha, beta);
                 position.undo();
 
                 // Check for cut-off
                 if (score > value) {
                     best_index = i;
                     value = score;
+
+                    // Update the PV
+                    _pvtable.update(0, move);
+
+                    PVInfo info;
+                    info.depth = depth;
+                    info.time = time() - _start_time;
+                    info.nodes = _negamax_visited + _qsearch_visited;
+                    info.value = value;
+                    info.pv_length = _pvtable.get_length(0);
+                    for (unsigned i = 0; i < info.pv_length; i++) {
+                        info.pv[i] = _pvtable.get(0, i);
+                    }
+                    _on_pv(info);
                 }
 
                 // Traversal callback
-                info.move = move;
-                info.move_number = i + 1;
-                info.time = time() - _start_time;
-                info.visited = _negamax_visited + _qsearch_visited;
-                info.depth = depth;
-                info.value = value;
-
-                _on_traverse(info);
+                iterative_info.move = move;
+                iterative_info.move_number = i + 1;
+                iterative_info.depth = depth;
+                _on_iterative(iterative_info);
 
                 if (value >= WIN_VALUE || !_running || _timeout) {
                     break;
@@ -379,6 +406,7 @@ namespace Brainiac {
             } else {
                 break;
             }
+
             depth++;
         }
 
